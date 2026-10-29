@@ -5,13 +5,12 @@ package system
 
 import (
 	"context"
-	"github.com/kar1hsu/go-seed/services/system/rpc/pb"
-	"github.com/zeromicro/go-zero/core/trace"
 
 	"github.com/kar1hsu/go-seed/apps/app/api/internal/svc"
 	"github.com/kar1hsu/go-seed/apps/app/api/internal/types"
-
+	"github.com/kar1hsu/go-seed/services/system/rpc/pb"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/trace"
 )
 
 type PingLogic struct {

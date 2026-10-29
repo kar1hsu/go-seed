@@ -7,7 +7,7 @@ COPY services ./services
 COPY pkg ./pkg
 COPY cmd ./cmd
 ARG SERVICE_PATH
-RUN CGO_ENABLED=0 go build -trimpath -o /out/server ./${SERVICE_PATH} && CGO_ENABLED=0 go build -trimpath -o /out/probe ./cmd/probe
+RUN CGO_ENABLED=0 go build -trimpath -o /out/server ./${SERVICE_PATH} && CGO_ENABLED=0 go build -trimpath -o /out/probe ./cmd/probe && CGO_ENABLED=0 go build -trimpath -o /out/systemctl ./services/system/cmd/system
 
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*

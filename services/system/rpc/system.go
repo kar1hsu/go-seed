@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/kar1hsu/go-seed/pkg/rpcx"
 	"github.com/kar1hsu/go-seed/services/system/rpc/internal/config"
 	"github.com/kar1hsu/go-seed/services/system/rpc/internal/server"
 	"github.com/kar1hsu/go-seed/services/system/rpc/internal/svc"
 	"github.com/kar1hsu/go-seed/services/system/rpc/pb"
-
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
 	"github.com/zeromicro/go-zero/zrpc"
@@ -30,6 +30,24 @@ func main() {
 	}
 	defer ctx.Close()
 
+	methods := []string{
+		pb.System_AdminLogin_FullMethodName,
+		pb.System_AdminRefresh_FullMethodName,
+		pb.System_AdminLogout_FullMethodName,
+		pb.System_AdminCurrent_FullMethodName,
+		pb.System_AdminChangePassword_FullMethodName,
+	}
+	callers := []rpcx.Caller{{Name: "admin-api", Secret: c.AdminAPISecret, Methods: methods}}
+	public := []string{
+		pb.System_Ping_FullMethodName,
+		pb.System_CheckReady_FullMethodName,
+		"/grpc.health.v1.Health/Check",
+	}
+	guard, err := rpcx.Server(callers, public)
+	if err != nil {
+		log.Fatal(err)
+	}
+	c.Middlewares.StatConf.IgnoreContentMethods = append(c.Middlewares.StatConf.IgnoreContentMethods, methods...)
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
 		pb.RegisterSystemServer(grpcServer, server.NewSystemServer(ctx))
 
@@ -38,6 +56,7 @@ func main() {
 		}
 	})
 	defer s.Stop()
+	s.AddUnaryInterceptors(guard)
 
 	fmt.Printf("Starting rpc server at %s...\n", c.ListenOn)
 	s.Start()

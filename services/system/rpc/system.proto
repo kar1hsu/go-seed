@@ -11,7 +11,28 @@ message PingResponse {
 message CheckReadyRequest {}
 message CheckReadyResponse {}
 
+message AdminLoginRequest { string username = 1; string password = 2; }
+message AdminRefreshRequest { string refresh_token = 1; }
+message AdminLogoutRequest { string refresh_token = 1; }
+message AdminCurrentRequest {}
+message AdminPasswordRequest { string current_password = 1; string new_password = 2; }
+message AdminProfile { string id = 1; string username = 2; string display_name = 3; }
+message AdminAuthResponse {
+  string access_token = 1;
+  string expires_at = 2;
+  AdminProfile admin = 3;
+  string refresh_token = 4; // API sets HttpOnly cookie; never return this field in HTTP JSON.
+  string refresh_expires_at = 5;
+}
+message AdminCurrentResponse { AdminProfile admin = 1; }
+message AdminActionResponse {}
+
 service System {
+  rpc AdminLogin(AdminLoginRequest) returns (AdminAuthResponse);
+  rpc AdminRefresh(AdminRefreshRequest) returns (AdminAuthResponse);
+  rpc AdminLogout(AdminLogoutRequest) returns (AdminActionResponse);
+  rpc AdminCurrent(AdminCurrentRequest) returns (AdminCurrentResponse);
+  rpc AdminChangePassword(AdminPasswordRequest) returns (AdminActionResponse);
   // Non-sensitive connectivity probe; independent of database readiness.
   rpc Ping(PingRequest) returns (PingResponse);
   // Checks MySQL and Redis with the caller's deadline.

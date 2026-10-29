@@ -4,7 +4,7 @@ COMPOSE := docker compose --env-file .env -p goseed -f deploy/compose/compose.ya
 
 .PHONY: help tools doctor infra-up infra-down dev build-go build check test gen gen-api gen-rpc gen-web verify-gen smoke compose-up compose-down
 help:
-	@echo 'tools doctor infra-up infra-down dev gen check test build smoke compose-up compose-down'
+	@echo 'init tools doctor infra-up infra-down migrate bootstrap dev gen check test test-auth build smoke auth-smoke compose-up compose-migrate compose-bootstrap compose-down'
 tools:
 	bash scripts/install-tools.sh
 doctor:
@@ -47,3 +47,21 @@ compose-up:
 	$(COMPOSE) up -d --build --wait
 compose-down:
 	$(COMPOSE) down
+
+.PHONY: init migrate bootstrap compose-migrate compose-bootstrap test-auth
+init:
+	python3 scripts/init-env.py
+migrate:
+	python3 scripts/system.py migrate
+bootstrap:
+	python3 scripts/system.py bootstrap
+compose-migrate:
+	python3 scripts/system.py --compose migrate
+compose-bootstrap:
+	python3 scripts/system.py --compose bootstrap
+test-auth:
+	python3 scripts/test-auth.py
+
+.PHONY: auth-smoke
+auth-smoke:
+	python3 scripts/test-auth.py --http

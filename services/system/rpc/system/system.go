@@ -14,12 +14,26 @@ import (
 )
 
 type (
-	CheckReadyRequest  = pb.CheckReadyRequest
-	CheckReadyResponse = pb.CheckReadyResponse
-	PingRequest        = pb.PingRequest
-	PingResponse       = pb.PingResponse
+	AdminActionResponse  = pb.AdminActionResponse
+	AdminAuthResponse    = pb.AdminAuthResponse
+	AdminCurrentRequest  = pb.AdminCurrentRequest
+	AdminCurrentResponse = pb.AdminCurrentResponse
+	AdminLoginRequest    = pb.AdminLoginRequest
+	AdminLogoutRequest   = pb.AdminLogoutRequest
+	AdminPasswordRequest = pb.AdminPasswordRequest
+	AdminProfile         = pb.AdminProfile
+	AdminRefreshRequest  = pb.AdminRefreshRequest
+	CheckReadyRequest    = pb.CheckReadyRequest
+	CheckReadyResponse   = pb.CheckReadyResponse
+	PingRequest          = pb.PingRequest
+	PingResponse         = pb.PingResponse
 
 	System interface {
+		AdminLogin(ctx context.Context, in *AdminLoginRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error)
+		AdminRefresh(ctx context.Context, in *AdminRefreshRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error)
+		AdminLogout(ctx context.Context, in *AdminLogoutRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+		AdminCurrent(ctx context.Context, in *AdminCurrentRequest, opts ...grpc.CallOption) (*AdminCurrentResponse, error)
+		AdminChangePassword(ctx context.Context, in *AdminPasswordRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
 		// Non-sensitive connectivity probe; independent of database readiness.
 		Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 		// Checks MySQL and Redis with the caller's deadline.
@@ -35,6 +49,31 @@ func NewSystem(cli zrpc.Client) System {
 	return &defaultSystem{
 		cli: cli,
 	}
+}
+
+func (m *defaultSystem) AdminLogin(ctx context.Context, in *AdminLoginRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.AdminLogin(ctx, in, opts...)
+}
+
+func (m *defaultSystem) AdminRefresh(ctx context.Context, in *AdminRefreshRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.AdminRefresh(ctx, in, opts...)
+}
+
+func (m *defaultSystem) AdminLogout(ctx context.Context, in *AdminLogoutRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.AdminLogout(ctx, in, opts...)
+}
+
+func (m *defaultSystem) AdminCurrent(ctx context.Context, in *AdminCurrentRequest, opts ...grpc.CallOption) (*AdminCurrentResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.AdminCurrent(ctx, in, opts...)
+}
+
+func (m *defaultSystem) AdminChangePassword(ctx context.Context, in *AdminPasswordRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.AdminChangePassword(ctx, in, opts...)
 }
 
 // Non-sensitive connectivity probe; independent of database readiness.

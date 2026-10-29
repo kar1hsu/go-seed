@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"testing"
 )
 
 func TestPublicMapping(t *testing.T) {

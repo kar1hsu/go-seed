@@ -2,7 +2,7 @@
 
 GoSeed 是基于 go-zero 的项目开发底座：单仓库、单 Go module，管理端 API、业务端 API 与领域 RPC 独立运行，管理后台采用 Vue 3。
 
-**当前完成第一阶段工程骨架。** 已提供真实的 API → RPC 探测、GORM/MySQL 与 Redis 就绪检查、Vue 工作台、契约生成、Compose 和本地检查流程。登录、RBAC、业务表、迁移、worker 与 scheduler 尚未实现；本阶段仅暴露无敏感数据的探测接口。
+**当前已完成工程骨架和管理员登录闭环。** 提供管理员初始化、登录、刷新、退出、修改密码，版本化 SQL 迁移，API → RPC 探测，GORM/MySQL 与 Redis 就绪检查，以及 Vue 管理后台。角色权限、管理员列表、业务表、worker 与 scheduler 按后续阶段接入。
 
 ## 本地开发
 
@@ -13,16 +13,18 @@ git clone --recurse-submodules git@github.com:kar1hsu/go-seed.git
 cd go-seed
 # 已有 checkout 时恢复固定版本的 AI 参考资料
 git submodule update --init --recursive
-cp .env.example .env
+make init                          # 创建 .env，并生成本地认证密钥和初始密码
 # 使用 nvm 的开发者先执行 nvm install && nvm use
 make tools                         # 固定 Go 生成工具安装到 .tools/bin；protoc 按需下载
 pnpm --dir web/admin install --frozen-lockfile
 make doctor
 make infra-up                      # 仅启动 GoSeed 自己的 MySQL / Redis
+make migrate                       # 显式执行 system SQL 迁移
+make bootstrap                     # 创建 admin；已有账号保持不变
 make dev                           # 编译并启动三个 Go 进程和 Vite；Ctrl+C 统一退出
 ```
 
-访问 [管理工作台](http://127.0.0.1:5173)。另一个终端执行 `make smoke`，验证两个 API 的健康检查、RPC 调用、响应结构和 Trace ID。
+访问 [管理工作台](http://127.0.0.1:5173)。初始账号为 `admin`，初始密码由 `make init` 随机生成，保存在本地 `.env` 的 `ADMIN_BOOTSTRAP_PASSWORD`。登录后可在账户菜单中修改密码。另一个终端执行 `make smoke`，验证两个 API 的健康检查、RPC 调用、响应结构和 Trace ID。
 
 | 服务 | 本地默认地址 |
 | --- | --- |
@@ -44,22 +46,27 @@ curl http://127.0.0.1:8081/readyz      # RPC + MySQL + Redis 就绪
 
 ## 完整容器运行
 
-只需 Docker/Compose 与 `.env`，无需主机 Go/Node 工具链：
+需要 Docker/Compose 与 Python 3，无需主机 Go/Node 工具链：
 
 ```bash
-cp .env.example .env                # 已有 .env 时保留自己的配置
+make init                          # 保留已有配置及凭证
 make compose-up
+make compose-migrate               # 使用容器内的领域命令执行迁移
+make compose-bootstrap             # 从本地私有配置初始化管理员
 # 打开 http://127.0.0.1:8088
 make smoke                         # 主机有 Python 时运行
 make compose-down                  # 停容器，保留命名卷
 ```
 
-容器模式与 `make dev` 使用相同的 API 端口，切换前先停止另一种运行方式。Compose 是开发/参考配置；生产交付还需完成服务身份、管理员认证、TLS 与密钥管理。RPC 端口不发布到容器宿主机，Nginx 提供同源入口。
+容器模式与 `make dev` 使用相同的 API 端口，切换前先停止另一种运行方式。Compose 是开发/参考配置；生产交付需配置 TLS、Secure Cookie、准确的允许来源及密钥管理。管理员认证和逐方法 RPC 服务身份校验已接入，角色权限仍在后续阶段。RPC 端口不发布到容器宿主机，Nginx 提供同源入口。
 
 ## 工程命令
 
 | 命令 | 当前行为 |
 | --- | --- |
+| `make init` | 创建本地配置和随机认证凭证，保留已有值 |
+| `make migrate` / `make bootstrap` | 迁移 system 数据库 / 幂等创建初始管理员 |
+| `make test-auth` / `make auth-smoke` | MySQL 认证并发测试 / 运行中 HTTP 登录链路 |
 | `make gen` | 生成两份 API、RPC、OpenAPI 3 与管理端 TypeScript 类型 |
 | `make gen-api APP=admin` | 从 `.api` 生成指定入口，保留手写骨架 |
 | `make gen-rpc DOMAIN=system` | 从 `.proto` 生成 system RPC |
@@ -95,6 +102,7 @@ Go module 固定为 `github.com/kar1hsu/go-seed`。运行时使用 go-zero **1.1
 | [目录规范](docs/directory-structure.md) | 依赖边界与生成文件所有权 |
 | [开发约定](docs/development-guide.md) | 契约、错误、开发与检查流程 |
 | [实施路线](docs/roadmap.md) | 当前进度与后续阶段 |
+| [管理员认证](docs/authentication.md) | 初始化、会话、Cookie、接口和验收 |
 | [第一阶段验证](docs/phase-one-validation.md) | 已执行的检查与当前边界 |
 | [AI 开发配置](docs/ai-development.md) | 官方资料版本、发现与升级方式 |
 | [管理 API](apps/admin/api/README.md) / [业务 API](apps/app/api/README.md) / [系统服务](services/system/README.md) | 运行和接口说明 |

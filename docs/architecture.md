@@ -1,6 +1,6 @@
 # GoSeed 整体架构
 
-GoSeed 面向需要业务 API 和管理后台的 Go 项目，采用单仓库、单 Go module、多个独立服务进程的结构。第一阶段已建立开发链路；下文仍包含后续认证、权限与任务的目标设计，实现状态以 README 和 roadmap 为准。
+GoSeed 面向需要业务 API 和管理后台的 Go 项目，采用单仓库、单 Go module、多个独立服务进程的结构。工程骨架和管理员认证已接入；下文仍包含后续权限与任务的目标设计，实现状态以 README 和 roadmap 为准。
 
 本文是实现基线，文中组件均为规划。目录与生成命令见[目录规范](directory-structure.md)和[开发约定](development-guide.md)。
 

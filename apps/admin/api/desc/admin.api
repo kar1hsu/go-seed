@@ -2,10 +2,11 @@ syntax = "v1"
 
 info (
 	title:          "GoSeed admin API"
-	desc:           "Phase 1 connectivity endpoints. Health probes are documented separately."
+	desc:           "Administrator authentication and connectivity. Health probes are documented separately."
 	version:        "v1"
 	useDefinitions: true
 )
 
 import "base.api"
 import "system/ping.api"
+import "auth/auth.api"

@@ -15,6 +15,147 @@
   },
   "basePath": "/",
   "paths": {
+    "/admin-api/v1/auth/login": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Administrator authentication"
+        ],
+        "summary": "Sign in; returns access token and sets HttpOnly refresh cookie",
+        "operationId": "authLogin",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/LoginRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AuthResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/auth/logout": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Administrator authentication"
+        ],
+        "summary": "Revoke current session and clear refresh cookie",
+        "operationId": "authLogout",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ActionResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/auth/me": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Administrator authentication"
+        ],
+        "summary": "Read the current administrator; checks live session state",
+        "operationId": "authCurrent",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CurrentResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/auth/password": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Administrator authentication"
+        ],
+        "summary": "Change password and revoke every administrator session",
+        "operationId": "authChangePassword",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ChangePasswordRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ActionResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/auth/refresh": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Administrator authentication"
+        ],
+        "summary": "Rotate HttpOnly refresh cookie and access token",
+        "operationId": "authRefresh",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AuthResponse"
+            }
+          }
+        }
+      }
+    },
     "/admin-api/v1/system/ping": {
       "get": {
         "produces": [
@@ -40,6 +181,268 @@
     }
   },
   "definitions": {
+    "ActionData": {
+      "type": "object",
+      "required": [
+        "success"
+      ],
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ActionResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "success"
+          ],
+          "properties": {
+            "success": {
+              "type": "boolean"
+            }
+          },
+          "$ref": "#/definitions/ActionData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "AdminProfile": {
+      "type": "object",
+      "required": [
+        "id",
+        "username",
+        "displayName"
+      ],
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "AuthData": {
+      "type": "object",
+      "required": [
+        "accessToken",
+        "expiresAt",
+        "admin"
+      ],
+      "properties": {
+        "accessToken": {
+          "type": "string"
+        },
+        "admin": {
+          "type": "object",
+          "required": [
+            "id",
+            "username",
+            "displayName"
+          ],
+          "properties": {
+            "displayName": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/AdminProfile"
+        },
+        "expiresAt": {
+          "type": "string"
+        }
+      }
+    },
+    "AuthResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "accessToken",
+            "expiresAt",
+            "admin"
+          ],
+          "properties": {
+            "accessToken": {
+              "type": "string"
+            },
+            "admin": {
+              "type": "object",
+              "required": [
+                "id",
+                "username",
+                "displayName"
+              ],
+              "properties": {
+                "displayName": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "username": {
+                  "type": "string"
+                }
+              },
+              "$ref": "#/definitions/AdminProfile"
+            },
+            "expiresAt": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/AuthData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "ChangePasswordRequest": {
+      "type": "object",
+      "required": [
+        "currentPassword",
+        "newPassword"
+      ],
+      "properties": {
+        "currentPassword": {
+          "type": "string"
+        },
+        "newPassword": {
+          "type": "string"
+        }
+      }
+    },
+    "CurrentData": {
+      "type": "object",
+      "required": [
+        "admin"
+      ],
+      "properties": {
+        "admin": {
+          "type": "object",
+          "required": [
+            "id",
+            "username",
+            "displayName"
+          ],
+          "properties": {
+            "displayName": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/AdminProfile"
+        }
+      }
+    },
+    "CurrentResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "admin"
+          ],
+          "properties": {
+            "admin": {
+              "type": "object",
+              "required": [
+                "id",
+                "username",
+                "displayName"
+              ],
+              "properties": {
+                "displayName": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "username": {
+                  "type": "string"
+                }
+              },
+              "$ref": "#/definitions/AdminProfile"
+            }
+          },
+          "$ref": "#/definitions/CurrentData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "LoginRequest": {
+      "type": "object",
+      "required": [
+        "username",
+        "password"
+      ],
+      "properties": {
+        "password": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
     "PingData": {
       "type": "object",
       "required": [

@@ -20,6 +20,7 @@
 | RPC 故障/恢复 | 仅停止 GoSeed RPC：两个 API healthz 200、readyz 503、业务探测 HTTP 503/code 100503；恢复后自动重连 |
 | 浏览器验收 | 容器静态页面、真实状态、刷新、故障提示和恢复均验证，未使用虚构业务数据 |
 | Compose 配置与 Git whitespace 检查 | 通过 |
+| [GitHub Actions CI](https://github.com/kar1hsu/go-seed/actions/runs/40882304709) | 第一阶段 `main` 提交通过 |
 
 生成器的 `x-date` 时间戳在文档生成脚本中移除，使输出可重复。Smoke 对启动/重连最多等待 30 秒，不将短暂重连差异当作最终成功或失败；超过上限仍报错。
 
@@ -30,7 +31,6 @@
 
 ## 尚未执行或不属于本阶段
 
-- GitHub Actions 工作流已配置，未推送远端，因此没有远端 CI 运行结果。
 - 未来 Codex 会话的自动技能发现尚需重载会话确认；本次显式读取成功不代表已经验证自动发现。
-- 管理员认证、服务身份、RBAC、业务表与迁移、Asynq worker/scheduler、文件业务和商品样板留在后续阶段。
+- 管理员认证、服务身份和认证表迁移的实现范围见 [管理员认证](authentication.md)。RBAC、业务表、Asynq worker/scheduler、文件业务和商品样板留在后续阶段。
 - 当前 Compose 是回环端口的开发参考环境，不作为生产安全验收。

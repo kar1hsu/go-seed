@@ -39,7 +39,7 @@ const stack = Object.entries(project.dependencies).map(([name, version]) => ({
         ><ElDescriptionsItem label="后端架构"
           >go-zero · API / RPC 独立进程 · GORM</ElDescriptionsItem
         ><ElDescriptionsItem label="当前阶段"
-          >工程骨架已接入。登录、权限、业务数据与 Asynq
+          >管理员登录与会话管理已接入。角色权限、业务数据与 Asynq
           任务能力待实现。</ElDescriptionsItem
         ></ElDescriptions
       >

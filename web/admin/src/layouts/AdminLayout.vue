@@ -10,10 +10,19 @@ import {
   Document,
   RefreshRight,
 } from '@element-plus/icons-vue'
+import {
+  ElDropdown,
+  ElDropdownMenu,
+  ElDropdownItem,
+  ElMessage,
+} from 'element-plus'
+import { useAuthStore, authMessage } from '../features/auth/store'
 import { navigation } from '../router/navigation'
 import { project } from '../app/project'
 import { useDashboardStore } from '../features/dashboard/store'
 
+const auth = useAuthStore()
+const signingOut = ref(false)
 const route = useRoute()
 const router = useRouter()
 const status = useDashboardStore()
@@ -21,6 +30,23 @@ const collapsed = ref(false)
 const mobileOpen = ref(false)
 const mobile = ref(false)
 const visited = ref(['/'])
+async function userAction(command: string) {
+  if (command === 'security') {
+    await router.push('/account/security')
+    return
+  }
+  if (signingOut.value) return
+  signingOut.value = true
+  try {
+    await auth.logout()
+    status.clearRecords()
+    await router.replace('/login')
+  } catch (error) {
+    ElMessage.error(authMessage(error))
+  } finally {
+    signingOut.value = false
+  }
+}
 const current = computed(
   () => navigation.find((item) => item.path === route.path) || navigation[0]!,
 )
@@ -138,9 +164,29 @@ onBeforeUnmount(() => media.removeEventListener('change', updateMedia))
               title="接口文档"
               aria-label="打开接口文档"
               ><Document class="icon" /></RouterLink
-            ><span class="header-divider"></span
-            ><span class="dev-avatar" title="当前未接入登录">G</span
-            ><span class="workspace-name">本地工作空间</span>
+            ><span class="header-divider"></span>
+            <ElDropdown trigger="click" @command="userAction">
+              <button
+                class="account-trigger"
+                aria-label="账户菜单"
+                :disabled="signingOut"
+              >
+                <span class="dev-avatar">{{
+                  auth.admin?.displayName.slice(0, 1) || 'G'
+                }}</span
+                ><span class="workspace-name">{{
+                  auth.admin?.displayName
+                }}</span>
+              </button>
+              <template #dropdown
+                ><ElDropdownMenu
+                  ><ElDropdownItem command="security">账户安全</ElDropdownItem
+                  ><ElDropdownItem command="logout" divided
+                    >退出登录</ElDropdownItem
+                  ></ElDropdownMenu
+                ></template
+              >
+            </ElDropdown>
           </div>
         </header>
         <div class="tabs-bar">

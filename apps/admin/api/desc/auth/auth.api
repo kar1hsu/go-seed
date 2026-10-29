@@ -1,0 +1,81 @@
+syntax = "v1"
+
+type (
+  LoginRequest {
+    Username string `json:"username"`
+    Password string `json:"password"`
+  }
+  ChangePasswordRequest {
+    CurrentPassword string `json:"currentPassword"`
+    NewPassword string `json:"newPassword"`
+  }
+  AdminProfile {
+    Id string `json:"id"`
+    Username string `json:"username"`
+    DisplayName string `json:"displayName"`
+  }
+  AuthData {
+    AccessToken string `json:"accessToken"`
+    ExpiresAt string `json:"expiresAt"`
+    Admin AdminProfile `json:"admin"`
+  }
+  AuthResponse {
+    Code int `json:"code"`
+    Message string `json:"message"`
+    Data AuthData `json:"data"`
+    TraceId string `json:"traceId"`
+  }
+  CurrentData { Admin AdminProfile `json:"admin"` }
+  CurrentResponse {
+    Code int `json:"code"`
+    Message string `json:"message"`
+    Data CurrentData `json:"data"`
+    TraceId string `json:"traceId"`
+  }
+  ActionData { Success bool `json:"success"` }
+  ActionResponse {
+    Code int `json:"code"`
+    Message string `json:"message"`
+    Data ActionData `json:"data"`
+    TraceId string `json:"traceId"`
+  }
+)
+
+@server(prefix: /admin-api/v1/auth
+ group: auth
+ tags: "Administrator authentication"
+ middleware: BrowserOrigin
+)
+service admin-api {
+ @doc "Sign in; returns access token and sets HttpOnly refresh cookie"
+ @handler Login
+ post /login (LoginRequest) returns (AuthResponse)
+ @doc "Rotate HttpOnly refresh cookie and access token"
+ @handler Refresh
+ post /refresh returns (AuthResponse)
+ @doc "Revoke current session and clear refresh cookie"
+ @handler Logout
+ post /logout returns (ActionResponse)
+}
+
+@server(prefix: /admin-api/v1/auth
+ group: auth
+ tags: "Administrator authentication"
+ middleware: AdminAccess
+)
+service admin-api {
+ @doc "Read the current administrator; checks live session state"
+ @handler Current
+ get /me returns (CurrentResponse)
+}
+
+@server(prefix: /admin-api/v1/auth
+ group: auth
+ tags: "Administrator authentication"
+ middleware: BrowserOrigin,AdminAccess
+)
+service admin-api {
+ @doc "Change password and revoke every administrator session"
+ @handler ChangePassword
+ post /password (ChangePasswordRequest) returns (ActionResponse)
+}

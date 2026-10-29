@@ -1,6 +1,6 @@
 # GoSeed 开发约定
 
-开发从契约和数据归属开始，按 HTTP、RPC、业务用例、数据访问、后台页面逐层实现。本文的 Makefile 命令是后续需要提供的统一入口，当前仓库尚未实现这些命令。
+开发从契约和数据归属开始，按 HTTP、RPC、业务用例、数据访问、后台页面逐层实现。当前 Makefile 已提供生成、检查、构建、迁移和认证验证入口；实际命令及后续计划在下文分别列出。
 
 ## 新增一个商品模块
 
@@ -124,14 +124,14 @@ API client 统一处理基础 URL、超时、错误码、request ID 和 refresh 
 
 ## 开发命令
 
-第一阶段已实现 doctor、infra-up、dev、gen-api、gen-rpc、gen-web、check、test、build，完整清单与实际行为见根 README。下表也保留后续阶段的设计接口；migrate、bootstrap、sync-resources、new-module 尚未实现，不应提前调用。
+当前已实现 doctor、infra-up、dev、gen-api、gen-rpc、gen-web、check、test、build、migrate、bootstrap，完整清单与实际行为见根 README。下表也保留后续阶段的设计接口；sync-resources、new-module 尚未实现，不应提前调用。
 
 | 命令 | 行为 |
 | --- | --- |
 | `make doctor` | 检查 Go、goctl、protoc、插件、Node、pnpm 及固定版本 |
 | `make infra-up` | 启动本地 MySQL 与 Redis |
-| `make migrate DOMAIN=system` | 运行指定领域的迁移 |
-| `make bootstrap DOMAIN=system` | 幂等初始化系统基础数据 |
+| `make migrate` | 运行 system 领域 SQL 迁移 |
+| `make bootstrap` | 幂等创建初始管理员，不覆盖已有账号 |
 | `make dev` | 启动 API、RPC、管理端开发服务并统一处理退出 |
 | `make gen-api APP=admin` | 校验并生成选定 API |
 | `make gen-rpc DOMAIN=system` | 生成指定领域 RPC |
@@ -151,3 +151,7 @@ API client 统一处理基础 URL、超时、错误码、request ID 和 refresh 
 第一版重点覆盖：登录与刷新轮换、会话撤销、角色授权变更、多实例策略加载、公开接口字段过滤、业务事务回滚、重复任务、迁移重复运行，以及从空环境启动完整链路。并发相关代码补充 race 检查，生成器升级补充重复生成对比。
 
 当前生成链路为 `.api` → goctl Swagger 2 → OpenAPI 3（合并公共错误 schema）→ openapi-typescript；运行时使用 openapi-fetch。Health 路由独立注册，框架级未匹配路由/方法不属于业务 envelope。模板只对解析错误映射做小范围定制，避免把业务实现放进模板。
+
+## 管理员认证开发
+
+当前认证实现、初始化命令、HTTP Cookie 与会话撤销规则见 [管理员认证](authentication.md)。修改认证行为时执行 `make test-auth`；对运行中的完整链路执行 `make auth-smoke`。这两个命令使用本项目开发 MySQL，创建随机测试账号并仅删除自身账号。认证令牌、密码和 Cookie 不写入日志或提交的测试产物。

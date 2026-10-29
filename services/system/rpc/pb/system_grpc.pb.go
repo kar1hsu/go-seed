@@ -19,14 +19,24 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	System_Ping_FullMethodName       = "/goseed.system.v1.System/Ping"
-	System_CheckReady_FullMethodName = "/goseed.system.v1.System/CheckReady"
+	System_AdminLogin_FullMethodName          = "/goseed.system.v1.System/AdminLogin"
+	System_AdminRefresh_FullMethodName        = "/goseed.system.v1.System/AdminRefresh"
+	System_AdminLogout_FullMethodName         = "/goseed.system.v1.System/AdminLogout"
+	System_AdminCurrent_FullMethodName        = "/goseed.system.v1.System/AdminCurrent"
+	System_AdminChangePassword_FullMethodName = "/goseed.system.v1.System/AdminChangePassword"
+	System_Ping_FullMethodName                = "/goseed.system.v1.System/Ping"
+	System_CheckReady_FullMethodName          = "/goseed.system.v1.System/CheckReady"
 )
 
 // SystemClient is the client API for System service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SystemClient interface {
+	AdminLogin(ctx context.Context, in *AdminLoginRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error)
+	AdminRefresh(ctx context.Context, in *AdminRefreshRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error)
+	AdminLogout(ctx context.Context, in *AdminLogoutRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+	AdminCurrent(ctx context.Context, in *AdminCurrentRequest, opts ...grpc.CallOption) (*AdminCurrentResponse, error)
+	AdminChangePassword(ctx context.Context, in *AdminPasswordRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
 	// Non-sensitive connectivity probe; independent of database readiness.
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 	// Checks MySQL and Redis with the caller's deadline.
@@ -39,6 +49,56 @@ type systemClient struct {
 
 func NewSystemClient(cc grpc.ClientConnInterface) SystemClient {
 	return &systemClient{cc}
+}
+
+func (c *systemClient) AdminLogin(ctx context.Context, in *AdminLoginRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminAuthResponse)
+	err := c.cc.Invoke(ctx, System_AdminLogin_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) AdminRefresh(ctx context.Context, in *AdminRefreshRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminAuthResponse)
+	err := c.cc.Invoke(ctx, System_AdminRefresh_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) AdminLogout(ctx context.Context, in *AdminLogoutRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminActionResponse)
+	err := c.cc.Invoke(ctx, System_AdminLogout_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) AdminCurrent(ctx context.Context, in *AdminCurrentRequest, opts ...grpc.CallOption) (*AdminCurrentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminCurrentResponse)
+	err := c.cc.Invoke(ctx, System_AdminCurrent_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) AdminChangePassword(ctx context.Context, in *AdminPasswordRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminActionResponse)
+	err := c.cc.Invoke(ctx, System_AdminChangePassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *systemClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error) {
@@ -65,6 +125,11 @@ func (c *systemClient) CheckReady(ctx context.Context, in *CheckReadyRequest, op
 // All implementations must embed UnimplementedSystemServer
 // for forward compatibility.
 type SystemServer interface {
+	AdminLogin(context.Context, *AdminLoginRequest) (*AdminAuthResponse, error)
+	AdminRefresh(context.Context, *AdminRefreshRequest) (*AdminAuthResponse, error)
+	AdminLogout(context.Context, *AdminLogoutRequest) (*AdminActionResponse, error)
+	AdminCurrent(context.Context, *AdminCurrentRequest) (*AdminCurrentResponse, error)
+	AdminChangePassword(context.Context, *AdminPasswordRequest) (*AdminActionResponse, error)
 	// Non-sensitive connectivity probe; independent of database readiness.
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	// Checks MySQL and Redis with the caller's deadline.
@@ -79,6 +144,21 @@ type SystemServer interface {
 // pointer dereference when methods are called.
 type UnimplementedSystemServer struct{}
 
+func (UnimplementedSystemServer) AdminLogin(context.Context, *AdminLoginRequest) (*AdminAuthResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminLogin not implemented")
+}
+func (UnimplementedSystemServer) AdminRefresh(context.Context, *AdminRefreshRequest) (*AdminAuthResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminRefresh not implemented")
+}
+func (UnimplementedSystemServer) AdminLogout(context.Context, *AdminLogoutRequest) (*AdminActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminLogout not implemented")
+}
+func (UnimplementedSystemServer) AdminCurrent(context.Context, *AdminCurrentRequest) (*AdminCurrentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminCurrent not implemented")
+}
+func (UnimplementedSystemServer) AdminChangePassword(context.Context, *AdminPasswordRequest) (*AdminActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminChangePassword not implemented")
+}
 func (UnimplementedSystemServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
@@ -104,6 +184,96 @@ func RegisterSystemServer(s grpc.ServiceRegistrar, srv SystemServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&System_ServiceDesc, srv)
+}
+
+func _System_AdminLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminLoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).AdminLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_AdminLogin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).AdminLogin(ctx, req.(*AdminLoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_AdminRefresh_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminRefreshRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).AdminRefresh(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_AdminRefresh_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).AdminRefresh(ctx, req.(*AdminRefreshRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_AdminLogout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminLogoutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).AdminLogout(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_AdminLogout_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).AdminLogout(ctx, req.(*AdminLogoutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_AdminCurrent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminCurrentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).AdminCurrent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_AdminCurrent_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).AdminCurrent(ctx, req.(*AdminCurrentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_AdminChangePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).AdminChangePassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_AdminChangePassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).AdminChangePassword(ctx, req.(*AdminPasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _System_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -149,6 +319,26 @@ var System_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "goseed.system.v1.System",
 	HandlerType: (*SystemServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "AdminLogin",
+			Handler:    _System_AdminLogin_Handler,
+		},
+		{
+			MethodName: "AdminRefresh",
+			Handler:    _System_AdminRefresh_Handler,
+		},
+		{
+			MethodName: "AdminLogout",
+			Handler:    _System_AdminLogout_Handler,
+		},
+		{
+			MethodName: "AdminCurrent",
+			Handler:    _System_AdminCurrent_Handler,
+		},
+		{
+			MethodName: "AdminChangePassword",
+			Handler:    _System_AdminChangePassword_Handler,
+		},
 		{
 			MethodName: "Ping",
 			Handler:    _System_Ping_Handler,

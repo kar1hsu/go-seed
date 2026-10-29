@@ -3,6 +3,57 @@
 
 package types
 
+type ActionData struct {
+	Success bool `json:"success"`
+}
+
+type ActionResponse struct {
+	Code    int        `json:"code"`
+	Message string     `json:"message"`
+	Data    ActionData `json:"data"`
+	TraceId string     `json:"traceId"`
+}
+
+type AdminProfile struct {
+	Id          string `json:"id"`
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
+}
+
+type AuthData struct {
+	AccessToken string       `json:"accessToken"`
+	ExpiresAt   string       `json:"expiresAt"`
+	Admin       AdminProfile `json:"admin"`
+}
+
+type AuthResponse struct {
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    AuthData `json:"data"`
+	TraceId string   `json:"traceId"`
+}
+
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword"`
+}
+
+type CurrentData struct {
+	Admin AdminProfile `json:"admin"`
+}
+
+type CurrentResponse struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    CurrentData `json:"data"`
+	TraceId string      `json:"traceId"`
+}
+
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type PingData struct {
 	Service string `json:"service"`
 	Version string `json:"version"`

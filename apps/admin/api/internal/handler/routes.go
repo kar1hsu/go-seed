@@ -6,6 +6,7 @@ package handler
 import (
 	"net/http"
 
+	auth "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/auth"
 	system "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/system"
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/svc"
 
@@ -13,6 +14,63 @@ import (
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.BrowserOrigin},
+			[]rest.Route{
+				{
+					// Sign in; returns access token and sets HttpOnly refresh cookie
+					Method:  http.MethodPost,
+					Path:    "/login",
+					Handler: auth.LoginHandler(serverCtx),
+				},
+				{
+					// Revoke current session and clear refresh cookie
+					Method:  http.MethodPost,
+					Path:    "/logout",
+					Handler: auth.LogoutHandler(serverCtx),
+				},
+				{
+					// Rotate HttpOnly refresh cookie and access token
+					Method:  http.MethodPost,
+					Path:    "/refresh",
+					Handler: auth.RefreshHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/auth"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					// Read the current administrator; checks live session state
+					Method:  http.MethodGet,
+					Path:    "/me",
+					Handler: auth.CurrentHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/auth"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.BrowserOrigin, serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					// Change password and revoke every administrator session
+					Method:  http.MethodPost,
+					Path:    "/password",
+					Handler: auth.ChangePasswordHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/auth"),
+	)
+
 	server.AddRoutes(
 		[]rest.Route{
 			{

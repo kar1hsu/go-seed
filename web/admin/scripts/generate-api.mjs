@@ -20,10 +20,27 @@ for (const app of ['admin', 'app']) {
       data: { nullable: true, enum: [null] }, traceId: { type: 'string' },
     },
   }
-  for (const item of Object.values(openapi.paths)) {
+  if (app === 'admin') {
+    openapi.components.securitySchemes = {
+      AdminBearer: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      AdminRefresh: { type: 'apiKey', in: 'cookie', name: 'goseed_refresh' },
+    }
+  }
+  for (const [route, item] of Object.entries(openapi.paths)) {
     for (const method of ['get', 'post', 'put', 'patch', 'delete']) {
       const operation = item[method]
       if (!operation) continue
+      if (app === 'admin' && route.startsWith('/admin-api/v1/auth/')) {
+        if (['/admin-api/v1/auth/me', '/admin-api/v1/auth/password'].includes(route)) operation.security = [{ AdminBearer: [] }]
+        if (route.endsWith('/refresh')) operation.security = [{ AdminRefresh: [] }]
+        if (method === 'post') {
+          operation.parameters ||= []
+          operation.parameters.push({ in: 'header', name: 'X-GoSeed-CSRF', required: true, schema: { type: 'string', enum: ['1'] }, description: 'Required for same-origin authentication requests, including CLI clients.' })
+        }
+        if (['/admin-api/v1/auth/login', '/admin-api/v1/auth/refresh'].includes(route)) {
+          operation.responses['200'].headers = { 'Set-Cookie': { schema: { type: 'string' }, description: 'Host-only goseed_refresh cookie; HttpOnly; SameSite=Strict; Path=/admin-api/v1/auth; Secure over HTTPS.' } }
+        }
+      }
       for (const code of [400, 401, 403, 404, 408, 409, 429, 500, 503, 504]) {
         operation.responses[code] = {
           description: 'GoSeed error envelope; code is stable, message is safe for clients.',

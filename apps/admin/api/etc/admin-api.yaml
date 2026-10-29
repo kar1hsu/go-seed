@@ -12,3 +12,15 @@ SystemRPC:
     - ${SYSTEM_RPC_HOST}:${SYSTEM_RPC_PORT}
   NonBlock: true
   Timeout: 2000
+
+MaxBytes: 16384
+Tokens:
+  Secret: "${ADMIN_TOKEN_SECRET}"
+  Issuer: go-seed-admin
+  Audience: go-seed-admin-api
+  AccessTTL: 15m
+RPCCredential:
+  Name: admin-api
+  Secret: "${ADMIN_RPC_SECRET}"
+CookieSecure: ${ADMIN_COOKIE_SECURE}
+AllowedOrigins: "${ADMIN_ALLOWED_ORIGINS}"

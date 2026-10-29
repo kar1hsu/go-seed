@@ -17,3 +17,11 @@ Cache:
   Host: ${REDIS_HOST}:${REDIS_PORT}
   Type: node
   NonBlock: true
+
+Tokens:
+  Secret: "${ADMIN_TOKEN_SECRET}"
+  Issuer: go-seed-admin
+  Audience: go-seed-admin-api
+  AccessTTL: 15m
+RefreshTTL: 168h
+AdminAPISecret: "${ADMIN_RPC_SECRET}"

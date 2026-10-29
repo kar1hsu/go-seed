@@ -23,6 +23,31 @@ func NewSystemServer(svcCtx *svc.ServiceContext) *SystemServer {
 	}
 }
 
+func (s *SystemServer) AdminLogin(ctx context.Context, in *pb.AdminLoginRequest) (*pb.AdminAuthResponse, error) {
+	l := logic.NewAdminLoginLogic(ctx, s.svcCtx)
+	return l.AdminLogin(in)
+}
+
+func (s *SystemServer) AdminRefresh(ctx context.Context, in *pb.AdminRefreshRequest) (*pb.AdminAuthResponse, error) {
+	l := logic.NewAdminRefreshLogic(ctx, s.svcCtx)
+	return l.AdminRefresh(in)
+}
+
+func (s *SystemServer) AdminLogout(ctx context.Context, in *pb.AdminLogoutRequest) (*pb.AdminActionResponse, error) {
+	l := logic.NewAdminLogoutLogic(ctx, s.svcCtx)
+	return l.AdminLogout(in)
+}
+
+func (s *SystemServer) AdminCurrent(ctx context.Context, in *pb.AdminCurrentRequest) (*pb.AdminCurrentResponse, error) {
+	l := logic.NewAdminCurrentLogic(ctx, s.svcCtx)
+	return l.AdminCurrent(in)
+}
+
+func (s *SystemServer) AdminChangePassword(ctx context.Context, in *pb.AdminPasswordRequest) (*pb.AdminActionResponse, error) {
+	l := logic.NewAdminChangePasswordLogic(ctx, s.svcCtx)
+	return l.AdminChangePassword(in)
+}
+
 // Non-sensitive connectivity probe; independent of database readiness.
 func (s *SystemServer) Ping(ctx context.Context, in *pb.PingRequest) (*pb.PingResponse, error) {
 	l := logic.NewPingLogic(ctx, s.svcCtx)

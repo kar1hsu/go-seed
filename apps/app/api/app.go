@@ -7,16 +7,15 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/kar1hsu/go-seed/pkg/xhttp"
-	"github.com/kar1hsu/go-seed/services/system/rpc/pb"
-	"github.com/zeromicro/go-zero/rest/httpx"
 
 	"github.com/kar1hsu/go-seed/apps/app/api/internal/config"
 	"github.com/kar1hsu/go-seed/apps/app/api/internal/handler"
 	"github.com/kar1hsu/go-seed/apps/app/api/internal/svc"
-
+	"github.com/kar1hsu/go-seed/pkg/xhttp"
+	"github.com/kar1hsu/go-seed/services/system/rpc/pb"
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
+	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 var configFile = flag.String("f", "etc/app-api.yaml", "the config file")

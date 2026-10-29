@@ -2,13 +2,12 @@ package logic
 
 import (
 	"context"
-	"github.com/kar1hsu/go-seed/pkg/xerr"
-	"google.golang.org/grpc/codes"
 
+	"github.com/kar1hsu/go-seed/pkg/xerr"
 	"github.com/kar1hsu/go-seed/services/system/rpc/internal/svc"
 	"github.com/kar1hsu/go-seed/services/system/rpc/pb"
-
 	"github.com/zeromicro/go-zero/core/logx"
+	"google.golang.org/grpc/codes"
 )
 
 type CheckReadyLogic struct {

@@ -131,7 +131,7 @@ onMounted(() => {
   <section class="panel system-panel">
     <div class="panel-heading">
       <h2>系统信息</h2>
-      <span class="panel-caption">第一阶段 · 工程骨架</span>
+      <span class="panel-caption">系统概况</span>
     </div>
     <dl class="system-info">
       <div>
@@ -156,11 +156,11 @@ onMounted(() => {
       </div>
       <div>
         <dt>身份认证</dt>
-        <dd>待接入</dd>
+        <dd>管理员会话</dd>
       </div>
     </dl>
     <div class="system-note">
-      当前提供非敏感的服务探测。登录、权限管理和业务模块将在后续阶段接入。
+      管理员登录已接入，可通过右上角账户菜单修改密码或退出登录。
     </div>
   </section>
 </template>
