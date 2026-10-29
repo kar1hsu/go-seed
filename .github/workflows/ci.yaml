@@ -22,8 +22,8 @@ jobs:
       - run: pnpm --dir web/admin install --frozen-lockfile
       - run: make check test build
       - run: go test -race ./pkg/... ./apps/... ./services/...
-      - run: make init infra-up migrate
-      - run: make test-auth
+      - run: make init infra-up migrate bootstrap
+      - run: make test-auth test-rbac
       - name: Real service smoke test
         run: |
           python3 scripts/dev.py > /tmp/goseed-dev.log 2>&1 &
@@ -33,7 +33,7 @@ jobs:
             if curl --fail --silent http://127.0.0.1:8081/readyz > /dev/null; then break; fi
             sleep 1
           done
-          make smoke auth-smoke
+          make smoke auth-smoke rbac-smoke
       - name: Failure logs
         if: failure()
         run: cat /tmp/goseed-dev.log 2>/dev/null || true

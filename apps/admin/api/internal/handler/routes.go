@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	auth "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/auth"
+	management "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/management"
 	system "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/system"
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/svc"
 
@@ -69,6 +70,74 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/admin-api/v1/auth"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					Method:  http.MethodGet,
+					Path:    "/administrators",
+					Handler: management.ListAdministratorsHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/permissions",
+					Handler: management.ListPermissionsHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/roles",
+					Handler: management.ListRolesHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/system"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.BrowserOrigin, serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					Method:  http.MethodPost,
+					Path:    "/administrators",
+					Handler: management.CreateAdministratorHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPatch,
+					Path:    "/administrators/:id",
+					Handler: management.UpdateAdministratorHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPut,
+					Path:    "/administrators/:id/roles",
+					Handler: management.AssignAdministratorRolesHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPost,
+					Path:    "/roles",
+					Handler: management.CreateRoleHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPatch,
+					Path:    "/roles/:id",
+					Handler: management.UpdateRoleHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodDelete,
+					Path:    "/roles/:id",
+					Handler: management.DeleteRoleHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPut,
+					Path:    "/roles/:id/permissions",
+					Handler: management.GrantRoleHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/system"),
 	)
 
 	server.AddRoutes(

@@ -1,6 +1,6 @@
 # 管理员认证
 
-当前范围是管理员登录与会话管理，使用 GORM、MySQL 和 go-zero Redis。业务会员、角色授权、管理员列表和权限菜单尚未接入。
+本文说明管理员登录与会话管理，使用 GORM、MySQL 和 go-zero Redis。管理员列表、角色授权和菜单按钮见 [角色授权](authorization.md)。业务会员尚未接入。
 
 ## 初始化
 
@@ -12,7 +12,7 @@ make bootstrap
 make dev
 ```
 
-`make init` 保留已有 `.env` 值，为空缺的 `ADMIN_TOKEN_SECRET`、`ADMIN_RPC_SECRET` 和 `ADMIN_BOOTSTRAP_PASSWORD` 生成随机值；文件权限为 0600。初始账号为 `admin`，密码在本地 `.env` 中查看。bootstrap 只创建缺失账号，不覆盖密码、显示名或启用状态。
+`make init` 保留已有 `.env` 值，为空缺的 `ADMIN_TOKEN_SECRET`、`ADMIN_RPC_SECRET` 和 `ADMIN_BOOTSTRAP_PASSWORD` 生成随机值；文件权限为 0600。初始账号为 `admin`，密码在本地 `.env` 中查看。bootstrap 只创建缺失账号，不覆盖密码、显示名或启用状态；首次初始化还会授予超级管理员角色，之后不恢复被移除的角色关联。
 
 只使用容器时：
 
@@ -33,7 +33,7 @@ python3 scripts/system.py -username operator disable
 # 容器方式在参数最前添加 --compose
 ```
 
-这些是拥有数据库配置的本地运维命令。禁用操作增加 token version 并撤销全部会话；重新启用账号也不会恢复旧会话。后续管理员管理接口还需实现角色授权检查。
+这些是拥有数据库配置的本地运维命令。禁用操作增加 token version 并撤销全部会话；重新启用账号也不会恢复旧会话。管理员管理接口同时校验角色权限；最后一个启用的超级管理员不能被禁用。
 
 ## 数据与会话
 

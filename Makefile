@@ -4,7 +4,7 @@ COMPOSE := docker compose --env-file .env -p goseed -f deploy/compose/compose.ya
 
 .PHONY: help tools doctor infra-up infra-down dev build-go build check test gen gen-api gen-rpc gen-web verify-gen smoke compose-up compose-down
 help:
-	@echo 'init tools doctor infra-up infra-down migrate bootstrap dev gen check test test-auth build smoke auth-smoke compose-up compose-migrate compose-bootstrap compose-down'
+	@echo 'init tools doctor infra-up infra-down migrate bootstrap dev gen check test test-auth test-rbac sync-resources build smoke auth-smoke rbac-smoke compose-up compose-migrate compose-bootstrap compose-down'
 tools:
 	bash scripts/install-tools.sh
 doctor:
@@ -24,6 +24,7 @@ dev: build-go
 build: build-go
 	pnpm --dir web/admin build
 check:
+	node web/admin/scripts/resources.mjs --check
 	python3 scripts/check.py
 	go vet ./...
 	pnpm --dir web/admin typecheck
@@ -31,6 +32,7 @@ check:
 	$(MAKE) verify-gen
 test:
 	go test ./...
+	pnpm --dir web/admin test
 gen:
 	bash scripts/gen.sh all
 gen-api:
@@ -65,3 +67,13 @@ test-auth:
 .PHONY: auth-smoke
 auth-smoke:
 	python3 scripts/test-auth.py --http
+
+.PHONY: sync-resources compose-sync-resources test-rbac rbac-smoke
+sync-resources:
+	python3 scripts/system.py sync-resources
+compose-sync-resources:
+	python3 scripts/system.py --compose sync-resources
+test-rbac:
+	python3 scripts/test-rbac.py
+rbac-smoke:
+	python3 scripts/test-rbac.py --http

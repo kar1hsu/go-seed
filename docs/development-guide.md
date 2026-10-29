@@ -124,7 +124,7 @@ API client 统一处理基础 URL、超时、错误码、request ID 和 refresh 
 
 ## 开发命令
 
-当前已实现 doctor、infra-up、dev、gen-api、gen-rpc、gen-web、check、test、build、migrate、bootstrap，完整清单与实际行为见根 README。下表也保留后续阶段的设计接口；sync-resources、new-module 尚未实现，不应提前调用。
+当前已实现 doctor、infra-up、dev、gen-api、gen-rpc、gen-web、check、test、build、migrate、bootstrap，完整清单与实际行为见根 README。下表也保留后续阶段的设计接口；sync-resources 已实现；new-module 尚未实现，不应提前调用。
 
 | 命令 | 行为 |
 | --- | --- |
@@ -136,7 +136,7 @@ API client 统一处理基础 URL、超时、错误码、request ID 和 refresh 
 | `make gen-api APP=admin` | 校验并生成选定 API |
 | `make gen-rpc DOMAIN=system` | 生成指定领域 RPC |
 | `make gen-web` | 从契约生成 OpenAPI 与 TypeScript client |
-| `make sync-resources` | 校验并同步权限目录与菜单声明 |
+| `make sync-resources` | 显式同步 system 权限目录，保留普通角色授权；菜单由 gen-web 校验和编译 |
 | `make check` | 格式、静态检查、类型检查及契约一致性 |
 | `make test` | 不依赖外部服务的测试，包含内存 gRPC；真实依赖单独用 `make smoke` |
 | `make build` | 构建各进程与前端 |

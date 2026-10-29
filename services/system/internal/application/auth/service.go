@@ -309,6 +309,9 @@ func (s *Service) Disable(ctx context.Context, username string) error {
 		return storageError(ctx, err)
 	}
 	err = s.store.Transaction(ctx, func(tx *repository.Auth) error {
+		if err := tx.LockPolicy(ctx); err != nil {
+			return err
+		}
 		if _, err := tx.LockAdmin(ctx, a.ID); err != nil {
 			return err
 		}

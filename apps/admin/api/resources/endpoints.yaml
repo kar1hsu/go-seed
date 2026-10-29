@@ -1,0 +1,16 @@
+- {method: get, path: '/admin-api/v1/system/ping', access: public}
+- {method: post, path: '/admin-api/v1/auth/login', access: public}
+- {method: post, path: '/admin-api/v1/auth/refresh', access: cookie}
+- {method: post, path: '/admin-api/v1/auth/logout', access: cookie}
+- {method: get, path: '/admin-api/v1/auth/me', access: session}
+- {method: post, path: '/admin-api/v1/auth/password', access: session}
+- {method: get, path: '/admin-api/v1/system/administrators', permission: system.user.read}
+- {method: post, path: '/admin-api/v1/system/administrators', permission: system.user.create, status: 201}
+- {method: patch, path: '/admin-api/v1/system/administrators/{id}', permission: system.user.update}
+- {method: put, path: '/admin-api/v1/system/administrators/{id}/roles', permission: system.user.assign_role}
+- {method: get, path: '/admin-api/v1/system/roles', permission: system.role.read}
+- {method: post, path: '/admin-api/v1/system/roles', permission: system.role.create, status: 201}
+- {method: patch, path: '/admin-api/v1/system/roles/{id}', permission: system.role.update}
+- {method: put, path: '/admin-api/v1/system/roles/{id}/permissions', permission: system.role.grant}
+- {method: delete, path: '/admin-api/v1/system/roles/{id}', permission: system.role.delete}
+- {method: get, path: '/admin-api/v1/system/permissions', permission: system.role.read}

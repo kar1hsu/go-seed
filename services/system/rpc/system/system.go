@@ -14,21 +14,48 @@ import (
 )
 
 type (
-	AdminActionResponse  = pb.AdminActionResponse
-	AdminAuthResponse    = pb.AdminAuthResponse
-	AdminCurrentRequest  = pb.AdminCurrentRequest
-	AdminCurrentResponse = pb.AdminCurrentResponse
-	AdminLoginRequest    = pb.AdminLoginRequest
-	AdminLogoutRequest   = pb.AdminLogoutRequest
-	AdminPasswordRequest = pb.AdminPasswordRequest
-	AdminProfile         = pb.AdminProfile
-	AdminRefreshRequest  = pb.AdminRefreshRequest
-	CheckReadyRequest    = pb.CheckReadyRequest
-	CheckReadyResponse   = pb.CheckReadyResponse
-	PingRequest          = pb.PingRequest
-	PingResponse         = pb.PingResponse
+	AdminActionResponse             = pb.AdminActionResponse
+	AdminAuthResponse               = pb.AdminAuthResponse
+	AdminCurrentRequest             = pb.AdminCurrentRequest
+	AdminCurrentResponse            = pb.AdminCurrentResponse
+	AdminLoginRequest               = pb.AdminLoginRequest
+	AdminLogoutRequest              = pb.AdminLogoutRequest
+	AdminPasswordRequest            = pb.AdminPasswordRequest
+	AdminProfile                    = pb.AdminProfile
+	AdminRefreshRequest             = pb.AdminRefreshRequest
+	AdministratorRecord             = pb.AdministratorRecord
+	AdministratorResponse           = pb.AdministratorResponse
+	AssignAdministratorRolesRequest = pb.AssignAdministratorRolesRequest
+	CheckReadyRequest               = pb.CheckReadyRequest
+	CheckReadyResponse              = pb.CheckReadyResponse
+	CreateAdministratorRequest      = pb.CreateAdministratorRequest
+	CreateRoleRequest               = pb.CreateRoleRequest
+	DeleteRoleRequest               = pb.DeleteRoleRequest
+	GrantRoleRequest                = pb.GrantRoleRequest
+	ListAdministratorsResponse      = pb.ListAdministratorsResponse
+	ListManagementRequest           = pb.ListManagementRequest
+	ListPermissionsRequest          = pb.ListPermissionsRequest
+	ListPermissionsResponse         = pb.ListPermissionsResponse
+	ListRolesResponse               = pb.ListRolesResponse
+	PermissionRecord                = pb.PermissionRecord
+	PingRequest                     = pb.PingRequest
+	PingResponse                    = pb.PingResponse
+	RoleRecord                      = pb.RoleRecord
+	RoleResponse                    = pb.RoleResponse
+	UpdateAdministratorRequest      = pb.UpdateAdministratorRequest
+	UpdateRoleRequest               = pb.UpdateRoleRequest
 
 	System interface {
+		ListAdministrators(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListAdministratorsResponse, error)
+		CreateAdministrator(ctx context.Context, in *CreateAdministratorRequest, opts ...grpc.CallOption) (*AdministratorResponse, error)
+		UpdateAdministrator(ctx context.Context, in *UpdateAdministratorRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+		AssignAdministratorRoles(ctx context.Context, in *AssignAdministratorRolesRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+		ListRoles(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListRolesResponse, error)
+		CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*RoleResponse, error)
+		UpdateRole(ctx context.Context, in *UpdateRoleRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+		GrantRole(ctx context.Context, in *GrantRoleRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+		DeleteRole(ctx context.Context, in *DeleteRoleRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+		ListPermissions(ctx context.Context, in *ListPermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error)
 		AdminLogin(ctx context.Context, in *AdminLoginRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error)
 		AdminRefresh(ctx context.Context, in *AdminRefreshRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error)
 		AdminLogout(ctx context.Context, in *AdminLogoutRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
@@ -49,6 +76,56 @@ func NewSystem(cli zrpc.Client) System {
 	return &defaultSystem{
 		cli: cli,
 	}
+}
+
+func (m *defaultSystem) ListAdministrators(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListAdministratorsResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.ListAdministrators(ctx, in, opts...)
+}
+
+func (m *defaultSystem) CreateAdministrator(ctx context.Context, in *CreateAdministratorRequest, opts ...grpc.CallOption) (*AdministratorResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.CreateAdministrator(ctx, in, opts...)
+}
+
+func (m *defaultSystem) UpdateAdministrator(ctx context.Context, in *UpdateAdministratorRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.UpdateAdministrator(ctx, in, opts...)
+}
+
+func (m *defaultSystem) AssignAdministratorRoles(ctx context.Context, in *AssignAdministratorRolesRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.AssignAdministratorRoles(ctx, in, opts...)
+}
+
+func (m *defaultSystem) ListRoles(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListRolesResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.ListRoles(ctx, in, opts...)
+}
+
+func (m *defaultSystem) CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*RoleResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.CreateRole(ctx, in, opts...)
+}
+
+func (m *defaultSystem) UpdateRole(ctx context.Context, in *UpdateRoleRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.UpdateRole(ctx, in, opts...)
+}
+
+func (m *defaultSystem) GrantRole(ctx context.Context, in *GrantRoleRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.GrantRole(ctx, in, opts...)
+}
+
+func (m *defaultSystem) DeleteRole(ctx context.Context, in *DeleteRoleRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.DeleteRole(ctx, in, opts...)
+}
+
+func (m *defaultSystem) ListPermissions(ctx context.Context, in *ListPermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.ListPermissions(ctx, in, opts...)
 }
 
 func (m *defaultSystem) AdminLogin(ctx context.Context, in *AdminLoginRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error) {

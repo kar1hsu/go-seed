@@ -11,12 +11,26 @@ message PingResponse {
 message CheckReadyRequest {}
 message CheckReadyResponse {}
 
-message AdminLoginRequest { string username = 1; string password = 2; }
-message AdminRefreshRequest { string refresh_token = 1; }
-message AdminLogoutRequest { string refresh_token = 1; }
+message AdminLoginRequest {
+  string username = 1;
+  string password = 2;
+}
+message AdminRefreshRequest {
+  string refresh_token = 1;
+}
+message AdminLogoutRequest {
+  string refresh_token = 1;
+}
 message AdminCurrentRequest {}
-message AdminPasswordRequest { string current_password = 1; string new_password = 2; }
-message AdminProfile { string id = 1; string username = 2; string display_name = 3; }
+message AdminPasswordRequest {
+  string current_password = 1;
+  string new_password = 2;
+}
+message AdminProfile {
+  string id = 1;
+  string username = 2;
+  string display_name = 3;
+}
 message AdminAuthResponse {
   string access_token = 1;
   string expires_at = 2;
@@ -24,10 +38,120 @@ message AdminAuthResponse {
   string refresh_token = 4; // API sets HttpOnly cookie; never return this field in HTTP JSON.
   string refresh_expires_at = 5;
 }
-message AdminCurrentResponse { AdminProfile admin = 1; }
+message AdminCurrentResponse {
+  AdminProfile admin = 1;
+  repeated string permissions = 2;
+  repeated string roles = 3;
+  string policy_version = 4;
+  bool super_admin = 5;
+}
 message AdminActionResponse {}
 
+
+message ListManagementRequest {
+  int64 page = 1;
+  int64 page_size = 2;
+  string keyword = 3;
+  string enabled = 4;
+}
+message AdministratorRecord {
+  string id = 1;
+  string username = 2;
+  string display_name = 3;
+  bool enabled = 4;
+  repeated string role_ids = 5;
+  repeated string role_names = 6;
+  string revision = 7;
+  string created_at = 8;
+  bool manageable = 9;
+}
+message ListAdministratorsResponse {
+  repeated AdministratorRecord items = 1;
+  int64 total = 2;
+}
+message CreateAdministratorRequest {
+  string username = 1;
+  string display_name = 2;
+  string password = 3;
+}
+message AdministratorResponse {
+  AdministratorRecord admin = 1;
+}
+message UpdateAdministratorRequest {
+  string id = 1;
+  string display_name = 2;
+  bool enabled = 3;
+  string revision = 4;
+}
+message AssignAdministratorRolesRequest {
+  string id = 1;
+  repeated string role_ids = 2;
+  string revision = 3;
+}
+message RoleRecord {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  bool enabled = 5;
+  bool built_in = 6;
+  repeated string permissions = 7;
+  int64 member_count = 8;
+  string revision = 9;
+  bool manageable = 10;
+  bool assignable = 11;
+}
+message ListRolesResponse {
+  repeated RoleRecord items = 1;
+  int64 total = 2;
+}
+message CreateRoleRequest {
+  string code = 1;
+  string name = 2;
+  string description = 3;
+}
+message RoleResponse {
+  RoleRecord role = 1;
+}
+message UpdateRoleRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  bool enabled = 4;
+  string revision = 5;
+}
+message GrantRoleRequest {
+  string id = 1;
+  repeated string permissions = 2;
+  string revision = 3;
+}
+message DeleteRoleRequest {
+  string id = 1;
+  string revision = 2;
+}
+message PermissionRecord {
+  string code = 1;
+  string name = 2;
+  string group = 3;
+  string kind = 4;
+  repeated string requires = 5;
+}
+message ListPermissionsRequest {}
+message ListPermissionsResponse {
+  repeated PermissionRecord items = 1;
+}
+
 service System {
+  rpc ListAdministrators(ListManagementRequest) returns (ListAdministratorsResponse);
+  rpc CreateAdministrator(CreateAdministratorRequest) returns (AdministratorResponse);
+  rpc UpdateAdministrator(UpdateAdministratorRequest) returns (AdminActionResponse);
+  rpc AssignAdministratorRoles(AssignAdministratorRolesRequest) returns (AdminActionResponse);
+  rpc ListRoles(ListManagementRequest) returns (ListRolesResponse);
+  rpc CreateRole(CreateRoleRequest) returns (RoleResponse);
+  rpc UpdateRole(UpdateRoleRequest) returns (AdminActionResponse);
+  rpc GrantRole(GrantRoleRequest) returns (AdminActionResponse);
+  rpc DeleteRole(DeleteRoleRequest) returns (AdminActionResponse);
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse);
   rpc AdminLogin(AdminLoginRequest) returns (AdminAuthResponse);
   rpc AdminRefresh(AdminRefreshRequest) returns (AdminAuthResponse);
   rpc AdminLogout(AdminLogoutRequest) returns (AdminActionResponse);

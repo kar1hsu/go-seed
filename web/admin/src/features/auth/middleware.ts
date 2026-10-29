@@ -37,11 +37,17 @@ export function authMiddleware(
     onResponse({ request, response }) {
       if (
         response.status === 401 &&
+        request.headers.get('Authorization') === `Bearer ${auth.accessToken}` &&
         !publicAuth.has(new URL(request.url).pathname)
       ) {
         auth.clear()
         onExpired()
       }
+      if (
+        response.status === 403 &&
+        new URL(request.url).pathname !== '/admin-api/v1/auth/me'
+      )
+        void auth.current().catch(() => {})
       return response
     },
   }

@@ -20,6 +20,45 @@ type AdminProfile struct {
 	DisplayName string `json:"displayName"`
 }
 
+type AdministratorListData struct {
+	Items    []AdministratorRecord `json:"items"`
+	Total    int64                 `json:"total"`
+	Page     int64                 `json:"page"`
+	PageSize int64                 `json:"pageSize"`
+}
+
+type AdministratorListResponse struct {
+	Code    int                   `json:"code"`
+	Message string                `json:"message"`
+	Data    AdministratorListData `json:"data"`
+	TraceId string                `json:"traceId"`
+}
+
+type AdministratorRecord struct {
+	Id          string   `json:"id"`
+	Username    string   `json:"username"`
+	DisplayName string   `json:"displayName"`
+	Enabled     bool     `json:"enabled"`
+	RoleIds     []string `json:"roleIds"`
+	RoleNames   []string `json:"roleNames"`
+	Revision    string   `json:"revision"`
+	CreatedAt   string   `json:"createdAt"`
+	Manageable  bool     `json:"manageable"`
+}
+
+type AdministratorResponse struct {
+	Code    int                 `json:"code"`
+	Message string              `json:"message"`
+	Data    AdministratorRecord `json:"data"`
+	TraceId string              `json:"traceId"`
+}
+
+type AssignAdministratorRolesRequest struct {
+	Id       string   `path:"id"`
+	RoleIds  []string `json:"roleIds"`
+	Revision string   `json:"revision"`
+}
+
 type AuthData struct {
 	AccessToken string       `json:"accessToken"`
 	ExpiresAt   string       `json:"expiresAt"`
@@ -38,8 +77,24 @@ type ChangePasswordRequest struct {
 	NewPassword     string `json:"newPassword"`
 }
 
+type CreateAdministratorRequest struct {
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
+	Password    string `json:"password"`
+}
+
+type CreateRoleRequest struct {
+	Code        string `json:"code"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 type CurrentData struct {
-	Admin AdminProfile `json:"admin"`
+	Admin         AdminProfile `json:"admin"`
+	Permissions   []string     `json:"permissions"`
+	Roles         []string     `json:"roles"`
+	PolicyVersion string       `json:"policyVersion"`
+	SuperAdmin    bool         `json:"superAdmin"`
 }
 
 type CurrentResponse struct {
@@ -49,9 +104,46 @@ type CurrentResponse struct {
 	TraceId string      `json:"traceId"`
 }
 
+type DeleteRoleRequest struct {
+	Id       string `path:"id"`
+	Revision string `form:"revision"`
+}
+
+type GrantRoleRequest struct {
+	Id          string   `path:"id"`
+	Permissions []string `json:"permissions"`
+	Revision    string   `json:"revision"`
+}
+
+type ListManagementRequest struct {
+	Page     int64  `form:"page,default=1,range=[1:100000]"`
+	PageSize int64  `form:"pageSize,default=20,range=[1:100]"`
+	Keyword  string `form:"keyword,optional"`
+	Enabled  string `form:"enabled,default=all,options=all|enabled|disabled"`
+}
+
 type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type PermissionListData struct {
+	Items []PermissionRecord `json:"items"`
+}
+
+type PermissionListResponse struct {
+	Code    int                `json:"code"`
+	Message string             `json:"message"`
+	Data    PermissionListData `json:"data"`
+	TraceId string             `json:"traceId"`
+}
+
+type PermissionRecord struct {
+	Code     string   `json:"code"`
+	Name     string   `json:"name"`
+	Group    string   `json:"group"`
+	Kind     string   `json:"kind"`
+	Requires []string `json:"requires"`
 }
 
 type PingData struct {
@@ -65,4 +157,54 @@ type PingResponse struct {
 	Message string   `json:"message"`
 	Data    PingData `json:"data"`
 	TraceId string   `json:"traceId"`
+}
+
+type RoleListData struct {
+	Items    []RoleRecord `json:"items"`
+	Total    int64        `json:"total"`
+	Page     int64        `json:"page"`
+	PageSize int64        `json:"pageSize"`
+}
+
+type RoleListResponse struct {
+	Code    int          `json:"code"`
+	Message string       `json:"message"`
+	Data    RoleListData `json:"data"`
+	TraceId string       `json:"traceId"`
+}
+
+type RoleRecord struct {
+	Id          string   `json:"id"`
+	Code        string   `json:"code"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Enabled     bool     `json:"enabled"`
+	BuiltIn     bool     `json:"builtIn"`
+	Permissions []string `json:"permissions"`
+	MemberCount int64    `json:"memberCount"`
+	Revision    string   `json:"revision"`
+	Manageable  bool     `json:"manageable"`
+	Assignable  bool     `json:"assignable"`
+}
+
+type RoleResponse struct {
+	Code    int        `json:"code"`
+	Message string     `json:"message"`
+	Data    RoleRecord `json:"data"`
+	TraceId string     `json:"traceId"`
+}
+
+type UpdateAdministratorRequest struct {
+	Id          string `path:"id"`
+	DisplayName string `json:"displayName"`
+	Enabled     bool   `json:"enabled"`
+	Revision    string `json:"revision"`
+}
+
+type UpdateRoleRequest struct {
+	Id          string `path:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Enabled     bool   `json:"enabled"`
+	Revision    string `json:"revision"`
 }

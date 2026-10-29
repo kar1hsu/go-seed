@@ -11,6 +11,8 @@ import (
 	"github.com/kar1hsu/go-seed/pkg/dbx"
 	"github.com/kar1hsu/go-seed/pkg/identity"
 	"github.com/kar1hsu/go-seed/services/system/internal/application/auth"
+	"github.com/kar1hsu/go-seed/services/system/internal/application/management"
+	"github.com/kar1hsu/go-seed/services/system/internal/authorization"
 	"github.com/kar1hsu/go-seed/services/system/internal/repository"
 	"github.com/kar1hsu/go-seed/services/system/migrations"
 	"github.com/zeromicro/go-zero/core/conf"
@@ -21,8 +23,8 @@ func main() {
 	username := flag.String("username", "admin", "initial administrator username")
 	displayName := flag.String("name", "管理员", "initial display name")
 	flag.Parse()
-	if flag.NArg() != 1 || (flag.Arg(0) != "migrate" && flag.Arg(0) != "bootstrap" && flag.Arg(0) != "disable") {
-		log.Fatal("usage: system [-f config] [-username admin] [-name display] migrate|bootstrap|disable")
+	if flag.NArg() != 1 || (flag.Arg(0) != "migrate" && flag.Arg(0) != "bootstrap" && flag.Arg(0) != "disable" && flag.Arg(0) != "sync-resources") {
+		log.Fatal("usage: system [-f config] [-username admin] [-name display] migrate|bootstrap|disable|sync-resources")
 	}
 	var c struct {
 		MySQL      dbx.MySQLConfig
@@ -52,6 +54,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	manager, err := management.New(repository.NewRBAC(db), authorization.New(tokens))
+	if err != nil {
+		log.Fatal(err)
+	}
+	if flag.Arg(0) == "sync-resources" {
+		if err = manager.SyncResources(ctx); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Permission catalog synchronized; existing grants preserved.")
+		return
+	}
 	service, err := auth.New(repository.NewAuth(db), tokens, c.RefreshTTL, func(context.Context, string) error { return fmt.Errorf("login unavailable in bootstrap command") })
 	if err != nil {
 		log.Fatal(err)
@@ -66,6 +79,16 @@ func main() {
 	created, err := service.Bootstrap(ctx, *username, os.Getenv("ADMIN_BOOTSTRAP_PASSWORD"), *displayName)
 	if err != nil {
 		log.Fatal("bootstrap failed: check database and username/password requirements (12–72 password bytes)")
+	}
+	if err = manager.SyncResources(ctx); err != nil {
+		log.Fatal(err)
+	}
+	initialized, err := manager.BootstrapRoot(ctx, *username)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if initialized {
+		fmt.Println("Initial super administrator role assigned.")
 	}
 	if created {
 		fmt.Printf("Administrator %s created.\n", *username)

@@ -23,6 +23,56 @@ func NewSystemServer(svcCtx *svc.ServiceContext) *SystemServer {
 	}
 }
 
+func (s *SystemServer) ListAdministrators(ctx context.Context, in *pb.ListManagementRequest) (*pb.ListAdministratorsResponse, error) {
+	l := logic.NewListAdministratorsLogic(ctx, s.svcCtx)
+	return l.ListAdministrators(in)
+}
+
+func (s *SystemServer) CreateAdministrator(ctx context.Context, in *pb.CreateAdministratorRequest) (*pb.AdministratorResponse, error) {
+	l := logic.NewCreateAdministratorLogic(ctx, s.svcCtx)
+	return l.CreateAdministrator(in)
+}
+
+func (s *SystemServer) UpdateAdministrator(ctx context.Context, in *pb.UpdateAdministratorRequest) (*pb.AdminActionResponse, error) {
+	l := logic.NewUpdateAdministratorLogic(ctx, s.svcCtx)
+	return l.UpdateAdministrator(in)
+}
+
+func (s *SystemServer) AssignAdministratorRoles(ctx context.Context, in *pb.AssignAdministratorRolesRequest) (*pb.AdminActionResponse, error) {
+	l := logic.NewAssignAdministratorRolesLogic(ctx, s.svcCtx)
+	return l.AssignAdministratorRoles(in)
+}
+
+func (s *SystemServer) ListRoles(ctx context.Context, in *pb.ListManagementRequest) (*pb.ListRolesResponse, error) {
+	l := logic.NewListRolesLogic(ctx, s.svcCtx)
+	return l.ListRoles(in)
+}
+
+func (s *SystemServer) CreateRole(ctx context.Context, in *pb.CreateRoleRequest) (*pb.RoleResponse, error) {
+	l := logic.NewCreateRoleLogic(ctx, s.svcCtx)
+	return l.CreateRole(in)
+}
+
+func (s *SystemServer) UpdateRole(ctx context.Context, in *pb.UpdateRoleRequest) (*pb.AdminActionResponse, error) {
+	l := logic.NewUpdateRoleLogic(ctx, s.svcCtx)
+	return l.UpdateRole(in)
+}
+
+func (s *SystemServer) GrantRole(ctx context.Context, in *pb.GrantRoleRequest) (*pb.AdminActionResponse, error) {
+	l := logic.NewGrantRoleLogic(ctx, s.svcCtx)
+	return l.GrantRole(in)
+}
+
+func (s *SystemServer) DeleteRole(ctx context.Context, in *pb.DeleteRoleRequest) (*pb.AdminActionResponse, error) {
+	l := logic.NewDeleteRoleLogic(ctx, s.svcCtx)
+	return l.DeleteRole(in)
+}
+
+func (s *SystemServer) ListPermissions(ctx context.Context, in *pb.ListPermissionsRequest) (*pb.ListPermissionsResponse, error) {
+	l := logic.NewListPermissionsLogic(ctx, s.svcCtx)
+	return l.ListPermissions(in)
+}
+
 func (s *SystemServer) AdminLogin(ctx context.Context, in *pb.AdminLoginRequest) (*pb.AdminAuthResponse, error) {
 	l := logic.NewAdminLoginLogic(ctx, s.svcCtx)
 	return l.AdminLogin(in)

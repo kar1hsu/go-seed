@@ -23,3 +23,7 @@ grpcurl -plaintext -d '{}' 127.0.0.1:19001 goseed.system.v1.System/CheckReady
 `AdminLogin`、`AdminRefresh`、`AdminLogout`、`AdminCurrent` 和 `AdminChangePassword` 仅允许已配置的 `admin-api` 服务身份调用。`AdminCurrent`、`AdminChangePassword` 还校验原始管理员 token 和数据库当前会话状态；调用方传入的用户 ID 或角色不能替代校验。
 
 密码和 refresh token 字段只在认证链路内部使用，不记录 RPC 请求正文。原始 refresh token 由 API 转为 HttpOnly Cookie。公共 Ping/CheckReady 不返回认证或业务数据，仍允许探测客户端访问。
+
+## 管理用例
+
+`ListAdministrators`、`CreateAdministrator`、`UpdateAdministrator`、`AssignAdministratorRoles`、`ListRoles`、`CreateRole`、`UpdateRole`、`GrantRole`、`DeleteRole` 和 `ListPermissions` 同样只允许 admin-api 服务身份调用，再由 management 用例校验原始用户 token、当前会话、固定的权限键和目标授权范围。无权限为 PermissionDenied，编辑版本过期为 Aborted，已分配成员或最后超级管理员冲突为 FailedPrecondition。完整接口、权限与同步规则见 [角色授权](../../../docs/authorization.md)。

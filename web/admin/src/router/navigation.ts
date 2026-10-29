@@ -4,17 +4,14 @@ import {
   Document,
   InfoFilled,
   Lock,
+  User,
+  Key,
 } from '@element-plus/icons-vue'
-
-export const navigation = [
-  { path: '/', title: '工作台', icon: DataBoard, group: '概览' },
-  { path: '/monitor', title: '服务状态', icon: Monitor, group: '概览' },
-  { path: '/api-docs', title: '接口文档', icon: Document, group: '开发工具' },
-  {
-    path: '/about',
-    title: '项目信息',
-    icon: InfoFilled,
-    group: '开发工具',
-  },
-  { path: '/account/security', title: '账户安全', icon: Lock, group: '账户' },
-]
+import { menuResources } from './resources.generated'
+const icons = { DataBoard, Monitor, Document, InfoFilled, Lock, User, Key }
+export const navigation = menuResources.map((item) => ({
+  ...item,
+  icon: icons[item.icon],
+  permission: 'permission' in item ? item.permission : undefined,
+  hidden: 'hidden' in item && item.hidden,
+}))

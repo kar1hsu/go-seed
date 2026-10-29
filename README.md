@@ -2,7 +2,7 @@
 
 GoSeed 是基于 go-zero 的项目开发底座：单仓库、单 Go module，管理端 API、业务端 API 与领域 RPC 独立运行，管理后台采用 Vue 3。
 
-**当前已完成工程骨架和管理员登录闭环。** 提供管理员初始化、登录、刷新、退出、修改密码，版本化 SQL 迁移，API → RPC 探测，GORM/MySQL 与 Redis 就绪检查，以及 Vue 管理后台。角色权限、管理员列表、业务表、worker 与 scheduler 按后续阶段接入。
+**当前已完成工程骨架、管理员认证与角色授权。** 提供管理员列表/新增/编辑/启停/角色分配，角色管理与菜单按钮授权，版本化 SQL 迁移，API → RPC 探测，GORM/MySQL 与 Redis 就绪检查。字典、配置、审计、业务样板及 Asynq worker/scheduler 按后续阶段接入。
 
 ## 本地开发
 
@@ -20,7 +20,7 @@ pnpm --dir web/admin install --frozen-lockfile
 make doctor
 make infra-up                      # 仅启动 GoSeed 自己的 MySQL / Redis
 make migrate                       # 显式执行 system SQL 迁移
-make bootstrap                     # 创建 admin；已有账号保持不变
+make bootstrap                     # 初始化 admin 与超级管理员角色；已有密码保持不变
 make dev                           # 编译并启动三个 Go 进程和 Vite；Ctrl+C 统一退出
 ```
 
@@ -58,7 +58,7 @@ make smoke                         # 主机有 Python 时运行
 make compose-down                  # 停容器，保留命名卷
 ```
 
-容器模式与 `make dev` 使用相同的 API 端口，切换前先停止另一种运行方式。Compose 是开发/参考配置；生产交付需配置 TLS、Secure Cookie、准确的允许来源及密钥管理。管理员认证和逐方法 RPC 服务身份校验已接入，角色权限仍在后续阶段。RPC 端口不发布到容器宿主机，Nginx 提供同源入口。
+容器模式与 `make dev` 使用相同的 API 端口，切换前先停止另一种运行方式。Compose 是开发/参考配置；生产交付需配置 TLS、Secure Cookie、准确的允许来源及密钥管理。管理员认证、逐方法 RPC 服务身份校验和角色权限已接入。RPC 端口不发布到容器宿主机，Nginx 提供同源入口。
 
 ## 工程命令
 
@@ -67,13 +67,15 @@ make compose-down                  # 停容器，保留命名卷
 | `make init` | 创建本地配置和随机认证凭证，保留已有值 |
 | `make migrate` / `make bootstrap` | 迁移 system 数据库 / 幂等创建初始管理员 |
 | `make test-auth` / `make auth-smoke` | MySQL 认证并发测试 / 运行中 HTTP 登录链路 |
+| `make sync-resources` | 同步权限目录，保留角色授权和成员关系 |
+| `make test-rbac` / `make rbac-smoke` | 独立临时库权限并发测试 / 运行中 HTTP 管理链路 |
 | `make gen` | 生成两份 API、RPC、OpenAPI 3 与管理端 TypeScript 类型 |
 | `make gen-api APP=admin` | 从 `.api` 生成指定入口，保留手写骨架 |
 | `make gen-rpc DOMAIN=system` | 从 `.proto` 生成 system RPC |
-| `make gen-web` | 更新 Swagger/OpenAPI 与前端类型 |
+| `make gen-web` | 校验权限/菜单声明，更新 OpenAPI、前端类型及菜单资源 |
 | `make verify-gen` | 在临时副本验证重复生成一致、新增契约保留手写实现且可编译 |
 | `make check` | 格式、依赖边界、文档链接、vet、前端类型/格式及生成一致性 |
-| `make test` | 不依赖外部服务的 Go 测试（包含内存 gRPC 链路） |
+| `make test` | 不依赖外部服务的 Go 测试（包含内存 gRPC）及前端会话/权限竞态测试 |
 | `make build` | 分别构建三个服务、probe 与管理端静态资源 |
 | `make smoke` | 验证已经运行的真实 API/RPC/MySQL/Redis 链路 |
 
@@ -102,7 +104,9 @@ Go module 固定为 `github.com/kar1hsu/go-seed`。运行时使用 go-zero **1.1
 | [目录规范](docs/directory-structure.md) | 依赖边界与生成文件所有权 |
 | [开发约定](docs/development-guide.md) | 契约、错误、开发与检查流程 |
 | [实施路线](docs/roadmap.md) | 当前进度与后续阶段 |
+| [角色授权](docs/authorization.md) | 管理员、角色、菜单按钮、版本一致性与验证 |
 | [管理员认证](docs/authentication.md) | 初始化、会话、Cookie、接口和验收 |
+| [权限阶段验证](docs/phase-two-validation.md) | 本批检查、权限边界与浏览器验收 |
 | [第一阶段验证](docs/phase-one-validation.md) | 已执行的检查与当前边界 |
 | [AI 开发配置](docs/ai-development.md) | 官方资料版本、发现与升级方式 |
 | [管理 API](apps/admin/api/README.md) / [业务 API](apps/app/api/README.md) / [系统服务](services/system/README.md) | 运行和接口说明 |

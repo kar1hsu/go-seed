@@ -20,7 +20,9 @@ export function authMessage(error: unknown): string {
     const messages: Record<number, string> = {
       100400: '输入信息不符合要求，请检查后重试',
       100401: '账号或密码不正确，或登录已失效',
-      100403: '当前请求未被允许，请检查访问地址',
+      100403: '没有此操作的权限，或目标超出您的管理范围',
+      100404: '记录不存在，请刷新列表',
+      100409: '数据已变更、名称重复或当前状态不允许此操作，请刷新后重试',
       100429: '操作过于频繁，请稍后再试',
       100503: '服务暂时不可用，请稍后重试',
       100504: '服务响应超时，请重试',
@@ -32,19 +34,32 @@ export function authMessage(error: unknown): string {
 
 export const useAuthStore = defineStore('auth', () => {
   const admin = ref<Admin | null>(null)
+  const permissions = ref<string[]>([])
+  const roles = ref<string[]>([])
+  const policyVersion = ref('')
+  const superAdmin = ref(false)
+  const has = (permission?: string) =>
+    !permission || permissions.value.includes(permission)
   const accessToken = ref('')
   const expiresAt = ref(0)
   const initialized = ref(false)
   const connectionError = ref('')
+  let sessionEpoch = 0
   let refreshPromise: Promise<boolean> | null = null
   let channel: BroadcastChannel | null = null
 
   function clear() {
+    sessionEpoch++
     admin.value = null
+    permissions.value = []
+    roles.value = []
+    policyVersion.value = ''
+    superAdmin.value = false
     accessToken.value = ''
     expiresAt.value = 0
   }
   function setSession(data: AuthData) {
+    sessionEpoch++
     admin.value = data.admin
     accessToken.value = data.accessToken
     expiresAt.value = Date.parse(data.expiresAt)
@@ -52,16 +67,35 @@ export const useAuthStore = defineStore('auth', () => {
     connectionError.value = ''
   }
   function sync(onLogout: () => void) {
-    if (typeof BroadcastChannel === 'undefined') return () => {}
-    channel = new BroadcastChannel('goseed-admin-session')
-    channel.onmessage = (event) => {
-      if (event.data === 'logout') {
-        clear()
-        initialized.value = true
-        onLogout()
+    if (typeof BroadcastChannel !== 'undefined')
+      channel = new BroadcastChannel('goseed-admin-session')
+    if (channel)
+      channel.onmessage = (event) => {
+        if (event.data === 'permissions') void reconcile()
+        if (event.data === 'logout') {
+          clear()
+          initialized.value = true
+          onLogout()
+        }
+      }
+    async function reconcile() {
+      if (!admin.value || document.visibilityState !== 'visible') return
+      try {
+        await current()
+      } catch (error) {
+        if (error instanceof APIError && error.code === 100401) {
+          clear()
+          onLogout()
+        }
       }
     }
+    const timer = window.setInterval(reconcile, 30_000)
+    window.addEventListener('focus', reconcile)
+    document.addEventListener('visibilitychange', reconcile)
     return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('focus', reconcile)
+      document.removeEventListener('visibilitychange', reconcile)
       channel?.close()
       channel = null
     }
@@ -128,14 +162,35 @@ export const useAuthStore = defineStore('auth', () => {
     })
   }
   async function current() {
-    const { data, error, response } = await api.GET('/admin-api/v1/auth/me')
+    const token = await ensureAccess()
+    const epoch = sessionEpoch
+    const { data, error, response } = await api.GET('/admin-api/v1/auth/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    // A delayed poll must not restore a signed-out session or overwrite a newer login.
+    if (epoch !== sessionEpoch || token !== accessToken.value) return
     if (!response.ok || error || !data)
       throw new APIError(
         error?.message || '会话已失效',
         error?.code,
         error?.traceId,
       )
+    if (
+      policyVersion.value &&
+      BigInt(data.data.policyVersion) < BigInt(policyVersion.value)
+    )
+      return
     admin.value = data.data.admin
+    // Keep identity stable on unchanged polls so open forms are not discarded.
+    if (permissions.value.join('\n') !== data.data.permissions.join('\n'))
+      permissions.value = data.data.permissions
+    roles.value = data.data.roles
+    policyVersion.value = data.data.policyVersion
+    superAdmin.value = data.data.superAdmin
+  }
+  async function permissionsChanged() {
+    channel?.postMessage('permissions')
+    await current()
   }
   async function logout() {
     await cookieOperation(async () => {
@@ -175,6 +230,12 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     admin,
     accessToken,
+    permissions,
+    roles,
+    policyVersion,
+    superAdmin,
+    has,
+    permissionsChanged,
     initialized,
     connectionError,
     clear,

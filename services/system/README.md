@@ -1,6 +1,6 @@
 # System 领域服务
 
-system 领域实现独立的 `system-rpc`、GORM MySQL 连接池和 Redis 客户端。`internal/application/health` 持有依赖就绪用例，`internal/application/auth` 持有管理员认证与会话用例，RPC logic 负责协议适配。认证表使用版本化 SQL 迁移；角色、权限与任务业务按后续阶段接入。
+system 领域实现独立的 `system-rpc`、GORM MySQL 连接池和 Redis 客户端。`internal/application/health` 持有依赖就绪用例，`internal/application/auth` 持有管理员认证与会话用例，RPC logic 负责协议适配。`internal/application/management` 实现管理员与角色管理，`internal/authorization` 从关系表和主库版本构建 Casbin 快照。认证与权限表使用版本化 SQL 迁移，异步任务按后续阶段接入。
 
 从仓库根目录按 [README](../../README.md) 启动。单独启动时先注入 `.env` 环境变量：
 
@@ -19,4 +19,4 @@ bin/probe -rpc 127.0.0.1:19001 -ready   # 加上 MySQL/Redis 检查
 
 ## 管理员认证与领域命令
 
-system 领域拥有管理员、会话、refresh token 摘要三张表。`make migrate` 显式运行 goose SQL 迁移；`make bootstrap` 幂等创建初始管理员。进程启动不执行 AutoMigrate。生命周期、配置和命令见 [管理员认证](../../docs/authentication.md)。
+system 领域拥有管理员、会话、refresh token 摘要三张表。`make migrate` 显式运行 goose SQL 迁移；`make bootstrap` 幂等创建初始管理员。进程启动不执行 AutoMigrate。生命周期、配置和命令见 [管理员认证](../../docs/authentication.md) 与 [角色授权](../../docs/authorization.md)。

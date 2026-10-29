@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 
 root = Path(__file__).resolve().parents[1]
-areas = ['apps', 'services', 'pkg', 'cmd', 'templates', 'docs/openapi', 'web/admin/src/api/generated']
+areas = ['apps', 'services', 'pkg', 'cmd', 'templates', 'docs/openapi', 'web/admin/src/api/generated', 'web/admin/src/router']
 def snapshot(base):
     return {str(p.relative_to(base)): hashlib.sha256(p.read_bytes()).hexdigest()
             for area in areas for p in (base/area).rglob('*') if p.is_file()}
@@ -35,6 +35,8 @@ with tempfile.TemporaryDirectory(prefix='goseed-gen-') as temporary:
     handwritten = {k:v for k,v in after.items() if k.endswith('.go') and ('/logic/' in k or '/svc/' in k or '/config/' in k or '/handler/' in k and not k.endswith('/routes.go') or k in ['apps/admin/api/admin.go','apps/app/api/app.go','services/system/rpc/system.go'])}
     with (target/'apps/admin/api/desc/system/ping.api').open('a') as output:
         output.write('\ntype GenerationProbeRequest { Value string `json:"value"` }\n@server(prefix: /admin-api/v1\n group: generation)\nservice admin-api {\n @handler GenerationProbe\n post /generation-probe (GenerationProbeRequest) returns (PingResponse)\n}\n')
+    with (target/'apps/admin/api/resources/endpoints.yaml').open('a') as output:
+        output.write('- {method: post, path: /admin-api/v1/generation-probe, access: public}\n')
     proto = target/'services/system/rpc/system.proto'
     proto.write_text(proto.read_text().replace('service System {','service System {\n rpc GenerationProbe(PingRequest) returns (PingResponse);'))
     run(['bash','scripts/gen.sh','all'], target)

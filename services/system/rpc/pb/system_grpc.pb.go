@@ -19,19 +19,39 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	System_AdminLogin_FullMethodName          = "/goseed.system.v1.System/AdminLogin"
-	System_AdminRefresh_FullMethodName        = "/goseed.system.v1.System/AdminRefresh"
-	System_AdminLogout_FullMethodName         = "/goseed.system.v1.System/AdminLogout"
-	System_AdminCurrent_FullMethodName        = "/goseed.system.v1.System/AdminCurrent"
-	System_AdminChangePassword_FullMethodName = "/goseed.system.v1.System/AdminChangePassword"
-	System_Ping_FullMethodName                = "/goseed.system.v1.System/Ping"
-	System_CheckReady_FullMethodName          = "/goseed.system.v1.System/CheckReady"
+	System_ListAdministrators_FullMethodName       = "/goseed.system.v1.System/ListAdministrators"
+	System_CreateAdministrator_FullMethodName      = "/goseed.system.v1.System/CreateAdministrator"
+	System_UpdateAdministrator_FullMethodName      = "/goseed.system.v1.System/UpdateAdministrator"
+	System_AssignAdministratorRoles_FullMethodName = "/goseed.system.v1.System/AssignAdministratorRoles"
+	System_ListRoles_FullMethodName                = "/goseed.system.v1.System/ListRoles"
+	System_CreateRole_FullMethodName               = "/goseed.system.v1.System/CreateRole"
+	System_UpdateRole_FullMethodName               = "/goseed.system.v1.System/UpdateRole"
+	System_GrantRole_FullMethodName                = "/goseed.system.v1.System/GrantRole"
+	System_DeleteRole_FullMethodName               = "/goseed.system.v1.System/DeleteRole"
+	System_ListPermissions_FullMethodName          = "/goseed.system.v1.System/ListPermissions"
+	System_AdminLogin_FullMethodName               = "/goseed.system.v1.System/AdminLogin"
+	System_AdminRefresh_FullMethodName             = "/goseed.system.v1.System/AdminRefresh"
+	System_AdminLogout_FullMethodName              = "/goseed.system.v1.System/AdminLogout"
+	System_AdminCurrent_FullMethodName             = "/goseed.system.v1.System/AdminCurrent"
+	System_AdminChangePassword_FullMethodName      = "/goseed.system.v1.System/AdminChangePassword"
+	System_Ping_FullMethodName                     = "/goseed.system.v1.System/Ping"
+	System_CheckReady_FullMethodName               = "/goseed.system.v1.System/CheckReady"
 )
 
 // SystemClient is the client API for System service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SystemClient interface {
+	ListAdministrators(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListAdministratorsResponse, error)
+	CreateAdministrator(ctx context.Context, in *CreateAdministratorRequest, opts ...grpc.CallOption) (*AdministratorResponse, error)
+	UpdateAdministrator(ctx context.Context, in *UpdateAdministratorRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+	AssignAdministratorRoles(ctx context.Context, in *AssignAdministratorRolesRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+	ListRoles(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListRolesResponse, error)
+	CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*RoleResponse, error)
+	UpdateRole(ctx context.Context, in *UpdateRoleRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+	GrantRole(ctx context.Context, in *GrantRoleRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+	DeleteRole(ctx context.Context, in *DeleteRoleRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+	ListPermissions(ctx context.Context, in *ListPermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error)
 	AdminLogin(ctx context.Context, in *AdminLoginRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error)
 	AdminRefresh(ctx context.Context, in *AdminRefreshRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error)
 	AdminLogout(ctx context.Context, in *AdminLogoutRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
@@ -49,6 +69,106 @@ type systemClient struct {
 
 func NewSystemClient(cc grpc.ClientConnInterface) SystemClient {
 	return &systemClient{cc}
+}
+
+func (c *systemClient) ListAdministrators(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListAdministratorsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAdministratorsResponse)
+	err := c.cc.Invoke(ctx, System_ListAdministrators_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) CreateAdministrator(ctx context.Context, in *CreateAdministratorRequest, opts ...grpc.CallOption) (*AdministratorResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdministratorResponse)
+	err := c.cc.Invoke(ctx, System_CreateAdministrator_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) UpdateAdministrator(ctx context.Context, in *UpdateAdministratorRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminActionResponse)
+	err := c.cc.Invoke(ctx, System_UpdateAdministrator_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) AssignAdministratorRoles(ctx context.Context, in *AssignAdministratorRolesRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminActionResponse)
+	err := c.cc.Invoke(ctx, System_AssignAdministratorRoles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) ListRoles(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListRolesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListRolesResponse)
+	err := c.cc.Invoke(ctx, System_ListRoles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*RoleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RoleResponse)
+	err := c.cc.Invoke(ctx, System_CreateRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) UpdateRole(ctx context.Context, in *UpdateRoleRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminActionResponse)
+	err := c.cc.Invoke(ctx, System_UpdateRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) GrantRole(ctx context.Context, in *GrantRoleRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminActionResponse)
+	err := c.cc.Invoke(ctx, System_GrantRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) DeleteRole(ctx context.Context, in *DeleteRoleRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminActionResponse)
+	err := c.cc.Invoke(ctx, System_DeleteRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) ListPermissions(ctx context.Context, in *ListPermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListPermissionsResponse)
+	err := c.cc.Invoke(ctx, System_ListPermissions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *systemClient) AdminLogin(ctx context.Context, in *AdminLoginRequest, opts ...grpc.CallOption) (*AdminAuthResponse, error) {
@@ -125,6 +245,16 @@ func (c *systemClient) CheckReady(ctx context.Context, in *CheckReadyRequest, op
 // All implementations must embed UnimplementedSystemServer
 // for forward compatibility.
 type SystemServer interface {
+	ListAdministrators(context.Context, *ListManagementRequest) (*ListAdministratorsResponse, error)
+	CreateAdministrator(context.Context, *CreateAdministratorRequest) (*AdministratorResponse, error)
+	UpdateAdministrator(context.Context, *UpdateAdministratorRequest) (*AdminActionResponse, error)
+	AssignAdministratorRoles(context.Context, *AssignAdministratorRolesRequest) (*AdminActionResponse, error)
+	ListRoles(context.Context, *ListManagementRequest) (*ListRolesResponse, error)
+	CreateRole(context.Context, *CreateRoleRequest) (*RoleResponse, error)
+	UpdateRole(context.Context, *UpdateRoleRequest) (*AdminActionResponse, error)
+	GrantRole(context.Context, *GrantRoleRequest) (*AdminActionResponse, error)
+	DeleteRole(context.Context, *DeleteRoleRequest) (*AdminActionResponse, error)
+	ListPermissions(context.Context, *ListPermissionsRequest) (*ListPermissionsResponse, error)
 	AdminLogin(context.Context, *AdminLoginRequest) (*AdminAuthResponse, error)
 	AdminRefresh(context.Context, *AdminRefreshRequest) (*AdminAuthResponse, error)
 	AdminLogout(context.Context, *AdminLogoutRequest) (*AdminActionResponse, error)
@@ -144,6 +274,36 @@ type SystemServer interface {
 // pointer dereference when methods are called.
 type UnimplementedSystemServer struct{}
 
+func (UnimplementedSystemServer) ListAdministrators(context.Context, *ListManagementRequest) (*ListAdministratorsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAdministrators not implemented")
+}
+func (UnimplementedSystemServer) CreateAdministrator(context.Context, *CreateAdministratorRequest) (*AdministratorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAdministrator not implemented")
+}
+func (UnimplementedSystemServer) UpdateAdministrator(context.Context, *UpdateAdministratorRequest) (*AdminActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAdministrator not implemented")
+}
+func (UnimplementedSystemServer) AssignAdministratorRoles(context.Context, *AssignAdministratorRolesRequest) (*AdminActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AssignAdministratorRoles not implemented")
+}
+func (UnimplementedSystemServer) ListRoles(context.Context, *ListManagementRequest) (*ListRolesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListRoles not implemented")
+}
+func (UnimplementedSystemServer) CreateRole(context.Context, *CreateRoleRequest) (*RoleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateRole not implemented")
+}
+func (UnimplementedSystemServer) UpdateRole(context.Context, *UpdateRoleRequest) (*AdminActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateRole not implemented")
+}
+func (UnimplementedSystemServer) GrantRole(context.Context, *GrantRoleRequest) (*AdminActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GrantRole not implemented")
+}
+func (UnimplementedSystemServer) DeleteRole(context.Context, *DeleteRoleRequest) (*AdminActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteRole not implemented")
+}
+func (UnimplementedSystemServer) ListPermissions(context.Context, *ListPermissionsRequest) (*ListPermissionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListPermissions not implemented")
+}
 func (UnimplementedSystemServer) AdminLogin(context.Context, *AdminLoginRequest) (*AdminAuthResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AdminLogin not implemented")
 }
@@ -184,6 +344,186 @@ func RegisterSystemServer(s grpc.ServiceRegistrar, srv SystemServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&System_ServiceDesc, srv)
+}
+
+func _System_ListAdministrators_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListManagementRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).ListAdministrators(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_ListAdministrators_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).ListAdministrators(ctx, req.(*ListManagementRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_CreateAdministrator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAdministratorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).CreateAdministrator(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_CreateAdministrator_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).CreateAdministrator(ctx, req.(*CreateAdministratorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_UpdateAdministrator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAdministratorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).UpdateAdministrator(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_UpdateAdministrator_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).UpdateAdministrator(ctx, req.(*UpdateAdministratorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_AssignAdministratorRoles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AssignAdministratorRolesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).AssignAdministratorRoles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_AssignAdministratorRoles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).AssignAdministratorRoles(ctx, req.(*AssignAdministratorRolesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_ListRoles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListManagementRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).ListRoles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_ListRoles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).ListRoles(ctx, req.(*ListManagementRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_CreateRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).CreateRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_CreateRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).CreateRole(ctx, req.(*CreateRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_UpdateRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).UpdateRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_UpdateRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).UpdateRole(ctx, req.(*UpdateRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_GrantRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GrantRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).GrantRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_GrantRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).GrantRole(ctx, req.(*GrantRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_DeleteRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).DeleteRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_DeleteRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).DeleteRole(ctx, req.(*DeleteRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_ListPermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPermissionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).ListPermissions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_ListPermissions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).ListPermissions(ctx, req.(*ListPermissionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _System_AdminLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -319,6 +659,46 @@ var System_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "goseed.system.v1.System",
 	HandlerType: (*SystemServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListAdministrators",
+			Handler:    _System_ListAdministrators_Handler,
+		},
+		{
+			MethodName: "CreateAdministrator",
+			Handler:    _System_CreateAdministrator_Handler,
+		},
+		{
+			MethodName: "UpdateAdministrator",
+			Handler:    _System_UpdateAdministrator_Handler,
+		},
+		{
+			MethodName: "AssignAdministratorRoles",
+			Handler:    _System_AssignAdministratorRoles_Handler,
+		},
+		{
+			MethodName: "ListRoles",
+			Handler:    _System_ListRoles_Handler,
+		},
+		{
+			MethodName: "CreateRole",
+			Handler:    _System_CreateRole_Handler,
+		},
+		{
+			MethodName: "UpdateRole",
+			Handler:    _System_UpdateRole_Handler,
+		},
+		{
+			MethodName: "GrantRole",
+			Handler:    _System_GrantRole_Handler,
+		},
+		{
+			MethodName: "DeleteRole",
+			Handler:    _System_DeleteRole_Handler,
+		},
+		{
+			MethodName: "ListPermissions",
+			Handler:    _System_ListPermissions_Handler,
+		},
 		{
 			MethodName: "AdminLogin",
 			Handler:    _System_AdminLogin_Handler,

@@ -31,6 +31,17 @@ func main() {
 	defer ctx.Close()
 
 	methods := []string{
+		pb.System_ListAdministrators_FullMethodName,
+		pb.System_CreateAdministrator_FullMethodName,
+		pb.System_UpdateAdministrator_FullMethodName,
+		pb.System_AssignAdministratorRoles_FullMethodName,
+		pb.System_ListRoles_FullMethodName,
+		pb.System_CreateRole_FullMethodName,
+		pb.System_UpdateRole_FullMethodName,
+		pb.System_GrantRole_FullMethodName,
+		pb.System_DeleteRole_FullMethodName,
+		pb.System_ListPermissions_FullMethodName,
+
 		pb.System_AdminLogin_FullMethodName,
 		pb.System_AdminRefresh_FullMethodName,
 		pb.System_AdminLogout_FullMethodName,

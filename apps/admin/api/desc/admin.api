@@ -10,3 +10,4 @@ info (
 import "base.api"
 import "system/ping.api"
 import "auth/auth.api"
+import "system/management.api"

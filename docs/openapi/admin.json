@@ -156,6 +156,211 @@
         }
       }
     },
+    "/admin-api/v1/system/administrators": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "System management"
+        ],
+        "summary": "ListAdministrators",
+        "operationId": "managementListAdministrators",
+        "parameters": [
+          {
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "integer",
+            "default": 1,
+            "example": 1,
+            "name": "page",
+            "in": "query",
+            "required": true
+          },
+          {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "default": 20,
+            "example": 20,
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "keyword",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "enum": [
+              "all",
+              "enabled",
+              "disabled"
+            ],
+            "type": "string",
+            "default": "all",
+            "example": "all",
+            "name": "enabled",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdministratorListResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "System management"
+        ],
+        "summary": "CreateAdministrator",
+        "operationId": "managementCreateAdministrator",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateAdministratorRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AdministratorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/system/administrators/{id}": {
+      "patch": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "System management"
+        ],
+        "summary": "UpdateAdministrator",
+        "operationId": "managementUpdateAdministrator",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateAdministratorRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ActionResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/system/administrators/{id}/roles": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "System management"
+        ],
+        "summary": "AssignAdministratorRoles",
+        "operationId": "managementAssignAdministratorRoles",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AssignAdministratorRolesRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ActionResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/system/permissions": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "System management"
+        ],
+        "summary": "ListPermissions",
+        "operationId": "managementListPermissions",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/PermissionListResponse"
+            }
+          }
+        }
+      }
+    },
     "/admin-api/v1/system/ping": {
       "get": {
         "produces": [
@@ -174,6 +379,223 @@
             "description": "",
             "schema": {
               "$ref": "#/definitions/PingResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/system/roles": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "System management"
+        ],
+        "summary": "ListRoles",
+        "operationId": "managementListRoles",
+        "parameters": [
+          {
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "integer",
+            "default": 1,
+            "example": 1,
+            "name": "page",
+            "in": "query",
+            "required": true
+          },
+          {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "default": 20,
+            "example": 20,
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "keyword",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "enum": [
+              "all",
+              "enabled",
+              "disabled"
+            ],
+            "type": "string",
+            "default": "all",
+            "example": "all",
+            "name": "enabled",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/RoleListResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "System management"
+        ],
+        "summary": "CreateRole",
+        "operationId": "managementCreateRole",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateRoleRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/RoleResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/system/roles/{id}": {
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "System management"
+        ],
+        "summary": "DeleteRole",
+        "operationId": "managementDeleteRole",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "revision",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ActionResponse"
+            }
+          }
+        }
+      },
+      "patch": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "System management"
+        ],
+        "summary": "UpdateRole",
+        "operationId": "managementUpdateRole",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateRoleRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ActionResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/system/roles/{id}/permissions": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "System management"
+        ],
+        "summary": "GrantRole",
+        "operationId": "managementGrantRole",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GrantRoleRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ActionResponse"
             }
           }
         }
@@ -240,6 +662,216 @@
         },
         "username": {
           "type": "string"
+        }
+      }
+    },
+    "AdministratorListData": {
+      "type": "object",
+      "required": [
+        "items",
+        "total",
+        "page",
+        "pageSize"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AdministratorRecord"
+          }
+        },
+        "page": {
+          "type": "integer"
+        },
+        "pageSize": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
+    },
+    "AdministratorListResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "items",
+            "total",
+            "page",
+            "pageSize"
+          ],
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AdministratorRecord"
+              }
+            },
+            "page": {
+              "type": "integer"
+            },
+            "pageSize": {
+              "type": "integer"
+            },
+            "total": {
+              "type": "integer"
+            }
+          },
+          "$ref": "#/definitions/AdministratorListData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "AdministratorRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "username",
+        "displayName",
+        "enabled",
+        "roleIds",
+        "roleNames",
+        "revision",
+        "createdAt",
+        "manageable"
+      ],
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "manageable": {
+          "type": "boolean"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "roleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "roleNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "AdministratorResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "id",
+            "username",
+            "displayName",
+            "enabled",
+            "roleIds",
+            "roleNames",
+            "revision",
+            "createdAt",
+            "manageable"
+          ],
+          "properties": {
+            "createdAt": {
+              "type": "string"
+            },
+            "displayName": {
+              "type": "string"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "id": {
+              "type": "string"
+            },
+            "manageable": {
+              "type": "boolean"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "roleIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "roleNames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "username": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/AdministratorRecord"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "AssignAdministratorRolesRequest": {
+      "type": "object",
+      "required": [
+        "roleIds",
+        "revision"
+      ],
+      "properties": {
+        "revision": {
+          "type": "string"
+        },
+        "roleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -351,10 +983,52 @@
         }
       }
     },
+    "CreateAdministratorRequest": {
+      "type": "object",
+      "required": [
+        "username",
+        "displayName",
+        "password"
+      ],
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateRoleRequest": {
+      "type": "object",
+      "required": [
+        "code",
+        "name",
+        "description"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
     "CurrentData": {
       "type": "object",
       "required": [
-        "admin"
+        "admin",
+        "permissions",
+        "roles",
+        "policyVersion",
+        "superAdmin"
       ],
       "properties": {
         "admin": {
@@ -376,6 +1050,24 @@
             }
           },
           "$ref": "#/definitions/AdminProfile"
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "policyVersion": {
+          "type": "string"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "superAdmin": {
+          "type": "boolean"
         }
       }
     },
@@ -394,7 +1086,11 @@
         "data": {
           "type": "object",
           "required": [
-            "admin"
+            "admin",
+            "permissions",
+            "roles",
+            "policyVersion",
+            "superAdmin"
           ],
           "properties": {
             "admin": {
@@ -416,6 +1112,24 @@
                 }
               },
               "$ref": "#/definitions/AdminProfile"
+            },
+            "permissions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "policyVersion": {
+              "type": "string"
+            },
+            "roles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "superAdmin": {
+              "type": "boolean"
             }
           },
           "$ref": "#/definitions/CurrentData"
@@ -427,6 +1141,30 @@
           "type": "string"
         }
       }
+    },
+    "DeleteRoleRequest": {
+      "type": "object"
+    },
+    "GrantRoleRequest": {
+      "type": "object",
+      "required": [
+        "permissions",
+        "revision"
+      ],
+      "properties": {
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "revision": {
+          "type": "string"
+        }
+      }
+    },
+    "ListManagementRequest": {
+      "type": "object"
     },
     "LoginRequest": {
       "type": "object",
@@ -440,6 +1178,85 @@
         },
         "username": {
           "type": "string"
+        }
+      }
+    },
+    "PermissionListData": {
+      "type": "object",
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PermissionRecord"
+          }
+        }
+      }
+    },
+    "PermissionListResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "items"
+          ],
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PermissionRecord"
+              }
+            }
+          },
+          "$ref": "#/definitions/PermissionListData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "PermissionRecord": {
+      "type": "object",
+      "required": [
+        "code",
+        "name",
+        "group",
+        "kind",
+        "requires"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "requires": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -498,6 +1315,250 @@
           "type": "string"
         },
         "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "RoleListData": {
+      "type": "object",
+      "required": [
+        "items",
+        "total",
+        "page",
+        "pageSize"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RoleRecord"
+          }
+        },
+        "page": {
+          "type": "integer"
+        },
+        "pageSize": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
+    },
+    "RoleListResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "items",
+            "total",
+            "page",
+            "pageSize"
+          ],
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/RoleRecord"
+              }
+            },
+            "page": {
+              "type": "integer"
+            },
+            "pageSize": {
+              "type": "integer"
+            },
+            "total": {
+              "type": "integer"
+            }
+          },
+          "$ref": "#/definitions/RoleListData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "RoleRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "code",
+        "name",
+        "description",
+        "enabled",
+        "builtIn",
+        "permissions",
+        "memberCount",
+        "revision",
+        "manageable",
+        "assignable"
+      ],
+      "properties": {
+        "assignable": {
+          "type": "boolean"
+        },
+        "builtIn": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "manageable": {
+          "type": "boolean"
+        },
+        "memberCount": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "revision": {
+          "type": "string"
+        }
+      }
+    },
+    "RoleResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "id",
+            "code",
+            "name",
+            "description",
+            "enabled",
+            "builtIn",
+            "permissions",
+            "memberCount",
+            "revision",
+            "manageable",
+            "assignable"
+          ],
+          "properties": {
+            "assignable": {
+              "type": "boolean"
+            },
+            "builtIn": {
+              "type": "boolean"
+            },
+            "code": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "id": {
+              "type": "string"
+            },
+            "manageable": {
+              "type": "boolean"
+            },
+            "memberCount": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            },
+            "permissions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "revision": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/RoleRecord"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "UpdateAdministratorRequest": {
+      "type": "object",
+      "required": [
+        "displayName",
+        "enabled",
+        "revision"
+      ],
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "revision": {
+          "type": "string"
+        }
+      }
+    },
+    "UpdateRoleRequest": {
+      "type": "object",
+      "required": [
+        "name",
+        "description",
+        "enabled",
+        "revision"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
           "type": "string"
         }
       }

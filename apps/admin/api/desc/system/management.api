@@ -1,0 +1,169 @@
+syntax = "v1"
+
+type (
+	ListManagementRequest {
+		Page     int64  `form:"page,default=1,range=[1:100000]"`
+		PageSize int64  `form:"pageSize,default=20,range=[1:100]"`
+		Keyword  string `form:"keyword,optional"`
+		Enabled  string `form:"enabled,default=all,options=all|enabled|disabled"`
+	}
+	AdministratorRecord {
+		Id          string   `json:"id"`
+		Username    string   `json:"username"`
+		DisplayName string   `json:"displayName"`
+		Enabled     bool     `json:"enabled"`
+		RoleIds     []string `json:"roleIds"`
+		RoleNames   []string `json:"roleNames"`
+		Revision    string   `json:"revision"`
+		CreatedAt   string   `json:"createdAt"`
+		Manageable  bool     `json:"manageable"`
+	}
+	AdministratorListData {
+		Items    []AdministratorRecord `json:"items"`
+		Total    int64                 `json:"total"`
+		Page     int64                 `json:"page"`
+		PageSize int64                 `json:"pageSize"`
+	}
+	AdministratorListResponse {
+		Code    int                   `json:"code"`
+		Message string                `json:"message"`
+		Data    AdministratorListData `json:"data"`
+		TraceId string                `json:"traceId"`
+	}
+	CreateAdministratorRequest {
+		Username    string `json:"username"`
+		DisplayName string `json:"displayName"`
+		Password    string `json:"password"`
+	}
+	AdministratorResponse {
+		Code    int                 `json:"code"`
+		Message string              `json:"message"`
+		Data    AdministratorRecord `json:"data"`
+		TraceId string              `json:"traceId"`
+	}
+	UpdateAdministratorRequest {
+		Id          string `path:"id"`
+		DisplayName string `json:"displayName"`
+		Enabled     bool   `json:"enabled"`
+		Revision    string `json:"revision"`
+	}
+	AssignAdministratorRolesRequest {
+		Id       string   `path:"id"`
+		RoleIds  []string `json:"roleIds"`
+		Revision string   `json:"revision"`
+	}
+	RoleRecord {
+		Id          string   `json:"id"`
+		Code        string   `json:"code"`
+		Name        string   `json:"name"`
+		Description string   `json:"description"`
+		Enabled     bool     `json:"enabled"`
+		BuiltIn     bool     `json:"builtIn"`
+		Permissions []string `json:"permissions"`
+		MemberCount int64    `json:"memberCount"`
+		Revision    string   `json:"revision"`
+		Manageable  bool     `json:"manageable"`
+		Assignable  bool     `json:"assignable"`
+	}
+	RoleListData {
+		Items    []RoleRecord `json:"items"`
+		Total    int64        `json:"total"`
+		Page     int64        `json:"page"`
+		PageSize int64        `json:"pageSize"`
+	}
+	RoleListResponse {
+		Code    int          `json:"code"`
+		Message string       `json:"message"`
+		Data    RoleListData `json:"data"`
+		TraceId string       `json:"traceId"`
+	}
+	CreateRoleRequest {
+		Code        string `json:"code"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	}
+	RoleResponse {
+		Code    int        `json:"code"`
+		Message string     `json:"message"`
+		Data    RoleRecord `json:"data"`
+		TraceId string     `json:"traceId"`
+	}
+	UpdateRoleRequest {
+		Id          string `path:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Enabled     bool   `json:"enabled"`
+		Revision    string `json:"revision"`
+	}
+	GrantRoleRequest {
+		Id          string   `path:"id"`
+		Permissions []string `json:"permissions"`
+		Revision    string   `json:"revision"`
+	}
+	DeleteRoleRequest {
+		Id       string `path:"id"`
+		Revision string `form:"revision"`
+	}
+	PermissionRecord {
+		Code     string   `json:"code"`
+		Name     string   `json:"name"`
+		Group    string   `json:"group"`
+		Kind     string   `json:"kind"`
+		Requires []string `json:"requires"`
+	}
+	PermissionListData {
+		Items []PermissionRecord `json:"items"`
+	}
+	PermissionListResponse {
+		Code    int                `json:"code"`
+		Message string             `json:"message"`
+		Data    PermissionListData `json:"data"`
+		TraceId string             `json:"traceId"`
+	}
+)
+
+@server (
+	prefix:     /admin-api/v1/system
+	group:      management
+	middleware: AdminAccess
+	tags:       "System management"
+)
+service admin-api {
+	@handler ListAdministrators
+	get /administrators (ListManagementRequest) returns (AdministratorListResponse)
+
+	@handler ListRoles
+	get /roles (ListManagementRequest) returns (RoleListResponse)
+
+	@handler ListPermissions
+	get /permissions returns (PermissionListResponse)
+}
+
+@server (
+	prefix:     /admin-api/v1/system
+	group:      management
+	middleware: BrowserOrigin,AdminAccess
+	tags:       "System management"
+)
+service admin-api {
+	@handler CreateAdministrator
+	post /administrators (CreateAdministratorRequest) returns (AdministratorResponse)
+
+	@handler UpdateAdministrator
+	patch /administrators/:id (UpdateAdministratorRequest) returns (ActionResponse)
+
+	@handler AssignAdministratorRoles
+	put /administrators/:id/roles (AssignAdministratorRolesRequest) returns (ActionResponse)
+
+	@handler CreateRole
+	post /roles (CreateRoleRequest) returns (RoleResponse)
+
+	@handler UpdateRole
+	patch /roles/:id (UpdateRoleRequest) returns (ActionResponse)
+
+	@handler GrantRole
+	put /roles/:id/permissions (GrantRoleRequest) returns (ActionResponse)
+
+	@handler DeleteRole
+	delete /roles/:id (DeleteRoleRequest) returns (ActionResponse)
+}

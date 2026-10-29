@@ -34,5 +34,5 @@ func (l *CurrentLogic) Current() (*types.CurrentResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &types.CurrentResponse{Code: 0, Message: "ok", Data: types.CurrentData{Admin: authhttp.Profile(reply.Admin)}, TraceId: trace.TraceIDFromContext(l.ctx)}, nil
+	return &types.CurrentResponse{Code: 0, Message: "ok", Data: types.CurrentData{Admin: authhttp.Profile(reply.Admin), Permissions: append([]string{}, reply.Permissions...), Roles: append([]string{}, reply.Roles...), PolicyVersion: reply.PolicyVersion, SuperAdmin: reply.SuperAdmin}, TraceId: trace.TraceIDFromContext(l.ctx)}, nil
 }

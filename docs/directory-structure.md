@@ -212,6 +212,8 @@ web/admin/
             └── menu.yaml             # 菜单和按钮的声明
 ```
 
+当前系统管理 feature 位于 `web/admin/src/features/system`；菜单集中在 `src/router/menu.yaml`，由 `make gen-web` 编译为 `resources.generated.ts`。上图的按模块分散声明是后续扩展方向。
+
 feature 独有状态留在 feature；不要把所有列表筛选和弹窗状态都塞进全局 store。前端构建时汇总 `menu.yaml`，验证路由、组件及权限引用；运行时只加载白名单中的页面。
 
 ## 命名与配置

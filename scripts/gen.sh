@@ -23,6 +23,7 @@ if [[ "$mode" == web || "$mode" == all ]]; then
  for app in admin app; do
   goctl api swagger --api "apps/$app/api/desc/$app.api" --dir docs/openapi --filename "$app"
  done
+ node web/admin/scripts/resources.mjs --write
  node web/admin/scripts/generate-api.mjs
 fi
 case "$mode" in all|api|rpc|web) ;; *) echo "Usage: $0 [all|api|rpc|web]" >&2; exit 1;; esac

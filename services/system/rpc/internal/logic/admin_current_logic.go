@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/kar1hsu/go-seed/pkg/identity"
 	"github.com/kar1hsu/go-seed/services/system/rpc/internal/svc"
@@ -24,9 +25,9 @@ func NewAdminCurrentLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Admi
 }
 
 func (l *AdminCurrentLogic) AdminCurrent(in *pb.AdminCurrentRequest) (*pb.AdminCurrentResponse, error) {
-	a, err := l.svcCtx.Auth.Current(l.ctx, identity.RawToken(l.ctx))
+	a, err := l.svcCtx.Management.Current(l.ctx, identity.RawToken(l.ctx))
 	if err != nil {
 		return nil, err
 	}
-	return &pb.AdminCurrentResponse{Admin: adminProfile(a)}, nil
+	return &pb.AdminCurrentResponse{Admin: adminProfile(a.Admin), Permissions: a.Permissions, Roles: a.Roles, PolicyVersion: strconv.FormatUint(a.Policy.Snapshot.Version, 10), SuperAdmin: a.SuperAdmin}, nil
 }

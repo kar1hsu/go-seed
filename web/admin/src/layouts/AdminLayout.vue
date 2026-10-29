@@ -47,13 +47,23 @@ async function userAction(command: string) {
     signingOut.value = false
   }
 }
+const visibleNavigation = computed(() =>
+  navigation.filter((item) => !item.hidden && auth.has(item.permission)),
+)
+const menuGroups = computed(() => [
+  ...new Set(visibleNavigation.value.map((item) => item.group)),
+])
 const current = computed(
-  () => navigation.find((item) => item.path === route.path) || navigation[0]!,
+  () =>
+    navigation.find((item) => item.path === route.path) ||
+    (route.name === 'forbidden'
+      ? { ...navigation[0]!, title: '暂无访问权限', group: '账户' }
+      : navigation[0]!),
 )
 const tabs = computed(() =>
   visited.value
     .map((path) => navigation.find((item) => item.path === path)!)
-    .filter(Boolean),
+    .filter((item) => item && auth.has(item.permission)),
 )
 const media = window.matchMedia('(max-width: 760px)')
 function updateMedia() {
@@ -76,6 +86,17 @@ watch(
     document.title = `${current.value.title} - GoSeed`
   },
   { immediate: true },
+)
+watch(
+  () => auth.permissions,
+  () => {
+    if (
+      auth.admin &&
+      typeof route.meta.permission === 'string' &&
+      !auth.has(route.meta.permission)
+    )
+      void router.replace('/forbidden')
+  },
 )
 onMounted(() => {
   updateMedia()
@@ -103,10 +124,12 @@ onBeforeUnmount(() => media.removeEventListener('change', updateMedia))
         ><span>Admin</span></RouterLink
       >
       <nav class="side-menu" aria-label="主导航">
-        <template v-for="group in ['概览', '开发工具']" :key="group">
+        <template v-for="group in menuGroups" :key="group">
           <div class="menu-group">{{ group }}</div>
           <RouterLink
-            v-for="item in navigation.filter((item) => item.group === group)"
+            v-for="item in visibleNavigation.filter(
+              (item) => item.group === group,
+            )"
             :key="item.path"
             :to="item.path"
             class="menu-item"

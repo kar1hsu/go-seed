@@ -4,7 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/kar1hsu/go-seed/pkg/xerr"
 	"github.com/kar1hsu/go-seed/services/system/internal/model"
+	"google.golang.org/grpc/codes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -62,7 +64,24 @@ func (s *Auth) Current(ctx context.Context, id uint64, sid string, version uint6
 	return &a, err
 }
 
+func (s *Auth) LockPolicy(ctx context.Context) error {
+	_, err := NewRBAC(s.db).LockPolicy(ctx)
+	return err
+}
 func (s *Auth) Disable(ctx context.Context, id uint64, now time.Time) error {
+	var count int64
+	if err := s.db.WithContext(ctx).Table("administrators a").Joins("JOIN admin_roles ar ON ar.admin_id=a.id JOIN roles r ON r.id=ar.role_id").Where("a.id = ? AND a.enabled = ? AND r.built_in = ? AND r.enabled = ?", id, true, true, true).Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		total, err := NewRBAC(s.db).EnabledSuperCount(ctx)
+		if err != nil {
+			return err
+		}
+		if total <= 1 {
+			return xerr.New(codes.FailedPrecondition)
+		}
+	}
 	if err := s.db.WithContext(ctx).Model(&model.Administrator{}).Where("id = ?", id).Updates(map[string]any{
 		"enabled":       false,
 		"token_version": gorm.Expr("token_version + 1"),

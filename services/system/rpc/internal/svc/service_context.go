@@ -11,6 +11,8 @@ import (
 	"github.com/kar1hsu/go-seed/pkg/xerr"
 	"github.com/kar1hsu/go-seed/services/system/internal/application/auth"
 	"github.com/kar1hsu/go-seed/services/system/internal/application/health"
+	"github.com/kar1hsu/go-seed/services/system/internal/application/management"
+	"github.com/kar1hsu/go-seed/services/system/internal/authorization"
 	"github.com/kar1hsu/go-seed/services/system/internal/repository"
 	"github.com/kar1hsu/go-seed/services/system/rpc/internal/config"
 	"github.com/zeromicro/go-zero/core/limit"
@@ -20,11 +22,12 @@ import (
 )
 
 type ServiceContext struct {
-	Config config.Config
-	DB     *gorm.DB
-	Cache  *redis.Redis
-	Health *health.Service
-	Auth   *auth.Service
+	Config     config.Config
+	DB         *gorm.DB
+	Cache      *redis.Redis
+	Health     *health.Service
+	Auth       *auth.Service
+	Management *management.Service
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
@@ -67,7 +70,12 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		_ = pool.Close()
 		return nil, err
 	}
-	return &ServiceContext{Config: c, DB: db, Cache: cache, Health: healthSvc, Auth: authSvc}, nil
+	managementSvc, err := management.New(repository.NewRBAC(db), authorization.New(tokens))
+	if err != nil {
+		_ = pool.Close()
+		return nil, err
+	}
+	return &ServiceContext{Config: c, DB: db, Cache: cache, Health: healthSvc, Auth: authSvc, Management: managementSvc}, nil
 }
 
 func (s *ServiceContext) Close() error {
