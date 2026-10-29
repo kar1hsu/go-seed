@@ -1,0 +1,12 @@
+syntax = "v1"
+
+@server(
+ prefix: /api/v1
+ group: system
+ tags: "System"
+)
+service app-api {
+ @doc "Probe API to system-rpc connectivity"
+ @handler Ping
+ get /system/ping returns (PingResponse)
+}

@@ -1,0 +1,19 @@
+syntax = "proto3";
+package goseed.system.v1;
+option go_package = "github.com/kar1hsu/go-seed/services/system/rpc/pb";
+
+message PingRequest {}
+message PingResponse {
+  string service = 1;
+  string version = 2;
+  string time = 3; // UTC RFC3339
+}
+message CheckReadyRequest {}
+message CheckReadyResponse {}
+
+service System {
+  // Non-sensitive connectivity probe; independent of database readiness.
+  rpc Ping(PingRequest) returns (PingResponse);
+  // Checks MySQL and Redis with the caller's deadline.
+  rpc CheckReady(CheckReadyRequest) returns (CheckReadyResponse);
+}

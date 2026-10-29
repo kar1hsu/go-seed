@@ -1,0 +1,19 @@
+Name: system-rpc
+ListenOn: ${SYSTEM_RPC_HOST}:${SYSTEM_RPC_PORT}
+Mode: dev
+Timeout: 2000
+Health: true
+Log:
+  ServiceName: system-rpc
+  Mode: console
+  Encoding: json
+MySQL:
+  Host: ${MYSQL_HOST}
+  Port: ${MYSQL_PORT}
+  Database: ${MYSQL_DATABASE}
+  User: ${MYSQL_USER}
+  Password: "${MYSQL_PASSWORD}"
+Cache:
+  Host: ${REDIS_HOST}:${REDIS_PORT}
+  Type: node
+  NonBlock: true

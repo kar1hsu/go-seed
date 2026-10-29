@@ -1,0 +1,107 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "title": "GoSeed app API",
+    "version": "v1"
+  },
+  "basePath": "/",
+  "paths": {
+    "/api/v1/system/ping": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "System"
+        ],
+        "summary": "Probe API to system-rpc connectivity",
+        "operationId": "systemPing",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/PingResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "PingData": {
+      "type": "object",
+      "required": [
+        "service",
+        "version",
+        "time"
+      ],
+      "properties": {
+        "service": {
+          "type": "string"
+        },
+        "time": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "PingResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "service",
+            "version",
+            "time"
+          ],
+          "properties": {
+            "service": {
+              "type": "string"
+            },
+            "time": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/PingData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "x-description": "This is a goctl generated swagger file.",
+  "x-github": "https://github.com/zeromicro/go-zero",
+  "x-go-zero-doc": "https://go-zero.dev/",
+  "x-goctl-version": "1.10.2"
+}

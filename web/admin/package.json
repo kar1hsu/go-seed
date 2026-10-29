@@ -1,0 +1,38 @@
+{
+  "name": "@goseed/admin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.15.1",
+  "engines": {
+    "node": "24.19.0",
+    "pnpm": "11.15.1"
+  },
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "vue-tsc --noEmit",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "generate:api": "node scripts/generate-api.mjs",
+    "format": "prettier --write src vite.config.ts index.html",
+    "format:check": "prettier --check src vite.config.ts index.html"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "2.3.2",
+    "element-plus": "2.14.7",
+    "openapi-fetch": "0.17.0",
+    "pinia": "3.0.4",
+    "vue": "3.5.44",
+    "vue-router": "4.6.4"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "@vitejs/plugin-vue": "6.0.4",
+    "openapi-typescript": "7.13.0",
+    "prettier": "3.6.2",
+    "swagger2openapi": "7.0.8",
+    "typescript": "5.9.3",
+    "vite": "7.3.1",
+    "vue-tsc": "3.3.13"
+  }
+}

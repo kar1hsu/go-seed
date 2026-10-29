@@ -1,0 +1,106 @@
+# Development/reference stack. All host ports are loopback-only.
+services:
+  mysql:
+    image: mysql:8.4.6
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?copy .env.example to .env}
+      MYSQL_USER: ${MYSQL_USER:?}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?}
+      TZ: UTC
+    ports: ["127.0.0.1:${MYSQL_PORT:-13306}:3306"]
+    volumes: ["mysql-data:/var/lib/mysql"]
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_PASSWORD mysql --protocol=tcp -h127.0.0.1 -u$$MYSQL_USER $$MYSQL_DATABASE -e 'SELECT 1' >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+  redis:
+    image: redis:8.2.1-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports: ["127.0.0.1:${REDIS_PORT:-16379}:6379"]
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  system-rpc:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/service.Dockerfile
+      args: { SERVICE_PATH: services/system/rpc }
+    command: ["-f", "services/system/rpc/etc/system.yaml"]
+    environment:
+      SYSTEM_RPC_HOST: 0.0.0.0
+      SYSTEM_RPC_PORT: 9001
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?}
+      MYSQL_USER: ${MYSQL_USER:?}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "/app/probe", "-rpc", "127.0.0.1:9001", "-ready"]
+      interval: 5s
+      timeout: 4s
+      retries: 10
+  admin-api:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/service.Dockerfile
+      args: { SERVICE_PATH: apps/admin/api }
+    command: ["-f", "apps/admin/api/etc/admin-api.yaml"]
+    environment:
+      API_HOST: 0.0.0.0
+      ADMIN_API_PORT: 8081
+      SYSTEM_RPC_HOST: system-rpc
+      SYSTEM_RPC_PORT: 9001
+    ports: ["127.0.0.1:${ADMIN_API_PORT:-8081}:8081"]
+    depends_on:
+      system-rpc: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "/app/probe", "-http", "http://127.0.0.1:8081/readyz"]
+      interval: 5s
+      timeout: 4s
+      retries: 10
+  app-api:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/service.Dockerfile
+      args: { SERVICE_PATH: apps/app/api }
+    command: ["-f", "apps/app/api/etc/app-api.yaml"]
+    environment:
+      API_HOST: 0.0.0.0
+      APP_API_PORT: 8080
+      SYSTEM_RPC_HOST: system-rpc
+      SYSTEM_RPC_PORT: 9001
+    ports: ["127.0.0.1:${APP_API_PORT:-8080}:8080"]
+    depends_on:
+      system-rpc: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "/app/probe", "-http", "http://127.0.0.1:8080/readyz"]
+      interval: 5s
+      timeout: 4s
+      retries: 10
+  gateway:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/admin.Dockerfile
+    ports: ["127.0.0.1:${GATEWAY_PORT:-8088}:80"]
+    depends_on:
+      admin-api: { condition: service_healthy }
+      app-api: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  mysql-data:
+  redis-data:

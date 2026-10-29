@@ -1,0 +1,11 @@
+.git
+.agents
+.ai-context
+.env
+.env.*
+**/node_modules
+**/dist
+.tools
+.tmp
+bin
+**/*.log

@@ -1,0 +1,14 @@
+Name: admin-api
+Host: ${API_HOST}
+Port: ${ADMIN_API_PORT}
+Mode: dev
+Timeout: 3000
+Log:
+  ServiceName: admin-api
+  Mode: console
+  Encoding: json
+SystemRPC:
+  Endpoints:
+    - ${SYSTEM_RPC_HOST}:${SYSTEM_RPC_PORT}
+  NonBlock: true
+  Timeout: 2000

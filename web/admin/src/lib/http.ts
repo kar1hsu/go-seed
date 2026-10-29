@@ -1,0 +1,21 @@
+import createClient from 'openapi-fetch'
+import type { paths } from '../api/generated/schema'
+
+export const api = createClient<paths>({
+  baseUrl: '',
+  fetch: (request) =>
+    fetch(request, {
+      signal: AbortSignal.any([request.signal, AbortSignal.timeout(5000)]),
+      credentials: 'same-origin',
+    }),
+})
+
+export class APIError extends Error {
+  constructor(
+    message: string,
+    readonly code?: number,
+    readonly traceId?: string,
+  ) {
+    super(message)
+  }
+}

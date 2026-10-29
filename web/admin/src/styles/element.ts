@@ -1,0 +1,8 @@
+import 'element-plus/es/components/button/style/css'
+import 'element-plus/es/components/tag/style/css'
+import 'element-plus/es/components/table/style/css'
+import 'element-plus/es/components/input/style/css'
+import 'element-plus/es/components/select/style/css'
+import 'element-plus/es/components/drawer/style/css'
+import 'element-plus/es/components/descriptions/style/css'
+import 'element-plus/es/components/pagination/style/css'
