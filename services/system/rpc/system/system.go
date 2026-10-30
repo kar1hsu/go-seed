@@ -32,27 +32,49 @@ type (
 	CheckReadyRequest               = pb.CheckReadyRequest
 	CheckReadyResponse              = pb.CheckReadyResponse
 	CreateAdministratorRequest      = pb.CreateAdministratorRequest
+	CreateDictionaryRequest         = pb.CreateDictionaryRequest
 	CreateRoleRequest               = pb.CreateRoleRequest
+	CreateSettingRequest            = pb.CreateSettingRequest
 	DeleteRoleRequest               = pb.DeleteRoleRequest
+	DeleteSettingResourceRequest    = pb.DeleteSettingResourceRequest
+	DictionaryItem                  = pb.DictionaryItem
+	DictionaryRecord                = pb.DictionaryRecord
+	DictionaryResponse              = pb.DictionaryResponse
 	GetAuditLogRequest              = pb.GetAuditLogRequest
 	GetAuditLogResponse             = pb.GetAuditLogResponse
+	GetDictionaryRequest            = pb.GetDictionaryRequest
 	GrantRoleRequest                = pb.GrantRoleRequest
 	ListAdministratorsResponse      = pb.ListAdministratorsResponse
 	ListAuditLogsRequest            = pb.ListAuditLogsRequest
 	ListAuditLogsResponse           = pb.ListAuditLogsResponse
+	ListDictionariesResponse        = pb.ListDictionariesResponse
 	ListManagementRequest           = pb.ListManagementRequest
 	ListPermissionsRequest          = pb.ListPermissionsRequest
 	ListPermissionsResponse         = pb.ListPermissionsResponse
 	ListRolesResponse               = pb.ListRolesResponse
+	ListSettingsResponse            = pb.ListSettingsResponse
 	PermissionRecord                = pb.PermissionRecord
 	PingRequest                     = pb.PingRequest
 	PingResponse                    = pb.PingResponse
 	RoleRecord                      = pb.RoleRecord
 	RoleResponse                    = pb.RoleResponse
+	SettingRecord                   = pb.SettingRecord
+	SettingResponse                 = pb.SettingResponse
 	UpdateAdministratorRequest      = pb.UpdateAdministratorRequest
+	UpdateDictionaryRequest         = pb.UpdateDictionaryRequest
 	UpdateRoleRequest               = pb.UpdateRoleRequest
+	UpdateSettingRequest            = pb.UpdateSettingRequest
 
 	System interface {
+		GetDictionary(ctx context.Context, in *GetDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error)
+		ListDictionaries(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListDictionariesResponse, error)
+		CreateDictionary(ctx context.Context, in *CreateDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error)
+		UpdateDictionary(ctx context.Context, in *UpdateDictionaryRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+		DeleteDictionary(ctx context.Context, in *DeleteSettingResourceRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+		ListSettings(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListSettingsResponse, error)
+		CreateSetting(ctx context.Context, in *CreateSettingRequest, opts ...grpc.CallOption) (*SettingResponse, error)
+		UpdateSetting(ctx context.Context, in *UpdateSettingRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+		DeleteSetting(ctx context.Context, in *DeleteSettingResourceRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
 		ListAuditLogs(ctx context.Context, in *ListAuditLogsRequest, opts ...grpc.CallOption) (*ListAuditLogsResponse, error)
 		GetAuditLog(ctx context.Context, in *GetAuditLogRequest, opts ...grpc.CallOption) (*GetAuditLogResponse, error)
 		ListAdministrators(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListAdministratorsResponse, error)
@@ -85,6 +107,51 @@ func NewSystem(cli zrpc.Client) System {
 	return &defaultSystem{
 		cli: cli,
 	}
+}
+
+func (m *defaultSystem) GetDictionary(ctx context.Context, in *GetDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.GetDictionary(ctx, in, opts...)
+}
+
+func (m *defaultSystem) ListDictionaries(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListDictionariesResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.ListDictionaries(ctx, in, opts...)
+}
+
+func (m *defaultSystem) CreateDictionary(ctx context.Context, in *CreateDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.CreateDictionary(ctx, in, opts...)
+}
+
+func (m *defaultSystem) UpdateDictionary(ctx context.Context, in *UpdateDictionaryRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.UpdateDictionary(ctx, in, opts...)
+}
+
+func (m *defaultSystem) DeleteDictionary(ctx context.Context, in *DeleteSettingResourceRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.DeleteDictionary(ctx, in, opts...)
+}
+
+func (m *defaultSystem) ListSettings(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListSettingsResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.ListSettings(ctx, in, opts...)
+}
+
+func (m *defaultSystem) CreateSetting(ctx context.Context, in *CreateSettingRequest, opts ...grpc.CallOption) (*SettingResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.CreateSetting(ctx, in, opts...)
+}
+
+func (m *defaultSystem) UpdateSetting(ctx context.Context, in *UpdateSettingRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.UpdateSetting(ctx, in, opts...)
+}
+
+func (m *defaultSystem) DeleteSetting(ctx context.Context, in *DeleteSettingResourceRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.DeleteSetting(ctx, in, opts...)
 }
 
 func (m *defaultSystem) ListAuditLogs(ctx context.Context, in *ListAuditLogsRequest, opts ...grpc.CallOption) (*ListAuditLogsResponse, error) {

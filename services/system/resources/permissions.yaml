@@ -48,3 +48,43 @@
   group: 操作日志
   kind: menu
   requires: []
+- code: system.dictionary.read
+  name: 查看字典
+  group: 字典管理
+  kind: menu
+  requires: []
+- code: system.dictionary.create
+  name: 新增字典
+  group: 字典管理
+  kind: button
+  requires: [system.dictionary.read]
+- code: system.dictionary.update
+  name: 编辑与启停字典
+  group: 字典管理
+  kind: button
+  requires: [system.dictionary.read]
+- code: system.dictionary.delete
+  name: 删除字典
+  group: 字典管理
+  kind: button
+  requires: [system.dictionary.read]
+- code: system.setting.read
+  name: 查看系统配置
+  group: 系统配置管理
+  kind: menu
+  requires: []
+- code: system.setting.create
+  name: 新增系统配置
+  group: 系统配置管理
+  kind: button
+  requires: [system.setting.read]
+- code: system.setting.update
+  name: 编辑与启停系统配置
+  group: 系统配置管理
+  kind: button
+  requires: [system.setting.read]
+- code: system.setting.delete
+  name: 删除系统配置
+  group: 系统配置管理
+  kind: button
+  requires: [system.setting.read]

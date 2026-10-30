@@ -2,7 +2,7 @@
 
 GoSeed 是基于 go-zero 的项目开发底座：单仓库、单 Go module，管理端 API、业务端 API 与领域 RPC 独立运行，管理后台采用 Vue 3。
 
-**当前已完成工程骨架、管理员认证、角色授权与操作日志。** 提供管理员列表/新增/编辑/启停/角色分配，角色管理与菜单按钮授权，版本化 SQL 迁移，API → RPC 探测，GORM/MySQL 与 Redis 就绪检查。管理员/角色变更与审计日志在同一事务提交，可按操作人、对象、类型、日期和 Trace ID 查询。字典、配置、业务样板及 Asynq worker/scheduler 按后续阶段接入。
+**当前已完成工程骨架、管理员认证、角色授权、操作日志、字典与系统配置。** 提供管理员列表/新增/编辑/启停/角色分配，角色管理与菜单按钮授权，版本化 SQL 迁移，API → RPC 探测，GORM/MySQL 与 Redis 就绪检查。管理员/角色变更与审计日志在同一事务提交，可按操作人、对象、类型、日期和 Trace ID 查询。字典支持分类与字典项维护，系统配置支持文本、整数、布尔及 JSON 参数。业务样板及 Asynq worker/scheduler 按后续阶段接入。
 
 ## 本地开发
 
@@ -104,6 +104,7 @@ Go module 固定为 `github.com/kar1hsu/go-seed`。运行时使用 go-zero **1.1
 | [目录规范](docs/directory-structure.md) | 依赖边界与生成文件所有权 |
 | [开发约定](docs/development-guide.md) | 契约、错误、开发与检查流程 |
 | [实施路线](docs/roadmap.md) | 当前进度与后续阶段 |
+| [字典与系统配置](docs/system-settings.md) | 参数类型、字典项、权限、审计与编辑冲突 |
 | [操作日志](docs/operation-audit.md) | 日志范围、事务一致性、查询与脱敏 |
 | [角色授权](docs/authorization.md) | 管理员、角色、菜单按钮、版本一致性与验证 |
 | [管理员认证](docs/authentication.md) | 初始化、会话、Cookie、接口和验收 |

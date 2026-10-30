@@ -85,6 +85,18 @@ watch(
 )
 onMounted(load)
 onBeforeUnmount(clear)
+function targetName(type: string) {
+  return (
+    (
+      {
+        administrator: '管理员',
+        role: '角色',
+        dictionary: '字典',
+        setting: '系统配置',
+      } as Record<string, string>
+    )[type] || type
+  )
+}
 </script>
 
 <template>
@@ -194,8 +206,7 @@ onBeforeUnmount(clear)
             ><div class="role-cell">
               <strong>{{ row.targetName }}</strong
               ><small
-                >{{ row.targetType === 'role' ? '角色' : '管理员' }} ·
-                {{ row.targetKey }}</small
+                >{{ targetName(row.targetType) }} · {{ row.targetKey }}</small
               >
             </div></template
           ></ElTableColumn

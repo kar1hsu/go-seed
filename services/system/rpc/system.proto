@@ -184,7 +184,98 @@ message GetAuditLogResponse {
   repeated AuditChange changes = 2;
 }
 
+message DictionaryItem {
+  string value = 1;
+  string label = 2;
+  int64 sort = 3;
+  bool enabled = 4;
+}
+message DictionaryRecord {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  bool enabled = 5;
+  string revision = 6;
+  string created_at = 7;
+  int64 item_count = 8;
+}
+message SettingRecord {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  bool enabled = 5;
+  string revision = 6;
+  string created_at = 7;
+  string type = 8;
+  string value = 9;
+}
+message GetDictionaryRequest {
+  string id = 1;
+}
+message DeleteSettingResourceRequest {
+  string id = 1;
+  string revision = 2;
+}
+message DictionaryResponse {
+  DictionaryRecord record = 1;
+  repeated DictionaryItem items = 2;
+}
+message SettingResponse {
+  SettingRecord record = 1;
+}
+message ListDictionariesResponse {
+  repeated DictionaryRecord items = 1;
+  int64 total = 2;
+}
+message ListSettingsResponse {
+  repeated SettingRecord items = 1;
+  int64 total = 2;
+}
+message CreateDictionaryRequest {
+  string code = 1;
+  string name = 2;
+  string description = 3;
+  bool enabled = 4;
+  repeated DictionaryItem items = 5;
+}
+message UpdateDictionaryRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  bool enabled = 4;
+  repeated DictionaryItem items = 5;
+  string revision = 6;
+}
+message CreateSettingRequest {
+  string code = 1;
+  string name = 2;
+  string description = 3;
+  bool enabled = 4;
+  string type = 5;
+  string value = 6;
+}
+message UpdateSettingRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  bool enabled = 4;
+  string value = 5;
+  string revision = 6;
+}
+
 service System {
+  rpc GetDictionary(GetDictionaryRequest) returns (DictionaryResponse);
+  rpc ListDictionaries(ListManagementRequest) returns (ListDictionariesResponse);
+  rpc CreateDictionary(CreateDictionaryRequest) returns (DictionaryResponse);
+  rpc UpdateDictionary(UpdateDictionaryRequest) returns (AdminActionResponse);
+  rpc DeleteDictionary(DeleteSettingResourceRequest) returns (AdminActionResponse);
+  rpc ListSettings(ListManagementRequest) returns (ListSettingsResponse);
+  rpc CreateSetting(CreateSettingRequest) returns (SettingResponse);
+  rpc UpdateSetting(UpdateSettingRequest) returns (AdminActionResponse);
+  rpc DeleteSetting(DeleteSettingResourceRequest) returns (AdminActionResponse);
+
   rpc ListAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse);
   rpc GetAuditLog(GetAuditLogRequest) returns (GetAuditLogResponse);
   rpc ListAdministrators(ListManagementRequest) returns (ListAdministratorsResponse);

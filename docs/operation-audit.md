@@ -53,3 +53,5 @@ curl -H "Authorization: Bearer $TOKEN" \
 ## 验证入口
 
 `make test-rbac` 包含独立临时 MySQL 库的日志字段、历史快照、查询边界、权限撤销、写失败回滚和密码脱敏测试（含 race）。`make rbac-smoke` 验证真实 API → RPC 的权限、分页、错误码及 Trace ID 关联。`make test-auth` 回归受日志事务影响的改密和禁用行为。`pnpm --dir web/admin test` 验证慢响应、详情切换/关闭、权限撤销后不恢复旧数据。测试仅清理自身创建的临时库或随机命名记录。
+
+字典与普通业务配置的新增、编辑/启停和删除也采用同一事务审计，字典项整体变化及配置值均记录历史；范围与输入边界见[字典与系统配置](system-settings.md)。

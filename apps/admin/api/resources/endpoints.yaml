@@ -16,3 +16,12 @@
 - {method: get, path: '/admin-api/v1/system/permissions', permission: system.role.read}
 - {method: get, path: '/admin-api/v1/system/audit-logs', permission: system.audit.read}
 - {method: get, path: '/admin-api/v1/system/audit-logs/{id}', permission: system.audit.read}
+- {method: get, path: '/admin-api/v1/system/dictionaries', permission: system.dictionary.read}
+- {method: post, path: '/admin-api/v1/system/dictionaries', permission: system.dictionary.create, status: 201}
+- {method: put, path: '/admin-api/v1/system/dictionaries/{id}', permission: system.dictionary.update}
+- {method: delete, path: '/admin-api/v1/system/dictionaries/{id}', permission: system.dictionary.delete}
+- {method: get, path: '/admin-api/v1/system/settings', permission: system.setting.read}
+- {method: post, path: '/admin-api/v1/system/settings', permission: system.setting.create, status: 201}
+- {method: put, path: '/admin-api/v1/system/settings/{id}', permission: system.setting.update}
+- {method: delete, path: '/admin-api/v1/system/settings/{id}', permission: system.setting.delete}
+- {method: get, path: '/admin-api/v1/system/dictionaries/{id}', permission: system.dictionary.read}

@@ -9,6 +9,7 @@ import (
 	audit "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/audit"
 	auth "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/auth"
 	management "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/management"
+	settings "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/settings"
 	system "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/system"
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/svc"
 
@@ -154,6 +155,69 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Method:  http.MethodPut,
 					Path:    "/roles/:id/permissions",
 					Handler: management.GrantRoleHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/system"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					Method:  http.MethodGet,
+					Path:    "/dictionaries",
+					Handler: settings.ListDictionariesHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/dictionaries/:id",
+					Handler: settings.GetDictionaryHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/settings",
+					Handler: settings.ListSettingsHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/system"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.BrowserOrigin, serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					Method:  http.MethodPost,
+					Path:    "/dictionaries",
+					Handler: settings.CreateDictionaryHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPut,
+					Path:    "/dictionaries/:id",
+					Handler: settings.UpdateDictionaryHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodDelete,
+					Path:    "/dictionaries/:id",
+					Handler: settings.DeleteDictionaryHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPost,
+					Path:    "/settings",
+					Handler: settings.CreateSettingHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPut,
+					Path:    "/settings/:id",
+					Handler: settings.UpdateSettingHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodDelete,
+					Path:    "/settings/:id",
+					Handler: settings.DeleteSettingHandler(serverCtx),
 				},
 			}...,
 		),

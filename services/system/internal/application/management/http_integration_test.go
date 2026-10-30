@@ -67,6 +67,12 @@ func TestHTTPManagement(t *testing.T) {
 			if err := cleanup.Where("code = ?", prefix+"_role").Delete(&model.Role{}).Error; err != nil {
 				return err
 			}
+			if err := cleanup.Where("code = ?", prefix+"_dict").Delete(&model.Dictionary{}).Error; err != nil {
+				return err
+			}
+			if err := cleanup.Where("code = ?", prefix+"_setting").Delete(&model.Setting{}).Error; err != nil {
+				return err
+			}
 			return tx.Bump(ctx)
 		})
 		if err != nil {
@@ -182,4 +188,5 @@ func TestHTTPManagement(t *testing.T) {
 	}
 	call("GET", "/system/audit-logs/0", rootToken, nil, false, 400)
 	call("GET", "/system/audit-logs/18446744073709551615", rootToken, nil, false, 404)
+	verifySettingsHTTP(t, call, db, prefix, rootToken, reader)
 }

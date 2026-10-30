@@ -39,6 +39,22 @@ export const menuResources = [
     permission: 'system.audit.read',
   },
   {
+    path: '/system/dictionaries',
+    title: '字典管理',
+    group: '系统管理',
+    icon: 'Collection',
+    component: 'dictionaries',
+    permission: 'system.dictionary.read',
+  },
+  {
+    path: '/system/settings',
+    title: '系统配置',
+    group: '系统管理',
+    icon: 'Setting',
+    component: 'settings',
+    permission: 'system.setting.read',
+  },
+  {
     path: '/api-docs',
     title: '接口文档',
     group: '开发工具',

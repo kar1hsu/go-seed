@@ -42,3 +42,7 @@ pnpm --dir web/admin build
 执行根目录 `make gen-web` 更新派生文档与类型。Element Plus 按组件引入。请求失败清除旧结果，展示错误并允许手动重试，不自动重试写操作；access token 仅保存在 Pinia 内存；refresh token 使用 HttpOnly Cookie。刷新页面恢复会话；同页请求合并刷新，支持 Web Locks 的浏览器还会跨标签页串行轮换。退出和授权保存通过 BroadcastChannel 通知其他标签页。可见页面每 30 秒及窗口激活时刷新权限，导航和 403 也会确认权限；服务端撤销立即生效。写操作不会在 401 后自动重放。页面显示的“连接正常”只代表 API/RPC 连通，依赖就绪请访问 API 的 `/readyz`。
 
 pnpm lockfile 固定依赖，workspace 仅允许 esbuild 构建脚本。Prettier 跳过生成目录，避免与生成器格式互相覆盖。
+
+## 字典、配置与导航
+
+字典管理和普通业务配置已接入，支持独立读写权限、版本冲突与事务审计。使用与接口边界见[字典与系统配置](../../docs/system-settings.md)。后台侧栏按分组展开/收起，标签支持右键菜单、键盘 Shift+F10 和右上角操作入口。

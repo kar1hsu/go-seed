@@ -26,6 +26,8 @@ export async function loadResources(root) {
     'administrators',
     'roles',
     'auditLogs',
+    'dictionaries',
+    'settings',
     'apiDocs',
     'about',
     'security',

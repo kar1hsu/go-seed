@@ -1,0 +1,153 @@
+syntax = "v1"
+
+type (
+	DictionaryItem {
+		Value   string `json:"value"`
+		Label   string `json:"label"`
+		Sort    int64  `json:"sort"`
+		Enabled bool   `json:"enabled"`
+	}
+	DictionaryRecord {
+		Id          string `json:"id"`
+		Code        string `json:"code"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Enabled     bool   `json:"enabled"`
+		Revision    string `json:"revision"`
+		CreatedAt   string `json:"createdAt"`
+		ItemCount   int64  `json:"itemCount"`
+	}
+	SettingRecord {
+		Id          string `json:"id"`
+		Code        string `json:"code"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Enabled     bool   `json:"enabled"`
+		Revision    string `json:"revision"`
+		CreatedAt   string `json:"createdAt"`
+		Type        string `json:"type"`
+		Value       string `json:"value"`
+	}
+	GetDictionaryRequest {
+		Id string `path:"id"`
+	}
+	DeleteSettingResourceRequest {
+		Id       string `path:"id"`
+		Revision string `form:"revision"`
+	}
+	CreateDictionaryRequest {
+		Code        string           `json:"code"`
+		Name        string           `json:"name"`
+		Description string           `json:"description"`
+		Enabled     bool             `json:"enabled"`
+		Items       []DictionaryItem `json:"items"`
+	}
+	UpdateDictionaryRequest {
+		Id          string           `path:"id"`
+		Name        string           `json:"name"`
+		Description string           `json:"description"`
+		Enabled     bool             `json:"enabled"`
+		Items       []DictionaryItem `json:"items"`
+		Revision    string           `json:"revision"`
+	}
+	DictionaryListData {
+		Items    []DictionaryRecord `json:"items"`
+		Total    int64              `json:"total"`
+		Page     int64              `json:"page"`
+		PageSize int64              `json:"pageSize"`
+	}
+	DictionaryDetailData {
+		Record DictionaryRecord `json:"record"`
+		Items  []DictionaryItem `json:"items"`
+	}
+	DictionaryListResponse {
+		Code    int                `json:"code"`
+		Message string             `json:"message"`
+		Data    DictionaryListData `json:"data"`
+		TraceId string             `json:"traceId"`
+	}
+	DictionaryResponse {
+		Code    int                  `json:"code"`
+		Message string               `json:"message"`
+		Data    DictionaryDetailData `json:"data"`
+		TraceId string               `json:"traceId"`
+	}
+	CreateSettingRequest {
+		Code        string `json:"code"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Enabled     bool   `json:"enabled"`
+		Value       string `json:"value"`
+		Type        string `json:"type"`
+	}
+	UpdateSettingRequest {
+		Id          string `path:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Enabled     bool   `json:"enabled"`
+		Value       string `json:"value"`
+		Revision    string `json:"revision"`
+	}
+	SettingListData {
+		Items    []SettingRecord `json:"items"`
+		Total    int64           `json:"total"`
+		Page     int64           `json:"page"`
+		PageSize int64           `json:"pageSize"`
+	}
+	SettingListResponse {
+		Code    int             `json:"code"`
+		Message string          `json:"message"`
+		Data    SettingListData `json:"data"`
+		TraceId string          `json:"traceId"`
+	}
+	SettingResponse {
+		Code    int           `json:"code"`
+		Message string        `json:"message"`
+		Data    SettingRecord `json:"data"`
+		TraceId string        `json:"traceId"`
+	}
+)
+
+@server (
+	prefix:     /admin-api/v1/system
+	group:      settings
+	middleware: AdminAccess
+	tags:       "Dictionaries and settings"
+)
+service admin-api {
+	@handler GetDictionary
+	get /dictionaries/:id (GetDictionaryRequest) returns (DictionaryResponse)
+
+	@handler ListDictionaries
+	get /dictionaries (ListManagementRequest) returns (DictionaryListResponse)
+
+	@handler ListSettings
+	get /settings (ListManagementRequest) returns (SettingListResponse)
+}
+
+@server (
+	prefix:     /admin-api/v1/system
+	group:      settings
+	middleware: BrowserOrigin,AdminAccess
+	tags:       "Dictionaries and settings"
+)
+service admin-api {
+	@handler CreateDictionary
+	post /dictionaries (CreateDictionaryRequest) returns (DictionaryResponse)
+
+	@handler UpdateDictionary
+	put /dictionaries/:id (UpdateDictionaryRequest) returns (ActionResponse)
+
+	@handler DeleteDictionary
+	delete /dictionaries/:id (DeleteSettingResourceRequest) returns (ActionResponse)
+
+	@handler CreateSetting
+	post /settings (CreateSettingRequest) returns (SettingResponse)
+
+	@handler UpdateSetting
+	put /settings/:id (UpdateSettingRequest) returns (ActionResponse)
+
+	@handler DeleteSetting
+	delete /settings/:id (DeleteSettingResourceRequest) returns (ActionResponse)
+}
+

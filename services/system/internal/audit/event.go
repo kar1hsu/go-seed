@@ -21,6 +21,8 @@ type Action struct{ Code, Name string }
 
 func Actions() []Action {
 	return []Action{
+		{resources.DictionaryCreate, "新增字典"}, {resources.DictionaryUpdate, "编辑与启停字典"}, {resources.DictionaryDelete, "删除字典"},
+		{resources.SettingCreate, "新增系统配置"}, {resources.SettingUpdate, "编辑与启停系统配置"}, {resources.SettingDelete, "删除系统配置"},
 		{resources.UserCreate, "新增管理员"}, {resources.UserUpdate, "编辑与启停管理员"},
 		{resources.UserAssignRole, "分配管理员角色"}, {resources.RoleCreate, "新增角色"},
 		{resources.RoleUpdate, "编辑与启停角色"}, {resources.RoleGrant, "设置角色权限"},
@@ -114,4 +116,18 @@ func New(ctx context.Context, actor *model.Administrator, action, targetType str
 		item.Source, item.ActorUsername, item.ActorName = "command", "system-cli", "领域运维命令"
 	}
 	return item, nil
+}
+
+func Dictionary(d model.Dictionary, items []model.DictionaryItem) Snapshot {
+	values := []string{}
+	for _, item := range items {
+		values = append(values, item.Value+" → "+item.Label+" · 排序 "+strconv.FormatInt(item.Sort, 10)+" · "+state(item.Enabled))
+	}
+	sort.Strings(values)
+	return Snapshot{{"code", "字典标识", []string{d.Code}}, {"name", "字典名称", []string{d.Name}}, {"description", "说明", []string{d.Description}}, {"enabled", "状态", []string{state(d.Enabled)}}, {"items", "字典项", values}}
+}
+
+// Only ordinary business parameters belong in settings; deployment credentials stay outside this store.
+func Setting(s model.Setting) Snapshot {
+	return Snapshot{{"code", "配置键", []string{s.Code}}, {"name", "配置名称", []string{s.Name}}, {"description", "说明", []string{s.Description}}, {"type", "值类型", []string{s.Type}}, {"value", "配置值", []string{s.Value}}, {"enabled", "状态", []string{state(s.Enabled)}}}
 }

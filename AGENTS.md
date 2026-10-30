@@ -2,7 +2,7 @@
 
 ## 项目状态
 
-当前已实现第一阶段工程骨架：两个 API、system-rpc、GORM/Redis 就绪检查、Vue 管理端、Compose、生成脚本和 CI。先读 README.md，并按任务查阅 docs/architecture.md、docs/directory-structure.md、docs/development-guide.md。管理员迁移、bootstrap、登录、刷新、退出和改密已实现；管理员管理、角色权限、菜单按钮授权和 Casbin 版本快照已实现；管理员/角色/改密/命令禁用的事务审计与日志查询已实现；Asynq worker/scheduler 与业务样板尚未实现；目标目录不代表全部存在。
+当前已实现第一阶段工程骨架：两个 API、system-rpc、GORM/Redis 就绪检查、Vue 管理端、Compose、生成脚本和 CI。先读 README.md，并按任务查阅 docs/architecture.md、docs/directory-structure.md、docs/development-guide.md。管理员迁移、bootstrap、登录、刷新、退出和改密已实现；管理员管理、角色权限、菜单按钮授权和 Casbin 版本快照已实现；管理员/角色/改密/命令禁用的事务审计与日志查询已实现；字典分类与子项、普通业务配置、编辑冲突与事务审计已实现，菜单分组可折叠、页签支持右键操作；Asynq worker/scheduler 与业务样板尚未实现；目标目录不代表全部存在。
 
 ## 工程边界
 

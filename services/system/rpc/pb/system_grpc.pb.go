@@ -19,6 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	System_GetDictionary_FullMethodName            = "/goseed.system.v1.System/GetDictionary"
+	System_ListDictionaries_FullMethodName         = "/goseed.system.v1.System/ListDictionaries"
+	System_CreateDictionary_FullMethodName         = "/goseed.system.v1.System/CreateDictionary"
+	System_UpdateDictionary_FullMethodName         = "/goseed.system.v1.System/UpdateDictionary"
+	System_DeleteDictionary_FullMethodName         = "/goseed.system.v1.System/DeleteDictionary"
+	System_ListSettings_FullMethodName             = "/goseed.system.v1.System/ListSettings"
+	System_CreateSetting_FullMethodName            = "/goseed.system.v1.System/CreateSetting"
+	System_UpdateSetting_FullMethodName            = "/goseed.system.v1.System/UpdateSetting"
+	System_DeleteSetting_FullMethodName            = "/goseed.system.v1.System/DeleteSetting"
 	System_ListAuditLogs_FullMethodName            = "/goseed.system.v1.System/ListAuditLogs"
 	System_GetAuditLog_FullMethodName              = "/goseed.system.v1.System/GetAuditLog"
 	System_ListAdministrators_FullMethodName       = "/goseed.system.v1.System/ListAdministrators"
@@ -44,6 +53,15 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SystemClient interface {
+	GetDictionary(ctx context.Context, in *GetDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error)
+	ListDictionaries(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListDictionariesResponse, error)
+	CreateDictionary(ctx context.Context, in *CreateDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error)
+	UpdateDictionary(ctx context.Context, in *UpdateDictionaryRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+	DeleteDictionary(ctx context.Context, in *DeleteSettingResourceRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+	ListSettings(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListSettingsResponse, error)
+	CreateSetting(ctx context.Context, in *CreateSettingRequest, opts ...grpc.CallOption) (*SettingResponse, error)
+	UpdateSetting(ctx context.Context, in *UpdateSettingRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+	DeleteSetting(ctx context.Context, in *DeleteSettingResourceRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
 	ListAuditLogs(ctx context.Context, in *ListAuditLogsRequest, opts ...grpc.CallOption) (*ListAuditLogsResponse, error)
 	GetAuditLog(ctx context.Context, in *GetAuditLogRequest, opts ...grpc.CallOption) (*GetAuditLogResponse, error)
 	ListAdministrators(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListAdministratorsResponse, error)
@@ -73,6 +91,96 @@ type systemClient struct {
 
 func NewSystemClient(cc grpc.ClientConnInterface) SystemClient {
 	return &systemClient{cc}
+}
+
+func (c *systemClient) GetDictionary(ctx context.Context, in *GetDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DictionaryResponse)
+	err := c.cc.Invoke(ctx, System_GetDictionary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) ListDictionaries(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListDictionariesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListDictionariesResponse)
+	err := c.cc.Invoke(ctx, System_ListDictionaries_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) CreateDictionary(ctx context.Context, in *CreateDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DictionaryResponse)
+	err := c.cc.Invoke(ctx, System_CreateDictionary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) UpdateDictionary(ctx context.Context, in *UpdateDictionaryRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminActionResponse)
+	err := c.cc.Invoke(ctx, System_UpdateDictionary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) DeleteDictionary(ctx context.Context, in *DeleteSettingResourceRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminActionResponse)
+	err := c.cc.Invoke(ctx, System_DeleteDictionary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) ListSettings(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListSettingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListSettingsResponse)
+	err := c.cc.Invoke(ctx, System_ListSettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) CreateSetting(ctx context.Context, in *CreateSettingRequest, opts ...grpc.CallOption) (*SettingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SettingResponse)
+	err := c.cc.Invoke(ctx, System_CreateSetting_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) UpdateSetting(ctx context.Context, in *UpdateSettingRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminActionResponse)
+	err := c.cc.Invoke(ctx, System_UpdateSetting_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) DeleteSetting(ctx context.Context, in *DeleteSettingResourceRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminActionResponse)
+	err := c.cc.Invoke(ctx, System_DeleteSetting_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *systemClient) ListAuditLogs(ctx context.Context, in *ListAuditLogsRequest, opts ...grpc.CallOption) (*ListAuditLogsResponse, error) {
@@ -269,6 +377,15 @@ func (c *systemClient) CheckReady(ctx context.Context, in *CheckReadyRequest, op
 // All implementations must embed UnimplementedSystemServer
 // for forward compatibility.
 type SystemServer interface {
+	GetDictionary(context.Context, *GetDictionaryRequest) (*DictionaryResponse, error)
+	ListDictionaries(context.Context, *ListManagementRequest) (*ListDictionariesResponse, error)
+	CreateDictionary(context.Context, *CreateDictionaryRequest) (*DictionaryResponse, error)
+	UpdateDictionary(context.Context, *UpdateDictionaryRequest) (*AdminActionResponse, error)
+	DeleteDictionary(context.Context, *DeleteSettingResourceRequest) (*AdminActionResponse, error)
+	ListSettings(context.Context, *ListManagementRequest) (*ListSettingsResponse, error)
+	CreateSetting(context.Context, *CreateSettingRequest) (*SettingResponse, error)
+	UpdateSetting(context.Context, *UpdateSettingRequest) (*AdminActionResponse, error)
+	DeleteSetting(context.Context, *DeleteSettingResourceRequest) (*AdminActionResponse, error)
 	ListAuditLogs(context.Context, *ListAuditLogsRequest) (*ListAuditLogsResponse, error)
 	GetAuditLog(context.Context, *GetAuditLogRequest) (*GetAuditLogResponse, error)
 	ListAdministrators(context.Context, *ListManagementRequest) (*ListAdministratorsResponse, error)
@@ -300,6 +417,33 @@ type SystemServer interface {
 // pointer dereference when methods are called.
 type UnimplementedSystemServer struct{}
 
+func (UnimplementedSystemServer) GetDictionary(context.Context, *GetDictionaryRequest) (*DictionaryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDictionary not implemented")
+}
+func (UnimplementedSystemServer) ListDictionaries(context.Context, *ListManagementRequest) (*ListDictionariesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDictionaries not implemented")
+}
+func (UnimplementedSystemServer) CreateDictionary(context.Context, *CreateDictionaryRequest) (*DictionaryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDictionary not implemented")
+}
+func (UnimplementedSystemServer) UpdateDictionary(context.Context, *UpdateDictionaryRequest) (*AdminActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDictionary not implemented")
+}
+func (UnimplementedSystemServer) DeleteDictionary(context.Context, *DeleteSettingResourceRequest) (*AdminActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteDictionary not implemented")
+}
+func (UnimplementedSystemServer) ListSettings(context.Context, *ListManagementRequest) (*ListSettingsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSettings not implemented")
+}
+func (UnimplementedSystemServer) CreateSetting(context.Context, *CreateSettingRequest) (*SettingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSetting not implemented")
+}
+func (UnimplementedSystemServer) UpdateSetting(context.Context, *UpdateSettingRequest) (*AdminActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateSetting not implemented")
+}
+func (UnimplementedSystemServer) DeleteSetting(context.Context, *DeleteSettingResourceRequest) (*AdminActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSetting not implemented")
+}
 func (UnimplementedSystemServer) ListAuditLogs(context.Context, *ListAuditLogsRequest) (*ListAuditLogsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAuditLogs not implemented")
 }
@@ -376,6 +520,168 @@ func RegisterSystemServer(s grpc.ServiceRegistrar, srv SystemServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&System_ServiceDesc, srv)
+}
+
+func _System_GetDictionary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDictionaryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).GetDictionary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_GetDictionary_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).GetDictionary(ctx, req.(*GetDictionaryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_ListDictionaries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListManagementRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).ListDictionaries(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_ListDictionaries_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).ListDictionaries(ctx, req.(*ListManagementRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_CreateDictionary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateDictionaryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).CreateDictionary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_CreateDictionary_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).CreateDictionary(ctx, req.(*CreateDictionaryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_UpdateDictionary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateDictionaryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).UpdateDictionary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_UpdateDictionary_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).UpdateDictionary(ctx, req.(*UpdateDictionaryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_DeleteDictionary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSettingResourceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).DeleteDictionary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_DeleteDictionary_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).DeleteDictionary(ctx, req.(*DeleteSettingResourceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_ListSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListManagementRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).ListSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_ListSettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).ListSettings(ctx, req.(*ListManagementRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_CreateSetting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSettingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).CreateSetting(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_CreateSetting_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).CreateSetting(ctx, req.(*CreateSettingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_UpdateSetting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateSettingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).UpdateSetting(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_UpdateSetting_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).UpdateSetting(ctx, req.(*UpdateSettingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_DeleteSetting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSettingResourceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).DeleteSetting(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_DeleteSetting_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).DeleteSetting(ctx, req.(*DeleteSettingResourceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _System_ListAuditLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -727,6 +1033,42 @@ var System_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "goseed.system.v1.System",
 	HandlerType: (*SystemServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetDictionary",
+			Handler:    _System_GetDictionary_Handler,
+		},
+		{
+			MethodName: "ListDictionaries",
+			Handler:    _System_ListDictionaries_Handler,
+		},
+		{
+			MethodName: "CreateDictionary",
+			Handler:    _System_CreateDictionary_Handler,
+		},
+		{
+			MethodName: "UpdateDictionary",
+			Handler:    _System_UpdateDictionary_Handler,
+		},
+		{
+			MethodName: "DeleteDictionary",
+			Handler:    _System_DeleteDictionary_Handler,
+		},
+		{
+			MethodName: "ListSettings",
+			Handler:    _System_ListSettings_Handler,
+		},
+		{
+			MethodName: "CreateSetting",
+			Handler:    _System_CreateSetting_Handler,
+		},
+		{
+			MethodName: "UpdateSetting",
+			Handler:    _System_UpdateSetting_Handler,
+		},
+		{
+			MethodName: "DeleteSetting",
+			Handler:    _System_DeleteSetting_Handler,
+		},
 		{
 			MethodName: "ListAuditLogs",
 			Handler:    _System_ListAuditLogs_Handler,

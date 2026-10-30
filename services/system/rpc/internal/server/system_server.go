@@ -23,6 +23,51 @@ func NewSystemServer(svcCtx *svc.ServiceContext) *SystemServer {
 	}
 }
 
+func (s *SystemServer) GetDictionary(ctx context.Context, in *pb.GetDictionaryRequest) (*pb.DictionaryResponse, error) {
+	l := logic.NewGetDictionaryLogic(ctx, s.svcCtx)
+	return l.GetDictionary(in)
+}
+
+func (s *SystemServer) ListDictionaries(ctx context.Context, in *pb.ListManagementRequest) (*pb.ListDictionariesResponse, error) {
+	l := logic.NewListDictionariesLogic(ctx, s.svcCtx)
+	return l.ListDictionaries(in)
+}
+
+func (s *SystemServer) CreateDictionary(ctx context.Context, in *pb.CreateDictionaryRequest) (*pb.DictionaryResponse, error) {
+	l := logic.NewCreateDictionaryLogic(ctx, s.svcCtx)
+	return l.CreateDictionary(in)
+}
+
+func (s *SystemServer) UpdateDictionary(ctx context.Context, in *pb.UpdateDictionaryRequest) (*pb.AdminActionResponse, error) {
+	l := logic.NewUpdateDictionaryLogic(ctx, s.svcCtx)
+	return l.UpdateDictionary(in)
+}
+
+func (s *SystemServer) DeleteDictionary(ctx context.Context, in *pb.DeleteSettingResourceRequest) (*pb.AdminActionResponse, error) {
+	l := logic.NewDeleteDictionaryLogic(ctx, s.svcCtx)
+	return l.DeleteDictionary(in)
+}
+
+func (s *SystemServer) ListSettings(ctx context.Context, in *pb.ListManagementRequest) (*pb.ListSettingsResponse, error) {
+	l := logic.NewListSettingsLogic(ctx, s.svcCtx)
+	return l.ListSettings(in)
+}
+
+func (s *SystemServer) CreateSetting(ctx context.Context, in *pb.CreateSettingRequest) (*pb.SettingResponse, error) {
+	l := logic.NewCreateSettingLogic(ctx, s.svcCtx)
+	return l.CreateSetting(in)
+}
+
+func (s *SystemServer) UpdateSetting(ctx context.Context, in *pb.UpdateSettingRequest) (*pb.AdminActionResponse, error) {
+	l := logic.NewUpdateSettingLogic(ctx, s.svcCtx)
+	return l.UpdateSetting(in)
+}
+
+func (s *SystemServer) DeleteSetting(ctx context.Context, in *pb.DeleteSettingResourceRequest) (*pb.AdminActionResponse, error) {
+	l := logic.NewDeleteSettingLogic(ctx, s.svcCtx)
+	return l.DeleteSetting(in)
+}
+
 func (s *SystemServer) ListAuditLogs(ctx context.Context, in *pb.ListAuditLogsRequest) (*pb.ListAuditLogsResponse, error) {
 	l := logic.NewListAuditLogsLogic(ctx, s.svcCtx)
 	return l.ListAuditLogs(in)

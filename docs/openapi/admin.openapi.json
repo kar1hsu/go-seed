@@ -1700,6 +1700,780 @@
         "x-permission": "system.audit.read"
       }
     },
+    "/admin-api/v1/system/dictionaries": {
+      "get": {
+        "tags": [
+          "Dictionaries and settings"
+        ],
+        "summary": "ListDictionaries",
+        "operationId": "settingsListDictionaries",
+        "parameters": [
+          {
+            "example": 1,
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100000,
+              "default": 1
+            }
+          },
+          {
+            "example": 20,
+            "name": "pageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "example": "all",
+            "name": "enabled",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "enabled",
+                "disabled"
+              ],
+              "default": "all"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DictionaryListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "x-permission": "system.dictionary.read"
+      },
+      "post": {
+        "tags": [
+          "Dictionaries and settings"
+        ],
+        "summary": "CreateDictionary",
+        "operationId": "settingsCreateDictionary",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDictionaryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DictionaryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "x-permission": "system.dictionary.create",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-GoSeed-CSRF",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            },
+            "description": "Required for same-origin write requests, including CLI clients."
+          }
+        ]
+      }
+    },
+    "/admin-api/v1/system/dictionaries/{id}": {
+      "get": {
+        "tags": [
+          "Dictionaries and settings"
+        ],
+        "summary": "GetDictionary",
+        "operationId": "settingsGetDictionary",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DictionaryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "x-permission": "system.dictionary.read"
+      },
+      "put": {
+        "tags": [
+          "Dictionaries and settings"
+        ],
+        "summary": "UpdateDictionary",
+        "operationId": "settingsUpdateDictionary",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-GoSeed-CSRF",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            },
+            "description": "Required for same-origin write requests, including CLI clients."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDictionaryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "x-permission": "system.dictionary.update"
+      },
+      "delete": {
+        "tags": [
+          "Dictionaries and settings"
+        ],
+        "summary": "DeleteDictionary",
+        "operationId": "settingsDeleteDictionary",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-GoSeed-CSRF",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            },
+            "description": "Required for same-origin write requests, including CLI clients."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "x-permission": "system.dictionary.delete"
+      }
+    },
     "/admin-api/v1/system/permissions": {
       "get": {
         "tags": [
@@ -2745,6 +3519,645 @@
         ],
         "x-permission": "system.role.grant"
       }
+    },
+    "/admin-api/v1/system/settings": {
+      "get": {
+        "tags": [
+          "Dictionaries and settings"
+        ],
+        "summary": "ListSettings",
+        "operationId": "settingsListSettings",
+        "parameters": [
+          {
+            "example": 1,
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100000,
+              "default": 1
+            }
+          },
+          {
+            "example": 20,
+            "name": "pageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "example": "all",
+            "name": "enabled",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "enabled",
+                "disabled"
+              ],
+              "default": "all"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "x-permission": "system.setting.read"
+      },
+      "post": {
+        "tags": [
+          "Dictionaries and settings"
+        ],
+        "summary": "CreateSetting",
+        "operationId": "settingsCreateSetting",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSettingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "x-permission": "system.setting.create",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-GoSeed-CSRF",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            },
+            "description": "Required for same-origin write requests, including CLI clients."
+          }
+        ]
+      }
+    },
+    "/admin-api/v1/system/settings/{id}": {
+      "put": {
+        "tags": [
+          "Dictionaries and settings"
+        ],
+        "summary": "UpdateSetting",
+        "operationId": "settingsUpdateSetting",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-GoSeed-CSRF",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            },
+            "description": "Required for same-origin write requests, including CLI clients."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "x-permission": "system.setting.update"
+      },
+      "delete": {
+        "tags": [
+          "Dictionaries and settings"
+        ],
+        "summary": "DeleteSetting",
+        "operationId": "settingsDeleteSetting",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-GoSeed-CSRF",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            },
+            "description": "Required for same-origin write requests, including CLI clients."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "x-permission": "system.setting.delete"
+      }
     }
   },
   "x-description": "This is a goctl generated swagger file.",
@@ -3226,6 +4639,36 @@
           }
         }
       },
+      "CreateDictionaryRequest": {
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "description",
+          "enabled",
+          "items"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryItem"
+            }
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
       "CreateRoleRequest": {
         "type": "object",
         "required": [
@@ -3241,6 +4684,37 @@
             "type": "string"
           },
           "name": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateSettingRequest": {
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "description",
+          "enabled",
+          "value",
+          "type"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "value": {
             "type": "string"
           }
         }
@@ -3304,7 +4778,165 @@
       "DeleteRoleRequest": {
         "type": "object"
       },
+      "DeleteSettingResourceRequest": {
+        "type": "object"
+      },
+      "DictionaryDetailData": {
+        "type": "object",
+        "required": [
+          "record",
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryItem"
+            }
+          },
+          "record": {
+            "$ref": "#/components/schemas/DictionaryRecord"
+          }
+        }
+      },
+      "DictionaryItem": {
+        "type": "object",
+        "required": [
+          "value",
+          "label",
+          "sort",
+          "enabled"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "integer"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "DictionaryListData": {
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryRecord"
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "DictionaryListResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DictionaryListData"
+          },
+          "message": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "DictionaryRecord": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name",
+          "description",
+          "enabled",
+          "revision",
+          "createdAt",
+          "itemCount"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "itemCount": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          }
+        }
+      },
+      "DictionaryResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DictionaryDetailData"
+          },
+          "message": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
       "GetAuditLogRequest": {
+        "type": "object"
+      },
+      "GetDictionaryRequest": {
         "type": "object"
       },
       "GrantRoleRequest": {
@@ -3581,6 +5213,121 @@
           }
         }
       },
+      "SettingListData": {
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SettingRecord"
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "SettingListResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SettingListData"
+          },
+          "message": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "SettingRecord": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name",
+          "description",
+          "enabled",
+          "revision",
+          "createdAt",
+          "type",
+          "value"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "SettingResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SettingRecord"
+          },
+          "message": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
       "UpdateAdministratorRequest": {
         "type": "object",
         "required": [
@@ -3594,6 +5341,36 @@
           },
           "enabled": {
             "type": "boolean"
+          },
+          "revision": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateDictionaryRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "enabled",
+          "items",
+          "revision"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryItem"
+            }
+          },
+          "name": {
+            "type": "string"
           },
           "revision": {
             "type": "string"
@@ -3619,6 +5396,33 @@
             "type": "string"
           },
           "revision": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateSettingRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "enabled",
+          "value",
+          "revision"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "value": {
             "type": "string"
           }
         }

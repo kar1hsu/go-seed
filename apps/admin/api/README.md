@@ -18,3 +18,7 @@ curl http://127.0.0.1:8081/admin-api/v1/system/ping
 - 业务探测详见 [API.md](API.md) 和 [OpenAPI](../../../docs/openapi/admin.openapi.json)。
 
 执行 `go test ./apps/admin/api/...` 验证生成 handler → gRPC → HTTP 的成功与失败映射；真实依赖使用 `make smoke`。退出由进程监督器统一处理，下游连接在退出时释放。
+
+## 字典、配置与导航
+
+字典管理和普通业务配置已接入，支持独立读写权限、版本冲突与事务审计。使用与接口边界见[字典与系统配置](../../../docs/system-settings.md)。后台侧栏按分组展开/收起，标签支持右键菜单、键盘 Shift+F10 和右上角操作入口。

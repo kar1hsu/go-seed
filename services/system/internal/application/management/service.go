@@ -73,6 +73,14 @@ func publicError(ctx context.Context, err error) error {
 	return xerr.New(codes.Unavailable)
 }
 func (s *Service) run(ctx context.Context, raw, permission string, write bool, fn func(*repository.RBAC, *authorization.Access) error) error {
+	return s.runTransaction(ctx, raw, permission, write, write, fn)
+}
+
+// Settings writes share the policy lock with revocations but do not change the authorization version.
+func (s *Service) runData(ctx context.Context, raw, permission string, write bool, fn func(*repository.RBAC, *authorization.Access) error) error {
+	return s.runTransaction(ctx, raw, permission, write, false, fn)
+}
+func (s *Service) runTransaction(ctx context.Context, raw, permission string, write, policyChanged bool, fn func(*repository.RBAC, *authorization.Access) error) error {
 	return publicError(ctx, s.store.Transaction(ctx, write, func(tx *repository.RBAC) error {
 		access, err := s.authorizer.Current(ctx, tx, raw)
 		if err != nil {
@@ -86,7 +94,7 @@ func (s *Service) run(ctx context.Context, raw, permission string, write bool, f
 		if err = fn(tx, access); err != nil {
 			return err
 		}
-		if write {
+		if policyChanged {
 			return tx.Bump(ctx)
 		}
 		return nil

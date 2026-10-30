@@ -6,9 +6,21 @@ import {
   Lock,
   User,
   Key,
+  Collection,
+  Setting,
 } from '@element-plus/icons-vue'
 import { menuResources } from './resources.generated'
-const icons = { DataBoard, Monitor, Document, InfoFilled, Lock, User, Key }
+const icons = {
+  DataBoard,
+  Monitor,
+  Document,
+  InfoFilled,
+  Lock,
+  User,
+  Key,
+  Collection,
+  Setting,
+}
 export const navigation = menuResources.map((item) => ({
   ...item,
   icon: icons[item.icon],

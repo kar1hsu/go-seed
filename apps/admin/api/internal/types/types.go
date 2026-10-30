@@ -138,10 +138,27 @@ type CreateAdministratorRequest struct {
 	Password    string `json:"password"`
 }
 
+type CreateDictionaryRequest struct {
+	Code        string           `json:"code"`
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	Enabled     bool             `json:"enabled"`
+	Items       []DictionaryItem `json:"items"`
+}
+
 type CreateRoleRequest struct {
 	Code        string `json:"code"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+}
+
+type CreateSettingRequest struct {
+	Code        string `json:"code"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Enabled     bool   `json:"enabled"`
+	Value       string `json:"value"`
+	Type        string `json:"type"`
 }
 
 type CurrentData struct {
@@ -164,7 +181,60 @@ type DeleteRoleRequest struct {
 	Revision string `form:"revision"`
 }
 
+type DeleteSettingResourceRequest struct {
+	Id       string `path:"id"`
+	Revision string `form:"revision"`
+}
+
+type DictionaryDetailData struct {
+	Record DictionaryRecord `json:"record"`
+	Items  []DictionaryItem `json:"items"`
+}
+
+type DictionaryItem struct {
+	Value   string `json:"value"`
+	Label   string `json:"label"`
+	Sort    int64  `json:"sort"`
+	Enabled bool   `json:"enabled"`
+}
+
+type DictionaryListData struct {
+	Items    []DictionaryRecord `json:"items"`
+	Total    int64              `json:"total"`
+	Page     int64              `json:"page"`
+	PageSize int64              `json:"pageSize"`
+}
+
+type DictionaryListResponse struct {
+	Code    int                `json:"code"`
+	Message string             `json:"message"`
+	Data    DictionaryListData `json:"data"`
+	TraceId string             `json:"traceId"`
+}
+
+type DictionaryRecord struct {
+	Id          string `json:"id"`
+	Code        string `json:"code"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Enabled     bool   `json:"enabled"`
+	Revision    string `json:"revision"`
+	CreatedAt   string `json:"createdAt"`
+	ItemCount   int64  `json:"itemCount"`
+}
+
+type DictionaryResponse struct {
+	Code    int                  `json:"code"`
+	Message string               `json:"message"`
+	Data    DictionaryDetailData `json:"data"`
+	TraceId string               `json:"traceId"`
+}
+
 type GetAuditLogRequest struct {
+	Id string `path:"id"`
+}
+
+type GetDictionaryRequest struct {
 	Id string `path:"id"`
 }
 
@@ -264,6 +334,39 @@ type RoleResponse struct {
 	TraceId string     `json:"traceId"`
 }
 
+type SettingListData struct {
+	Items    []SettingRecord `json:"items"`
+	Total    int64           `json:"total"`
+	Page     int64           `json:"page"`
+	PageSize int64           `json:"pageSize"`
+}
+
+type SettingListResponse struct {
+	Code    int             `json:"code"`
+	Message string          `json:"message"`
+	Data    SettingListData `json:"data"`
+	TraceId string          `json:"traceId"`
+}
+
+type SettingRecord struct {
+	Id          string `json:"id"`
+	Code        string `json:"code"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Enabled     bool   `json:"enabled"`
+	Revision    string `json:"revision"`
+	CreatedAt   string `json:"createdAt"`
+	Type        string `json:"type"`
+	Value       string `json:"value"`
+}
+
+type SettingResponse struct {
+	Code    int           `json:"code"`
+	Message string        `json:"message"`
+	Data    SettingRecord `json:"data"`
+	TraceId string        `json:"traceId"`
+}
+
 type UpdateAdministratorRequest struct {
 	Id          string `path:"id"`
 	DisplayName string `json:"displayName"`
@@ -271,10 +374,28 @@ type UpdateAdministratorRequest struct {
 	Revision    string `json:"revision"`
 }
 
+type UpdateDictionaryRequest struct {
+	Id          string           `path:"id"`
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	Enabled     bool             `json:"enabled"`
+	Items       []DictionaryItem `json:"items"`
+	Revision    string           `json:"revision"`
+}
+
 type UpdateRoleRequest struct {
 	Id          string `path:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Enabled     bool   `json:"enabled"`
+	Revision    string `json:"revision"`
+}
+
+type UpdateSettingRequest struct {
+	Id          string `path:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Enabled     bool   `json:"enabled"`
+	Value       string `json:"value"`
 	Revision    string `json:"revision"`
 }

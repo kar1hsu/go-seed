@@ -10,6 +10,15 @@ import (
 )
 
 const (
+	DictionaryRead   = "system.dictionary.read"
+	DictionaryCreate = "system.dictionary.create"
+	DictionaryUpdate = "system.dictionary.update"
+	DictionaryDelete = "system.dictionary.delete"
+	SettingRead      = "system.setting.read"
+	SettingCreate    = "system.setting.create"
+	SettingUpdate    = "system.setting.update"
+	SettingDelete    = "system.setting.delete"
+
 	UserRead       = "system.user.read"
 	UserCreate     = "system.user.create"
 	UserUpdate     = "system.user.update"

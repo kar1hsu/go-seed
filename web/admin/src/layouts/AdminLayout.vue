@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Fold,
   Expand,
   ArrowRight,
-  Close,
+  MoreFilled,
   Link,
   Document,
   RefreshRight,
@@ -18,6 +18,10 @@ import {
 } from 'element-plus'
 import { useAuthStore, authMessage } from '../features/auth/store'
 import { navigation } from '../router/navigation'
+import SidebarNavigation from './SidebarNavigation.vue'
+import PageTab from './PageTab.vue'
+import TabActions from './TabActions.vue'
+import { closeTabs, type CloseAction } from './tabs'
 import { project } from '../app/project'
 import { useDashboardStore } from '../features/dashboard/store'
 
@@ -29,7 +33,21 @@ const status = useDashboardStore()
 const collapsed = ref(false)
 const mobileOpen = ref(false)
 const mobile = ref(false)
-const visited = ref(['/'])
+const visited = ref<string[]>(['/'])
+const pageVersion = ref(0)
+const tabsElement = ref<HTMLElement>()
+try {
+  collapsed.value = localStorage.getItem('goseed.menu.collapsed') === 'true'
+} catch {
+  /* Optional preference. */
+}
+watch(collapsed, (value) => {
+  try {
+    localStorage.setItem('goseed.menu.collapsed', String(value))
+  } catch {
+    /* Optional preference. */
+  }
+})
 async function userAction(command: string) {
   if (command === 'security') {
     await router.push('/account/security')
@@ -47,12 +65,6 @@ async function userAction(command: string) {
     signingOut.value = false
   }
 }
-const visibleNavigation = computed(() =>
-  navigation.filter((item) => !item.hidden && auth.has(item.permission)),
-)
-const menuGroups = computed(() => [
-  ...new Set(visibleNavigation.value.map((item) => item.group)),
-])
 const current = computed(
   () =>
     navigation.find((item) => item.path === route.path) ||
@@ -74,14 +86,45 @@ function toggleSidebar() {
   if (mobile.value) mobileOpen.value = !mobileOpen.value
   else collapsed.value = !collapsed.value
 }
-function closeTab(path: string) {
-  visited.value = visited.value.filter((item) => item !== path)
-  if (route.path === path) void router.push(visited.value.at(-1) || '/')
+function tabOptions(path: string) {
+  const paths: string[] = tabs.value.map((item) => item.path)
+  return {
+    pinned: path === '/',
+    hasOthers: paths.some((item) => item !== '/' && item !== path),
+    hasRight: paths.slice(paths.indexOf(path) + 1).some((item) => item !== '/'),
+    hasClosable: paths.some((item) => item !== '/'),
+  }
 }
+async function tabAction(path: string, command: string) {
+  if (command === 'refresh') {
+    if (route.path !== path) await router.push(path)
+    if (route.path === path) pageVersion.value++
+    return
+  }
+  if (!['close', 'others', 'right', 'all'].includes(command)) return
+  const result = closeTabs(
+    tabs.value.map((item) => item.path),
+    route.path,
+    path,
+    command as CloseAction,
+  )
+  visited.value = result.paths
+  if (result.active !== route.path) await router.push(result.active)
+}
+watch([() => route.path, tabs], async () => {
+  await nextTick()
+  tabsElement.value
+    ?.querySelector('[aria-current="page"]')
+    ?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+})
 watch(
   () => route.path,
   (path) => {
-    if (!visited.value.includes(path)) visited.value.push(path)
+    if (
+      navigation.some((item) => item.path === path) &&
+      !visited.value.includes(path)
+    )
+      visited.value.push(path)
     mobileOpen.value = false
     document.title = `${current.value.title} - GoSeed`
   },
@@ -90,6 +133,11 @@ watch(
 watch(
   () => auth.permissions,
   () => {
+    visited.value = visited.value.filter((path) =>
+      navigation.some(
+        (item) => item.path === path && auth.has(item.permission),
+      ),
+    )
     if (
       auth.admin &&
       typeof route.meta.permission === 'string' &&
@@ -118,31 +166,16 @@ onBeforeUnmount(() => media.removeEventListener('change', updateMedia))
       aria-label="关闭导航菜单"
       @click="mobileOpen = false"
     ></button>
-    <aside class="app-sidebar" aria-label="侧边导航">
+    <aside
+      class="app-sidebar"
+      aria-label="侧边导航"
+      :inert="mobile && !mobileOpen"
+    >
       <RouterLink class="app-brand" to="/" aria-label="GoSeed 工作台"
         ><img src="/seed.svg" alt="" /><strong>GoSeed</strong
         ><span>Admin</span></RouterLink
       >
-      <nav class="side-menu" aria-label="主导航">
-        <template v-for="group in menuGroups" :key="group">
-          <div class="menu-group">{{ group }}</div>
-          <RouterLink
-            v-for="item in visibleNavigation.filter(
-              (item) => item.group === group,
-            )"
-            :key="item.path"
-            :to="item.path"
-            class="menu-item"
-            :class="{ active: route.path === item.path }"
-            :aria-current="route.path === item.path ? 'page' : undefined"
-            :title="item.title"
-          >
-            <component :is="item.icon" class="icon" /><span>{{
-              item.title
-            }}</span>
-          </RouterLink>
-        </template>
-      </nav>
+      <SidebarNavigation :collapsed="collapsed && !mobile" />
       <div class="sidebar-bottom">
         <span>GoSeed v{{ project.version }}</span
         ><button
@@ -213,41 +246,51 @@ onBeforeUnmount(() => media.removeEventListener('change', updateMedia))
           </div>
         </header>
         <div class="tabs-bar">
-          <nav class="page-tabs" aria-label="已打开页面">
-            <div
+          <nav ref="tabsElement" class="page-tabs" aria-label="已打开页面">
+            <PageTab
               v-for="item in tabs"
               :key="item.path"
-              class="page-tab"
-              :class="{ active: route.path === item.path }"
-            >
-              <RouterLink
-                :to="item.path"
-                :aria-current="route.path === item.path ? 'page' : undefined"
-                ><component :is="item.icon" class="small-icon" />{{
-                  item.title
-                }}</RouterLink
-              ><button
-                v-if="item.path !== '/'"
-                class="tab-close"
-                :aria-label="`关闭${item.title}页签`"
-                @click="closeTab(item.path)"
-              >
-                <Close class="tiny-icon" />
-              </button>
-            </div>
+              :path="item.path"
+              :title="item.title"
+              :icon="item.icon"
+              :active="route.path === item.path"
+              v-bind="tabOptions(item.path)"
+              @action="(command) => tabAction(item.path, command)"
+            />
           </nav>
-          <button
-            class="icon-button tab-refresh"
-            aria-label="刷新服务数据"
-            title="刷新服务数据"
-            :disabled="status.loading"
-            @click="status.refresh"
-          >
-            <RefreshRight class="icon" :class="{ spinning: status.loading }" />
-          </button>
+          <div class="tab-tools">
+            <button
+              class="icon-button tab-refresh"
+              aria-label="刷新当前页面"
+              title="刷新当前页面"
+              @click="pageVersion++"
+            >
+              <RefreshRight class="icon" />
+            </button>
+            <ElDropdown
+              trigger="click"
+              :disabled="!tabs.some((item) => item.path === route.path)"
+              @command="(command) => tabAction(route.path, command)"
+            >
+              <button
+                class="icon-button"
+                aria-label="页面标签操作"
+                title="页面标签操作"
+              >
+                <MoreFilled class="icon" />
+              </button>
+              <template #dropdown
+                ><TabActions v-bind="tabOptions(route.path)"
+              /></template>
+            </ElDropdown>
+          </div>
         </div>
       </div>
-      <main id="main-content" class="page-content"><RouterView /></main>
+      <main id="main-content" class="page-content">
+        <RouterView v-slot="{ Component }"
+          ><component :is="Component" :key="`${route.fullPath}:${pageVersion}`"
+        /></RouterView>
+      </main>
       <footer class="app-footer">
         GoSeed Admin <span>v{{ project.version }}</span>
       </footer>

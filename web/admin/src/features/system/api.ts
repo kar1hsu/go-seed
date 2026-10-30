@@ -12,7 +12,7 @@ export type Query = {
   enabled: 'all' | 'enabled' | 'disabled'
 }
 const header = { 'X-GoSeed-CSRF': '1' as const }
-async function unwrap<T>(
+export async function unwrap<T>(
   result: Promise<{
     data?: { data: T }
     error?: { message: string; code: number; traceId: string }
