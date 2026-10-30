@@ -1,0 +1,93 @@
+syntax = "v1"
+type (
+ RegisterMemberRequest {
+  Username string `json:"username"`
+  Password string `json:"password"`
+  Nickname string `json:"nickname"`
+ }
+ MemberLoginRequest {
+  Username string `json:"username"`
+  Password string `json:"password"`
+ }
+ MemberProfile {
+  Id string `json:"id"`
+  Username string `json:"username"`
+  Nickname string `json:"nickname"`
+  Revision string `json:"revision"`
+  CreatedAt string `json:"createdAt"`
+ }
+ MemberProfileResponse {
+  Code int `json:"code"`
+  Message string `json:"message"`
+  Data MemberProfile `json:"data"`
+  TraceId string `json:"traceId"`
+ }
+ MemberAuthData {
+  User MemberProfile `json:"user"`
+  AccessToken string `json:"accessToken"`
+  ExpiresAt string `json:"expiresAt"`
+ }
+ MemberAuthResponse {
+  Code int `json:"code"`
+  Message string `json:"message"`
+  Data MemberAuthData `json:"data"`
+  TraceId string `json:"traceId"`
+ }
+ MemberActionData { Success bool `json:"success"` }
+ MemberActionResponse {
+  Code int `json:"code"`
+  Message string `json:"message"`
+  Data MemberActionData `json:"data"`
+  TraceId string `json:"traceId"`
+ }
+ UpdateMemberProfileRequest {
+  Nickname string `json:"nickname"`
+  Revision string `json:"revision"`
+ }
+ MemberPasswordRequest {
+  CurrentPassword string `json:"currentPassword"`
+  NewPassword string `json:"newPassword"`
+ }
+)
+@server (
+ prefix: /api/v1/auth
+ group: member
+ tags: "Member authentication"
+ middleware: BrowserOrigin
+)
+service app-api {
+ @doc "Register a member account; sign in separately"
+ @handler RegisterMember
+ post /register (RegisterMemberRequest) returns (MemberProfileResponse)
+ @doc "Sign in with member credentials; sets a member-only HttpOnly cookie"
+ @handler MemberLogin
+ post /login (MemberLoginRequest) returns (MemberAuthResponse)
+ @handler MemberRefresh
+ post /refresh returns (MemberAuthResponse)
+ @handler MemberLogout
+ post /logout returns (MemberActionResponse)
+}
+@server (
+ prefix: /api/v1
+ group: member
+ tags: "Member profile"
+ middleware: MemberAccess
+)
+service app-api {
+ @doc "Read the current member; no client-supplied user ID"
+ @handler MemberCurrent
+ get /me returns (MemberProfileResponse)
+}
+@server (
+ prefix: /api/v1
+ group: member
+ tags: "Member profile"
+ middleware: BrowserOrigin,MemberAccess
+)
+service app-api {
+ @handler UpdateMemberProfile
+ patch /me (UpdateMemberProfileRequest) returns (MemberProfileResponse)
+ @doc "Change password and revoke all member sessions"
+ @handler MemberChangePassword
+ post /me/password (MemberPasswordRequest) returns (MemberActionResponse)
+}

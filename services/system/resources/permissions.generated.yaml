@@ -1,0 +1,151 @@
+# Code generated from services/*/resources/permissions.yaml. DO NOT EDIT.
+- code: member.user.read
+  name: 查看会员
+  group: 会员管理
+  kind: menu
+- code: member.user.update_status
+  name: 启停会员
+  group: 会员管理
+  kind: button
+  requires:
+    - member.user.read
+- code: system.user.read
+  name: 查看管理员
+  group: 管理员管理
+  kind: menu
+  requires: []
+- code: system.user.create
+  name: 新增管理员
+  group: 管理员管理
+  kind: button
+  requires:
+    - system.user.read
+- code: system.user.update
+  name: 编辑与启停管理员
+  group: 管理员管理
+  kind: button
+  requires:
+    - system.user.read
+- code: system.user.assign_role
+  name: 分配管理员角色
+  group: 管理员管理
+  kind: button
+  requires:
+    - system.user.read
+    - system.role.read
+- code: system.role.read
+  name: 查看角色与权限
+  group: 角色管理
+  kind: menu
+  requires: []
+- code: system.role.create
+  name: 新增角色
+  group: 角色管理
+  kind: button
+  requires:
+    - system.role.read
+- code: system.role.update
+  name: 编辑与启停角色
+  group: 角色管理
+  kind: button
+  requires:
+    - system.role.read
+- code: system.role.grant
+  name: 设置角色权限
+  group: 角色管理
+  kind: button
+  requires:
+    - system.role.read
+- code: system.role.delete
+  name: 删除未使用角色
+  group: 角色管理
+  kind: button
+  requires:
+    - system.role.read
+- code: system.audit.read
+  name: 查看操作日志
+  group: 操作日志
+  kind: menu
+  requires: []
+- code: system.dictionary.read
+  name: 查看字典
+  group: 字典管理
+  kind: menu
+  requires: []
+- code: system.dictionary.create
+  name: 新增字典
+  group: 字典管理
+  kind: button
+  requires:
+    - system.dictionary.read
+- code: system.dictionary.update
+  name: 编辑与启停字典
+  group: 字典管理
+  kind: button
+  requires:
+    - system.dictionary.read
+- code: system.dictionary.delete
+  name: 删除字典
+  group: 字典管理
+  kind: button
+  requires:
+    - system.dictionary.read
+- code: system.setting.read
+  name: 查看系统配置
+  group: 系统配置管理
+  kind: menu
+  requires: []
+- code: system.setting.create
+  name: 新增系统配置
+  group: 系统配置管理
+  kind: button
+  requires:
+    - system.setting.read
+- code: system.setting.update
+  name: 编辑与启停系统配置
+  group: 系统配置管理
+  kind: button
+  requires:
+    - system.setting.read
+- code: system.setting.delete
+  name: 删除系统配置
+  group: 系统配置管理
+  kind: button
+  requires:
+    - system.setting.read
+- code: system.file.read
+  name: 查看自己的文件
+  group: 文件管理
+  kind: menu
+  requires: []
+- code: system.file.upload
+  name: 上传文件
+  group: 文件管理
+  kind: button
+  requires:
+    - system.file.read
+- code: system.file.delete
+  name: 删除自己的文件
+  group: 文件管理
+  kind: button
+  requires:
+    - system.file.read
+- code: system.task.read
+  name: 查看自己的任务与系统任务
+  group: 任务中心
+  kind: menu
+  requires: []
+- code: system.task.export
+  name: 导出字典 CSV
+  group: 任务中心
+  kind: button
+  requires:
+    - system.task.read
+    - system.file.read
+    - system.dictionary.read
+- code: system.task.retry
+  name: 重试失败任务
+  group: 任务中心
+  kind: button
+  requires:
+    - system.task.read

@@ -7,11 +7,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 
 	"github.com/kar1hsu/go-seed/apps/app/api/internal/config"
 	"github.com/kar1hsu/go-seed/apps/app/api/internal/handler"
 	"github.com/kar1hsu/go-seed/apps/app/api/internal/svc"
 	"github.com/kar1hsu/go-seed/pkg/xhttp"
+	memberpb "github.com/kar1hsu/go-seed/services/member/rpc/pb"
 	"github.com/kar1hsu/go-seed/services/system/rpc/pb"
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
@@ -27,13 +29,20 @@ func main() {
 	conf.MustLoad(*configFile, &c, conf.UseEnv())
 	httpx.SetErrorHandlerCtx(xhttp.ErrorHandler)
 
+	c.Middlewares.Log = false // Never log authentication request bodies.
 	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()
 
-	ctx := svc.NewServiceContext(c)
+	ctx, err := svc.NewServiceContext(c)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer ctx.Close()
 	xhttp.RegisterHealth(server, func(callCtx context.Context) error {
-		_, err := ctx.System.CheckReady(callCtx, &pb.CheckReadyRequest{})
+		if _, err := ctx.System.CheckReady(callCtx, &pb.CheckReadyRequest{}); err != nil {
+			return err
+		}
+		_, err := ctx.Member.CheckReady(callCtx, &memberpb.Empty{})
 		return err
 	})
 	handler.RegisterHandlers(server, ctx)

@@ -12,3 +12,20 @@ SystemRPC:
     - ${SYSTEM_RPC_HOST}:${SYSTEM_RPC_PORT}
   NonBlock: true
   Timeout: 2000
+
+MaxBytes: 16384
+MemberRPC:
+  Endpoints: ["${MEMBER_RPC_HOST}:${MEMBER_RPC_PORT}"]
+  NonBlock: true
+  Timeout: 3000
+MemberCredential:
+  Name: app-api
+  Secret: "${MEMBER_APP_RPC_SECRET}"
+Tokens:
+  Kind: member
+  Secret: "${MEMBER_TOKEN_SECRET}"
+  Issuer: go-seed-member
+  Audience: go-seed-app-api
+  AccessTTL: 15m
+CookieSecure: ${MEMBER_COOKIE_SECURE}
+AllowedOrigins: "${MEMBER_ALLOWED_ORIGINS}"

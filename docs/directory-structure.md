@@ -20,7 +20,7 @@ go-seed/
 ├── cmd/probe/                        # 容器健康检查客户端
 ├── services/                         # 按数据所有权划分的领域
 │   ├── system/                       # 管理基础能力
-│   └── catalog/                      # 后续加入的商品开发样板
+│   └── member/                       # C 端会员业务样板
 ├── pkg/                              # 无业务所有权的共享技术代码
 ├── web/
 │   └── admin/                        # Vue 管理后台
@@ -145,7 +145,7 @@ services/system/
 
 `rpc/system/` 是 `service System` 在当前 goctl 单 service 模式下的客户端输出目录；使用方可用 `systemclient` 作为 import 别名，避免与领域名称混淆。未来一个 proto 内增加多个 service 时，要显式启用 multiple 模式并同步调整生成目录规范，不能混用两种布局。
 
-新增 `catalog`、`order` 等领域时复制此结构的必要部分。没有异步业务就不创建 worker/scheduler，没有表就不创建 migrations。
+member 已实现同样的必要结构；其他新领域按实际需要参考[模块教程](new-module-guide.md)。没有异步业务就不创建 worker/scheduler，没有表就不创建 migrations。
 
 ## 依赖约束
 
@@ -204,7 +204,7 @@ web/admin/
         │   ├── setting/
         │   ├── file/
         │   └── audit/
-        └── catalog/product/          # 业务样板实现时加入
+        └── member/users/             # 已实现的会员管理样板
             ├── pages/
             ├── components/
             ├── api.ts                # 基于 generated client 的业务适配

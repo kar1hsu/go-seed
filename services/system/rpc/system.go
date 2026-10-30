@@ -71,6 +71,10 @@ func main() {
 		pb.System_AdminChangePassword_FullMethodName,
 	}
 	callers := []rpcx.Caller{{Name: "admin-api", Secret: c.AdminAPISecret, Methods: methods}}
+	for _, caller := range c.DomainCallers {
+		callers = append(callers, rpcx.Caller{Name: caller.Name, Secret: caller.Secret, Methods: []string{pb.System_CheckAccess_FullMethodName}})
+	}
+	methods = append(methods, pb.System_CheckAccess_FullMethodName)
 	public := []string{
 		pb.System_Ping_FullMethodName,
 		pb.System_CheckReady_FullMethodName,

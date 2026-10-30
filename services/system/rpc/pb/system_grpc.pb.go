@@ -19,6 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	System_CheckAccess_FullMethodName              = "/goseed.system.v1.System/CheckAccess"
 	System_ListFiles_FullMethodName                = "/goseed.system.v1.System/ListFiles"
 	System_CreateFile_FullMethodName               = "/goseed.system.v1.System/CreateFile"
 	System_AuthorizeFileUpload_FullMethodName      = "/goseed.system.v1.System/AuthorizeFileUpload"
@@ -62,6 +63,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SystemClient interface {
+	CheckAccess(ctx context.Context, in *CheckAccessRequest, opts ...grpc.CallOption) (*CheckAccessResponse, error)
 	ListFiles(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*FilesResponse, error)
 	CreateFile(ctx context.Context, in *CreateFileRequest, opts ...grpc.CallOption) (*FileResponse, error)
 	AuthorizeFileUpload(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileTransferResponse, error)
@@ -109,6 +111,16 @@ type systemClient struct {
 
 func NewSystemClient(cc grpc.ClientConnInterface) SystemClient {
 	return &systemClient{cc}
+}
+
+func (c *systemClient) CheckAccess(ctx context.Context, in *CheckAccessRequest, opts ...grpc.CallOption) (*CheckAccessResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckAccessResponse)
+	err := c.cc.Invoke(ctx, System_CheckAccess_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *systemClient) ListFiles(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*FilesResponse, error) {
@@ -485,6 +497,7 @@ func (c *systemClient) CheckReady(ctx context.Context, in *CheckReadyRequest, op
 // All implementations must embed UnimplementedSystemServer
 // for forward compatibility.
 type SystemServer interface {
+	CheckAccess(context.Context, *CheckAccessRequest) (*CheckAccessResponse, error)
 	ListFiles(context.Context, *ListFilesTasksRequest) (*FilesResponse, error)
 	CreateFile(context.Context, *CreateFileRequest) (*FileResponse, error)
 	AuthorizeFileUpload(context.Context, *FileTaskIDRequest) (*FileTransferResponse, error)
@@ -534,6 +547,9 @@ type SystemServer interface {
 // pointer dereference when methods are called.
 type UnimplementedSystemServer struct{}
 
+func (UnimplementedSystemServer) CheckAccess(context.Context, *CheckAccessRequest) (*CheckAccessResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckAccess not implemented")
+}
 func (UnimplementedSystemServer) ListFiles(context.Context, *ListFilesTasksRequest) (*FilesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListFiles not implemented")
 }
@@ -664,6 +680,24 @@ func RegisterSystemServer(s grpc.ServiceRegistrar, srv SystemServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&System_ServiceDesc, srv)
+}
+
+func _System_CheckAccess_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckAccessRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).CheckAccess(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_CheckAccess_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).CheckAccess(ctx, req.(*CheckAccessRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _System_ListFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1339,6 +1373,10 @@ var System_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "goseed.system.v1.System",
 	HandlerType: (*SystemServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CheckAccess",
+			Handler:    _System_CheckAccess_Handler,
+		},
 		{
 			MethodName: "ListFiles",
 			Handler:    _System_ListFiles_Handler,

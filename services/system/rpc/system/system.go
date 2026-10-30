@@ -29,6 +29,8 @@ type (
 	AuditAction                     = pb.AuditAction
 	AuditChange                     = pb.AuditChange
 	AuditLogRecord                  = pb.AuditLogRecord
+	CheckAccessRequest              = pb.CheckAccessRequest
+	CheckAccessResponse             = pb.CheckAccessResponse
 	CheckReadyRequest               = pb.CheckReadyRequest
 	CheckReadyResponse              = pb.CheckReadyResponse
 	CreateAdministratorRequest      = pb.CreateAdministratorRequest
@@ -77,6 +79,7 @@ type (
 	UpdateSettingRequest            = pb.UpdateSettingRequest
 
 	System interface {
+		CheckAccess(ctx context.Context, in *CheckAccessRequest, opts ...grpc.CallOption) (*CheckAccessResponse, error)
 		ListFiles(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*FilesResponse, error)
 		CreateFile(ctx context.Context, in *CreateFileRequest, opts ...grpc.CallOption) (*FileResponse, error)
 		AuthorizeFileUpload(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileTransferResponse, error)
@@ -127,6 +130,11 @@ func NewSystem(cli zrpc.Client) System {
 	return &defaultSystem{
 		cli: cli,
 	}
+}
+
+func (m *defaultSystem) CheckAccess(ctx context.Context, in *CheckAccessRequest, opts ...grpc.CallOption) (*CheckAccessResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.CheckAccess(ctx, in, opts...)
 }
 
 func (m *defaultSystem) ListFiles(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*FilesResponse, error) {

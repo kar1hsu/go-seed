@@ -15,6 +15,217 @@
   },
   "basePath": "/",
   "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Member authentication"
+        ],
+        "summary": "Sign in with member credentials; sets a member-only HttpOnly cookie",
+        "operationId": "memberMemberLogin",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MemberLoginRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/MemberAuthResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Member authentication"
+        ],
+        "summary": "MemberLogout",
+        "operationId": "memberMemberLogout",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/MemberActionResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Member authentication"
+        ],
+        "summary": "MemberRefresh",
+        "operationId": "memberMemberRefresh",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/MemberAuthResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Member authentication"
+        ],
+        "summary": "Register a member account; sign in separately",
+        "operationId": "memberRegisterMember",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RegisterMemberRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/MemberProfileResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Member profile"
+        ],
+        "summary": "Read the current member; no client-supplied user ID",
+        "operationId": "memberMemberCurrent",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/MemberProfileResponse"
+            }
+          }
+        }
+      },
+      "patch": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Member profile"
+        ],
+        "summary": "UpdateMemberProfile",
+        "operationId": "memberUpdateMemberProfile",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateMemberProfileRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/MemberProfileResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/password": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Member profile"
+        ],
+        "summary": "Change password and revoke all member sessions",
+        "operationId": "memberMemberChangePassword",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MemberPasswordRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/MemberActionResponse"
+            }
+          }
+        }
+      }
+    },
     "/api/v1/system/ping": {
       "get": {
         "produces": [
@@ -40,6 +251,263 @@
     }
   },
   "definitions": {
+    "MemberActionData": {
+      "type": "object",
+      "required": [
+        "success"
+      ],
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MemberActionResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "success"
+          ],
+          "properties": {
+            "success": {
+              "type": "boolean"
+            }
+          },
+          "$ref": "#/definitions/MemberActionData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "MemberAuthData": {
+      "type": "object",
+      "required": [
+        "user",
+        "accessToken",
+        "expiresAt"
+      ],
+      "properties": {
+        "accessToken": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string"
+        },
+        "user": {
+          "type": "object",
+          "required": [
+            "id",
+            "username",
+            "nickname",
+            "revision",
+            "createdAt"
+          ],
+          "properties": {
+            "createdAt": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "nickname": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/MemberProfile"
+        }
+      }
+    },
+    "MemberAuthResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "user",
+            "accessToken",
+            "expiresAt"
+          ],
+          "properties": {
+            "accessToken": {
+              "type": "string"
+            },
+            "expiresAt": {
+              "type": "string"
+            },
+            "user": {
+              "type": "object",
+              "required": [
+                "id",
+                "username",
+                "nickname",
+                "revision",
+                "createdAt"
+              ],
+              "properties": {
+                "createdAt": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "nickname": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "string"
+                },
+                "username": {
+                  "type": "string"
+                }
+              },
+              "$ref": "#/definitions/MemberProfile"
+            }
+          },
+          "$ref": "#/definitions/MemberAuthData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "MemberLoginRequest": {
+      "type": "object",
+      "required": [
+        "username",
+        "password"
+      ],
+      "properties": {
+        "password": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "MemberPasswordRequest": {
+      "type": "object",
+      "required": [
+        "currentPassword",
+        "newPassword"
+      ],
+      "properties": {
+        "currentPassword": {
+          "type": "string"
+        },
+        "newPassword": {
+          "type": "string"
+        }
+      }
+    },
+    "MemberProfile": {
+      "type": "object",
+      "required": [
+        "id",
+        "username",
+        "nickname",
+        "revision",
+        "createdAt"
+      ],
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nickname": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "MemberProfileResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "id",
+            "username",
+            "nickname",
+            "revision",
+            "createdAt"
+          ],
+          "properties": {
+            "createdAt": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "nickname": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/MemberProfile"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
     "PingData": {
       "type": "object",
       "required": [
@@ -95,6 +563,40 @@
           "type": "string"
         },
         "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "RegisterMemberRequest": {
+      "type": "object",
+      "required": [
+        "username",
+        "password",
+        "nickname"
+      ],
+      "properties": {
+        "nickname": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "UpdateMemberProfileRequest": {
+      "type": "object",
+      "required": [
+        "nickname",
+        "revision"
+      ],
+      "properties": {
+        "nickname": {
+          "type": "string"
+        },
+        "revision": {
           "type": "string"
         }
       }

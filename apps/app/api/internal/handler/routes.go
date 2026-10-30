@@ -6,6 +6,7 @@ package handler
 import (
 	"net/http"
 
+	member "github.com/kar1hsu/go-seed/apps/app/api/internal/handler/member"
 	system "github.com/kar1hsu/go-seed/apps/app/api/internal/handler/system"
 	"github.com/kar1hsu/go-seed/apps/app/api/internal/svc"
 
@@ -13,6 +14,72 @@ import (
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.BrowserOrigin},
+			[]rest.Route{
+				{
+					// Sign in with member credentials; sets a member-only HttpOnly cookie
+					Method:  http.MethodPost,
+					Path:    "/login",
+					Handler: member.MemberLoginHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPost,
+					Path:    "/logout",
+					Handler: member.MemberLogoutHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPost,
+					Path:    "/refresh",
+					Handler: member.MemberRefreshHandler(serverCtx),
+				},
+				{
+					// Register a member account; sign in separately
+					Method:  http.MethodPost,
+					Path:    "/register",
+					Handler: member.RegisterMemberHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/api/v1/auth"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.MemberAccess},
+			[]rest.Route{
+				{
+					// Read the current member; no client-supplied user ID
+					Method:  http.MethodGet,
+					Path:    "/me",
+					Handler: member.MemberCurrentHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/api/v1"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.BrowserOrigin, serverCtx.MemberAccess},
+			[]rest.Route{
+				{
+					Method:  http.MethodPatch,
+					Path:    "/me",
+					Handler: member.UpdateMemberProfileHandler(serverCtx),
+				},
+				{
+					// Change password and revoke all member sessions
+					Method:  http.MethodPost,
+					Path:    "/me/password",
+					Handler: member.MemberChangePasswordHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/api/v1"),
+	)
+
 	server.AddRoutes(
 		[]rest.Route{
 			{

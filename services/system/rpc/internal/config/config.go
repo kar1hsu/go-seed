@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/kar1hsu/go-seed/pkg/rpcx"
 	"github.com/kar1hsu/go-seed/pkg/storage"
 	"time"
 
@@ -10,8 +11,13 @@ import (
 	"github.com/zeromicro/go-zero/zrpc"
 )
 
+type DomainCaller struct {
+	rpcx.Credential
+	PermissionPrefix string
+}
 type Config struct {
-	Storage storage.Config
+	DomainCallers []DomainCaller `json:",optional"`
+	Storage       storage.Config
 	zrpc.RpcServerConf
 	MySQL          dbx.MySQLConfig
 	Cache          redis.RedisConf

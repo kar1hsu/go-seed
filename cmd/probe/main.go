@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	memberpb "github.com/kar1hsu/go-seed/services/member/rpc/pb"
 	"github.com/kar1hsu/go-seed/services/system/rpc/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -18,14 +19,15 @@ import (
 func main() {
 	target := flag.String("rpc", "", "RPC target")
 	url := flag.String("http", "", "HTTP health endpoint")
+	domain := flag.String("domain", "system", "RPC domain: system or member")
 	ready := flag.Bool("ready", false, "check RPC dependencies as well")
 	flag.Parse()
-	if err := check(*target, *url, *ready); err != nil {
+	if err := check(*target, *url, *ready, *domain); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
-func check(target, url string, ready bool) error {
+func check(target, url string, ready bool, domain string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	if url != "" {
@@ -59,7 +61,14 @@ func check(target, url string, ready bool) error {
 		return fmt.Errorf("RPC is not serving")
 	}
 	if ready {
-		_, err = pb.NewSystemClient(conn).CheckReady(ctx, &pb.CheckReadyRequest{})
+		switch domain {
+		case "system":
+			_, err = pb.NewSystemClient(conn).CheckReady(ctx, &pb.CheckReadyRequest{})
+		case "member":
+			_, err = memberpb.NewMemberClient(conn).CheckReady(ctx, &memberpb.Empty{})
+		default:
+			return fmt.Errorf("unknown RPC domain")
+		}
 	}
 	return err
 }

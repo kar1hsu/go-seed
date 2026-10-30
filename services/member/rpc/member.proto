@@ -1,0 +1,32 @@
+syntax = "proto3";
+package goseed.member.v1;
+option go_package = "github.com/kar1hsu/go-seed/services/member/rpc/pb";
+message Empty {}
+message ReadyResponse { bool ready = 1; }
+message RegisterRequest { string username = 1; string password = 2; string nickname = 3; }
+message LoginRequest { string username = 1; string password = 2; }
+message RefreshRequest { string refresh_token = 1; }
+message Profile { string id = 1; string username = 2; string nickname = 3; string revision = 4; string created_at = 5; }
+message SessionResponse { Profile user = 1; string access_token = 2; string expires_at = 3; string refresh_token = 4; string refresh_expires_at = 5; }
+message UpdateProfileRequest { string nickname = 1; string revision = 2; }
+message ChangePasswordRequest { string current_password = 1; string new_password = 2; }
+message UserQuery { int64 page = 1; int64 page_size = 2; string keyword = 3; string enabled = 4; }
+message UserID { string id = 1; }
+message UserRecord { string id = 1; string username = 2; string nickname = 3; bool enabled = 4; string revision = 5; string created_at = 6; string updated_at = 7; string last_login_at = 8; }
+message UserList { repeated UserRecord items = 1; int64 total = 2; }
+message AuditRecord { string id = 1; string action = 2; string actor_kind = 3; string actor_id = 4; string created_at = 5; string trace_id = 6; }
+message UserDetail { UserRecord user = 1; repeated AuditRecord recent_events = 2; }
+message SetUserStatusRequest { string id = 1; bool enabled = 2; string revision = 3; }
+service Member {
+ rpc CheckReady(Empty) returns (ReadyResponse);
+ rpc Register(RegisterRequest) returns (Profile);
+ rpc Login(LoginRequest) returns (SessionResponse);
+ rpc Refresh(RefreshRequest) returns (SessionResponse);
+ rpc Logout(RefreshRequest) returns (Empty);
+ rpc Current(Empty) returns (Profile);
+ rpc UpdateProfile(UpdateProfileRequest) returns (Profile);
+ rpc ChangePassword(ChangePasswordRequest) returns (Empty);
+ rpc ListUsers(UserQuery) returns (UserList);
+ rpc GetUser(UserID) returns (UserDetail);
+ rpc SetUserStatus(SetUserStatusRequest) returns (Empty);
+}

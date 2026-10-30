@@ -1,6 +1,6 @@
 # GoSeed 整体架构
 
-GoSeed 面向需要业务 API 和管理后台的 Go 项目，采用单仓库、单 Go module、多个独立服务进程的结构。工程骨架、认证授权、文件与异步任务已接入；下文仍包含跨领域授权等目标设计，实现状态以 README 和 roadmap 为准。
+GoSeed 面向需要业务 API 和管理后台的 Go 项目，采用单仓库、单 Go module、多个独立服务进程的结构。工程骨架、认证授权、文件与异步任务已接入；跨领域管理员授权已通过 system CheckAccess 接入；下文仍包含后续扩展目标，实现状态以 README 和 roadmap 为准。
 
 本文是实现基线；当前能力与具体限制以实施路线及[文件与任务](files-and-tasks.md)为准。目录与生成命令见[目录规范](directory-structure.md)和[开发约定](development-guide.md)。
 
@@ -9,7 +9,7 @@ GoSeed 面向需要业务 API 和管理后台的 Go 项目，采用单仓库、�
 | 项目 | 第一版选择 | 原因与边界 |
 | --- | --- | --- |
 | 仓库组织 | Monorepo，根目录一个 `go.mod` | 统一依赖、生成与联调；每个进程独立构建镜像 |
-| 服务形态 | 两个 HTTP API 和一个系统 RPC | 管理端与业务端分别演进；系统基础能力集中维护 |
+| 服务形态 | 两个 HTTP API、system/member RPC 与 system worker/scheduler | 管理端与业务端分别演进；系统基础能力集中维护 |
 | 业务拆分 | 按业务域拆，域内按模块组织 | 用户、角色、菜单不分别拆微服务；商品、订单按实际业务增加 |
 | HTTP 与 RPC | go-zero REST、zrpc | 保留原生生成目录与服务治理能力 |
 | 数据访问 | 默认 GORM | 便于关联查询、后台 CRUD 与现有经验复用；需要 sqlx 的服务单独决策 |
@@ -31,9 +31,9 @@ flowchart TB
   Edge --> AdminAPI[admin-api]
   Edge --> AppAPI[app-api]
   AdminAPI --> System[system-rpc]
-  AdminAPI -. 业务扩展 .-> Domain[业务域 RPC]
-  AppAPI -. 业务扩展 .-> Domain
-  Domain -. 授权与基础能力 .-> System
+  AdminAPI --> Domain[member-rpc]
+  AppAPI --> Domain
+  Domain --> System
   System --> SystemDB[(system 数据库)]
   Domain --> DomainDB[(业务域数据库)]
   System --> Cache[(Redis 缓存)]
@@ -44,7 +44,7 @@ flowchart TB
   System --> Object[文件存储]
 ```
 
-图中的 worker 是 system 领域示例，其他领域的 worker 只访问自己的数据库。虚线表示按业务启用的组件或调用；业务域 RPC 不是首版运行系统后台的前置条件。
+图中的 worker 是 system 领域示例，其他领域的 worker 只访问自己的数据库。虚线表示按业务启用的组件或调用；member-rpc 已作为当前运行栈的一部分。
 
 反向代理承担 TLS、静态资源和路由转发。`admin-api`、`app-api` 是面向客户端的接口聚合层，负责协议适配、参数校验和 RPC 编排。API 不持有业务表的数据库连接，业务事务放在 RPC 所属领域。
 
@@ -57,12 +57,13 @@ flowchart TB
 | `system-rpc` | 管理员认证、会话、角色、权限、菜单、字典、配置、文件元数据、审计 | system 数据库、Redis、存储适配器、任务生产者 |
 | `system-worker` | 导出、清理及其他 system 异步任务 | system 数据库、任务队列、存储适配器 |
 | `system-scheduler` | 投递 system 的周期任务 | 调度配置与队列客户端；不初始化整套后台依赖 |
-| `<domain>-rpc` | 商品、订单、会员等领域的业务用例 | 自己的数据库；必要的基础能力 RPC |
+| `member-rpc` | 会员注册登录、资料、会话、后台查询与启停 | 独立 member 数据库、Redis、system 授权 RPC |
+| `<domain>-rpc` | 后续独立领域的业务用例 | 自己的数据库；必要的基础能力 RPC |
 | `<domain>-worker` | 本领域异步用例 | 本领域内部代码与数据库 |
 
 `system-rpc` 只接纳通用管理能力。商品、订单等业务不能因为管理后台要操作它们，就写进 system。system 也不反向调用各业务域，避免依赖环。
 
-第一版 system 的账号是**管理员账号**。业务会员在实际需要时进入 member 等领域，使用独立的 issuer、audience、密钥及会话规则。`app-api` 初期提供基础入口与业务样板的公开查询，不把管理员登录直接当作会员登录。
+第一版 system 的账号是**管理员账号**。业务会员由 member 领域负责，已实现独立的 JWT kind、issuer、audience、密钥、数据库账号和会话规则。`app-api` 提供会员注册、登录与自己的资料接口。
 
 ## 代码分层
 
@@ -92,8 +93,8 @@ HTTP handler → API logic → RPC client
 1. `system-rpc` 完成管理员登录，签发短期 access token，维护 session 与可轮换的 refresh token。
 2. `admin-api` 验证 access token 的签名、算法、有效期、issuer、audience 和主体类型，构建类型明确的身份上下文。
 3. API 调用 RPC 时使用服务身份凭证，并传递原始用户 token、请求标识及 Trace 上下文。浏览器传入的 `X-User-ID`、角色或内部 metadata 不能作为可信身份。
-4. system 内的用例直接调用本地授权器，校验账号状态、session、token version 和权限。其他领域接入时通过待实现的 system `CheckAccess` 做同等校验，再检查本领域的数据归属。
-5. 权限名由 RPC 用例确定，例如 `catalog.product.update`；调用方不能通过传一个较弱的权限名来绕过检查。
+4. system 内的用例直接调用本地授权器，校验账号状态、session、token version 和权限。其他领域接入时通过已实现的 system `CheckAccess` 做同等校验，再检查本领域的数据归属。
+5. 权限名由 RPC 用例确定，例如 `member.user.update_status`；调用方不能通过传一个较弱的权限名来绕过检查。
 
 API 的 JWT 校验是入口检查，RPC 是业务授权的最终边界。第一版不在每层重复做相同的远程权限预检。公开方法采用明确的白名单，默认方法要求授权；system 的认证基础方法使用独立的服务调用权限，避免授权接口递归调用自身。
 
@@ -121,7 +122,7 @@ refresh token 仅存摘要，刷新采用原子轮换，旧 token 重用触发�
 
 ## 数据与事务
 
-第一版使用一个 MySQL 实例，按领域分逻辑数据库，例如 `goseed_system`、`goseed_catalog`，数据库账号按领域授权。领域间只保留业务 ID，不建跨库外键、跨域 Join 或直接更新其他服务的表。
+第一版使用一个 MySQL 实例，按领域分逻辑数据库，例如 `goseed_system`、`goseed_member`，数据库账号按领域授权。领域间只保留业务 ID，不建跨库外键、跨域 Join 或直接更新其他服务的表。
 
 事务由 application 发起，repository 使用传入的事务对象或明确的事务作用域。HTTP context、数据库事务、分布式事务是三个不同概念，事务不能跨 RPC 延续。聚合查询由 API/RPC 调用组成；高成本的跨域报表后续建立只读投影。
 
@@ -166,10 +167,10 @@ Asynq 按至少一次执行设计，消费者必须可重入。`Unique` 和调�
 | admin-api | `8081` | 可多副本，不对外暴露管理用指标端口 |
 | app-api | `8080` | 可多副本，独立于管理端发布 |
 | system-rpc | `19001`（容器内 `9001`） | 只对受信服务开放，配置服务身份校验 |
-| catalog-rpc 样板 | `9002` | 示例启用时运行 |
+| member-rpc | `19002`（容器内 `9002`） | 独立会员领域，仅向受信 API 提供业务方法 |
 | 前端开发服务 | `5173` | 开发代理转发 API |
 
-完整开发环境由两个 API、system-rpc、MySQL、Redis 和前端组成，任务能力作为可选启动组。仅开发系统后台时可以省略 app-api。运行时继续使用 RPC 边界，不维护另一套通过配置切换的进程内调用模式。
+完整开发环境由两个 API、system/member RPC、system worker/scheduler、MySQL、Redis 和前端组成。仅开发系统后台时可以省略 app-api。运行时继续使用 RPC 边界，不维护另一套通过配置切换的进程内调用模式。
 
 RPC 初期使用 `Endpoints`；go-zero 也提供 `Target` 与 etcd 配置，后续根据部署平台选择发现机制。单 Go module 不妨碍各进程分别执行 `go build` 和发布镜像。[RPC 配置源码](https://github.com/zeromicro/go-zero/blob/master/zrpc/config.go)
 

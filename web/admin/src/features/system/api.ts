@@ -1,33 +1,15 @@
-import { api, APIError } from '../../lib/http'
+import { api } from '../../lib/http'
 import type { components } from '../../api/generated/schema'
 
 type Schemas = components['schemas']
 export type Administrator = Schemas['AdministratorRecord']
 export type Role = Schemas['RoleRecord']
 export type Permission = Schemas['PermissionRecord']
-export type Query = {
-  page: number
-  pageSize: number
-  keyword: string
-  enabled: 'all' | 'enabled' | 'disabled'
-}
+import type { Query } from '../../lib/list-query'
+export type { Query } from '../../lib/list-query'
+import { unwrap } from '../../lib/api-response'
+export { unwrap } from '../../lib/api-response'
 const header = { 'X-GoSeed-CSRF': '1' as const }
-export async function unwrap<T>(
-  result: Promise<{
-    data?: { data: T }
-    error?: { message: string; code: number; traceId: string }
-    response: Response
-  }>,
-): Promise<T> {
-  const { data, error, response } = await result
-  if (!response.ok || error || !data)
-    throw new APIError(
-      error?.message || '操作失败',
-      error?.code,
-      error?.traceId,
-    )
-  return data.data
-}
 export const management = {
   administrators: (query: Query) =>
     unwrap(

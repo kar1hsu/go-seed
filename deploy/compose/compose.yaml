@@ -50,6 +50,7 @@ services:
     environment:
       <<: *storage-env
       ADMIN_TOKEN_SECRET: ${ADMIN_TOKEN_SECRET:?run make init}
+      MEMBER_SYSTEM_RPC_SECRET: ${MEMBER_SYSTEM_RPC_SECRET:?run make init}
       ADMIN_RPC_SECRET: ${ADMIN_RPC_SECRET:?run make init}
       SYSTEM_RPC_HOST: 0.0.0.0
       SYSTEM_RPC_PORT: 9001
@@ -69,6 +70,39 @@ services:
       interval: 5s
       timeout: 4s
       retries: 10
+  member-rpc:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/service.Dockerfile
+      args: { SERVICE_PATH: services/member/rpc }
+    command: ["-f", "services/member/rpc/etc/member.yaml"]
+    environment:
+      MEMBER_RPC_HOST: 0.0.0.0
+      MEMBER_RPC_PORT: 9002
+      MEMBER_TOKEN_SECRET: ${MEMBER_TOKEN_SECRET:?run make init}
+      MEMBER_ADMIN_RPC_SECRET: ${MEMBER_ADMIN_RPC_SECRET:?run make init}
+      MEMBER_APP_RPC_SECRET: ${MEMBER_APP_RPC_SECRET:?run make init}
+      MEMBER_SYSTEM_RPC_SECRET: ${MEMBER_SYSTEM_RPC_SECRET:?run make init}
+      MEMBER_REGISTER_RATE: ${MEMBER_REGISTER_RATE:-10}
+      MEMBER_LOGIN_RATE: ${MEMBER_LOGIN_RATE:-120}
+      MEMBER_MYSQL_DATABASE: ${MEMBER_MYSQL_DATABASE:?run make init}
+      MEMBER_MYSQL_USER: ${MEMBER_MYSQL_USER:?run make init}
+      MEMBER_MYSQL_PASSWORD: ${MEMBER_MYSQL_PASSWORD:?run make init}
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SYSTEM_RPC_HOST: system-rpc
+      SYSTEM_RPC_PORT: 9001
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      system-rpc: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "/app/probe", "-rpc", "127.0.0.1:9002", "-domain", "member", "-ready"]
+      interval: 5s
+      timeout: 4s
+      retries: 10
   admin-api:
     build:
       context: ../..
@@ -83,11 +117,15 @@ services:
       ADMIN_RPC_SECRET: ${ADMIN_RPC_SECRET:?run make init}
       ADMIN_COOKIE_SECURE: ${ADMIN_COOKIE_SECURE:-false}
       ADMIN_ALLOWED_ORIGINS: ${ADMIN_ALLOWED_ORIGINS:?run make init}
+      MEMBER_RPC_HOST: member-rpc
+      MEMBER_RPC_PORT: 9002
+      MEMBER_ADMIN_RPC_SECRET: ${MEMBER_ADMIN_RPC_SECRET:?run make init}
       SYSTEM_RPC_HOST: system-rpc
       SYSTEM_RPC_PORT: 9001
     ports: ["127.0.0.1:${ADMIN_API_PORT:-8081}:8081"]
     volumes: ["files-data:/app/data/files"]
     depends_on:
+      member-rpc: { condition: service_healthy }
       system-rpc: { condition: service_healthy }
     healthcheck:
       test: ["CMD", "/app/probe", "-http", "http://127.0.0.1:8081/readyz"]
@@ -101,12 +139,19 @@ services:
       args: { SERVICE_PATH: apps/app/api }
     command: ["-f", "apps/app/api/etc/app-api.yaml"]
     environment:
+      MEMBER_TOKEN_SECRET: ${MEMBER_TOKEN_SECRET:?run make init}
+      MEMBER_COOKIE_SECURE: ${MEMBER_COOKIE_SECURE:-false}
+      MEMBER_ALLOWED_ORIGINS: ${MEMBER_ALLOWED_ORIGINS:?run make init}
       API_HOST: 0.0.0.0
       APP_API_PORT: 8080
+      MEMBER_RPC_HOST: member-rpc
+      MEMBER_RPC_PORT: 9002
+      MEMBER_APP_RPC_SECRET: ${MEMBER_APP_RPC_SECRET:?run make init}
       SYSTEM_RPC_HOST: system-rpc
       SYSTEM_RPC_PORT: 9001
     ports: ["127.0.0.1:${APP_API_PORT:-8080}:8080"]
     depends_on:
+      member-rpc: { condition: service_healthy }
       system-rpc: { condition: service_healthy }
     healthcheck:
       test: ["CMD", "/app/probe", "-http", "http://127.0.0.1:8080/readyz"]

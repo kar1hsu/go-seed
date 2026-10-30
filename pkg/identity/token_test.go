@@ -58,3 +58,33 @@ func TestAccessTokenClaims(t *testing.T) {
 		}
 	}
 }
+
+func TestMemberAndAdminKindsAreIsolated(t *testing.T) {
+	// Even accidental reuse of a signing key/issuer/audience cannot bridge identity kinds.
+	c := Config{Secret: strings.Repeat("k", 48), Issuer: "shared-test", Audience: "shared-test", AccessTTL: 15 * time.Minute, Kind: "admin"}
+	admin, err := New(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.Kind = "member"
+	member, err := New(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sid, _ := Random()
+	a, _, _ := admin.Issue(1, sid, 1)
+	m, _, _ := member.Issue(1, sid, 1)
+	if _, err = member.Parse(a); err == nil {
+		t.Fatal("member accepted admin token")
+	}
+	if _, err = admin.Parse(m); err == nil {
+		t.Fatal("admin accepted member token")
+	}
+	if _, err = member.Parse(m); err != nil {
+		t.Fatal(err)
+	}
+	c.Kind = "unknown"
+	if _, err = New(c); err == nil {
+		t.Fatal("unknown kind accepted")
+	}
+}

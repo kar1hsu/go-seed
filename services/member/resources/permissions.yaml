@@ -1,0 +1,2 @@
+- {code: member.user.read, name: 查看会员, group: 会员管理, kind: menu}
+- {code: member.user.update_status, name: 启停会员, group: 会员管理, kind: button, requires: [member.user.read]}

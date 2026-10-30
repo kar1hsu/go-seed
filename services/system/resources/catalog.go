@@ -38,7 +38,7 @@ const (
 	SuperRole      = "super_admin"
 )
 
-//go:embed permissions.yaml
+//go:embed permissions.generated.yaml
 var catalog []byte
 
 //go:embed casbin_model.conf

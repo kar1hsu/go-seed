@@ -33,3 +33,7 @@
 - {method: get, path: '/admin-api/v1/system/tasks', permission: system.task.read}
 - {method: post, path: '/admin-api/v1/system/tasks/dictionary-export', permission: system.task.export, status: 202}
 - {method: post, path: '/admin-api/v1/system/tasks/{id}/retry', permission: system.task.retry, status: 202}
+
+- {method: get, path: /admin-api/v1/member/users, permission: member.user.read}
+- {method: get, path: '/admin-api/v1/member/users/{id}', permission: member.user.read}
+- {method: put, path: '/admin-api/v1/member/users/{id}/status', permission: member.user.update_status}

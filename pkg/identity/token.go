@@ -14,6 +14,7 @@ import (
 )
 
 type Config struct {
+	Kind      string `json:",default=admin"`
 	Secret    string
 	Issuer    string
 	Audience  string
@@ -32,6 +33,13 @@ type Tokens struct {
 }
 
 func New(c Config) (*Tokens, error) {
+	// Empty preserves the original administrator-only constructor contract.
+	if c.Kind == "" {
+		c.Kind = "admin"
+	}
+	if c.Kind != "admin" && c.Kind != "member" {
+		return nil, errors.New("invalid identity kind")
+	}
 	if len(c.Secret) < 32 || c.Issuer == "" || c.Audience == "" || c.AccessTTL < time.Minute || c.AccessTTL > time.Hour {
 		return nil, errors.New("invalid token configuration")
 	}
@@ -63,7 +71,7 @@ func (t *Tokens) Issue(id uint64, sid string, version uint64) (string, time.Time
 			NotBefore: jwt.NewNumericDate(now),
 			ID:        jti,
 		},
-		Kind:      "admin",
+		Kind:      t.config.Kind,
 		SessionID: sid,
 		Version:   version,
 	}
@@ -84,7 +92,7 @@ func (t *Tokens) Parse(raw string) (*Claims, error) {
 		return nil, errors.New("invalid access token")
 	}
 	id, err := strconv.ParseUint(claims.Subject, 10, 64)
-	if err != nil || id == 0 || claims.Kind != "admin" || len(claims.SessionID) != 43 || claims.Version == 0 || claims.ID == "" {
+	if err != nil || id == 0 || claims.Kind != t.config.Kind || len(claims.SessionID) != 43 || claims.Version == 0 || claims.ID == "" {
 		return nil, errors.New("invalid access claims")
 	}
 	if claims.ExpiresAt == nil || claims.IssuedAt == nil || claims.NotBefore == nil {

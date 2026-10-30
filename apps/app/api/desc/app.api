@@ -9,3 +9,4 @@ info (
 
 import "base.api"
 import "system/ping.api"
+import "member/auth.api"

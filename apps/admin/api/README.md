@@ -24,3 +24,5 @@ curl http://127.0.0.1:8081/admin-api/v1/system/ping
 字典管理和普通业务配置已接入，支持独立读写权限、版本冲突与事务审计。使用与接口边界见[字典与系统配置](../../../docs/system-settings.md)。后台侧栏按分组展开/收起，标签支持右键菜单、键盘 Shift+F10 和右上角操作入口。
 
 文件上传、任务中心和定时清理见[文件与任务](../../../docs/files-and-tasks.md)。
+
+会员管理由 `member-rpc` 提供：`/admin-api/v1/member/users` 列表、详情和状态操作，权限为 `member.user.read`、`member.user.update_status`。API 不连接会员数据库，详见[会员模块](../../../docs/member-module.md)。就绪检查现在覆盖 system 和 member 两个 RPC。

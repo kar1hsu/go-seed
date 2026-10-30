@@ -9,7 +9,9 @@ import (
 )
 
 type Config struct {
-	Storage storage.Config
+	MemberRPC        zrpc.RpcClientConf
+	MemberCredential rpcx.Credential
+	Storage          storage.Config
 	rest.RestConf
 	SystemRPC      zrpc.RpcClientConf
 	Tokens         identity.Config

@@ -13,6 +13,7 @@ import (
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/handler"
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/svc"
 	"github.com/kar1hsu/go-seed/pkg/xhttp"
+	memberpb "github.com/kar1hsu/go-seed/services/member/rpc/pb"
 	"github.com/kar1hsu/go-seed/services/system/rpc/pb"
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
@@ -38,7 +39,10 @@ func main() {
 	}
 	defer ctx.Close()
 	xhttp.RegisterHealth(server, func(callCtx context.Context) error {
-		_, err := ctx.System.CheckReady(callCtx, &pb.CheckReadyRequest{})
+		if _, err := ctx.System.CheckReady(callCtx, &pb.CheckReadyRequest{}); err != nil {
+			return err
+		}
+		_, err := ctx.Member.CheckReady(callCtx, &memberpb.Empty{})
 		return err
 	})
 	handler.RegisterHandlers(server, ctx)

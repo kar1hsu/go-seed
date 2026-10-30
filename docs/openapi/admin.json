@@ -156,6 +156,143 @@
         }
       }
     },
+    "/admin-api/v1/member/users": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Member management"
+        ],
+        "summary": "ListMemberUsers",
+        "operationId": "memberListMemberUsers",
+        "parameters": [
+          {
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "integer",
+            "default": 1,
+            "example": 1,
+            "name": "page",
+            "in": "query",
+            "required": true
+          },
+          {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "default": 20,
+            "example": 20,
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "keyword",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "enum": [
+              "all",
+              "enabled",
+              "disabled"
+            ],
+            "type": "string",
+            "default": "all",
+            "example": "all",
+            "name": "enabled",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/MemberUserListResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/member/users/{id}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Member management"
+        ],
+        "summary": "GetMemberUser",
+        "operationId": "memberGetMemberUser",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/MemberUserResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/member/users/{id}/status": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Member management"
+        ],
+        "summary": "Enable or disable a member; disabling revokes all sessions",
+        "operationId": "memberSetMemberUserStatus",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SetMemberUserStatusRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ActionResponse"
+            }
+          }
+        }
+      }
+    },
     "/admin-api/v1/system/administrators": {
       "get": {
         "produces": [
@@ -2924,6 +3061,283 @@
         }
       }
     },
+    "MemberUserDetail": {
+      "type": "object",
+      "required": [
+        "user",
+        "recentEvents"
+      ],
+      "properties": {
+        "recentEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MemberUserEvent"
+          }
+        },
+        "user": {
+          "type": "object",
+          "required": [
+            "id",
+            "username",
+            "nickname",
+            "enabled",
+            "revision",
+            "createdAt",
+            "updatedAt",
+            "lastLoginAt"
+          ],
+          "properties": {
+            "createdAt": {
+              "type": "string"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "id": {
+              "type": "string"
+            },
+            "lastLoginAt": {
+              "type": "string"
+            },
+            "nickname": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "updatedAt": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/MemberUserRecord"
+        }
+      }
+    },
+    "MemberUserEvent": {
+      "type": "object",
+      "required": [
+        "id",
+        "action",
+        "actorKind",
+        "actorId",
+        "createdAt",
+        "traceId"
+      ],
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "actorId": {
+          "type": "string"
+        },
+        "actorKind": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "MemberUserID": {
+      "type": "object"
+    },
+    "MemberUserListData": {
+      "type": "object",
+      "required": [
+        "items",
+        "total",
+        "page",
+        "pageSize"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MemberUserRecord"
+          }
+        },
+        "page": {
+          "type": "integer"
+        },
+        "pageSize": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
+    },
+    "MemberUserListResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "items",
+            "total",
+            "page",
+            "pageSize"
+          ],
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MemberUserRecord"
+              }
+            },
+            "page": {
+              "type": "integer"
+            },
+            "pageSize": {
+              "type": "integer"
+            },
+            "total": {
+              "type": "integer"
+            }
+          },
+          "$ref": "#/definitions/MemberUserListData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "MemberUserRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "username",
+        "nickname",
+        "enabled",
+        "revision",
+        "createdAt",
+        "updatedAt",
+        "lastLoginAt"
+      ],
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lastLoginAt": {
+          "type": "string"
+        },
+        "nickname": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "MemberUserResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "user",
+            "recentEvents"
+          ],
+          "properties": {
+            "recentEvents": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MemberUserEvent"
+              }
+            },
+            "user": {
+              "type": "object",
+              "required": [
+                "id",
+                "username",
+                "nickname",
+                "enabled",
+                "revision",
+                "createdAt",
+                "updatedAt",
+                "lastLoginAt"
+              ],
+              "properties": {
+                "createdAt": {
+                  "type": "string"
+                },
+                "enabled": {
+                  "type": "boolean"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "lastLoginAt": {
+                  "type": "string"
+                },
+                "nickname": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "type": "string"
+                },
+                "username": {
+                  "type": "string"
+                }
+              },
+              "$ref": "#/definitions/MemberUserRecord"
+            }
+          },
+          "$ref": "#/definitions/MemberUserDetail"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
     "PermissionListData": {
       "type": "object",
       "required": [
@@ -3260,6 +3674,21 @@
           "type": "string"
         },
         "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "SetMemberUserStatusRequest": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "revision"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "revision": {
           "type": "string"
         }
       }

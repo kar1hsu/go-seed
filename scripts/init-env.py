@@ -12,6 +12,12 @@ lines = path.read_text().splitlines()
 existing = dict(line.split('=', 1) for line in lines if line and not line.startswith('#') and '=' in line)
 defaults = dict(line.split('=', 1) for line in (root / '.env.example').read_text().splitlines() if line and not line.startswith('#') and '=' in line)
 settings = {**defaults,
+    'MEMBER_MYSQL_PASSWORD': secrets.token_urlsafe(32),
+    'MEMBER_TOKEN_SECRET': secrets.token_urlsafe(48),
+    'MEMBER_ADMIN_RPC_SECRET': secrets.token_urlsafe(48),
+    'MEMBER_APP_RPC_SECRET': secrets.token_urlsafe(48),
+    'MEMBER_SYSTEM_RPC_SECRET': secrets.token_urlsafe(48),
+    'MEMBER_ALLOWED_ORIGINS': ','.join(f'http://{host}:{existing.get(key, default)}' for host in ('127.0.0.1', 'localhost') for key, default in [('GATEWAY_PORT','8088'),('APP_API_PORT','8080')]),
     'ADMIN_TOKEN_SECRET': secrets.token_urlsafe(48),
     'ADMIN_RPC_SECRET': secrets.token_urlsafe(48),
     'ADMIN_BOOTSTRAP_PASSWORD': secrets.token_urlsafe(24),

@@ -1,0 +1,72 @@
+syntax = "v1"
+type (
+ MemberUserRecord {
+  Id string `json:"id"`
+  Username string `json:"username"`
+  Nickname string `json:"nickname"`
+  Enabled bool `json:"enabled"`
+  Revision string `json:"revision"`
+  CreatedAt string `json:"createdAt"`
+  UpdatedAt string `json:"updatedAt"`
+  LastLoginAt string `json:"lastLoginAt"`
+ }
+ MemberUserListData {
+  Items []MemberUserRecord `json:"items"`
+  Total int64 `json:"total"`
+  Page int64 `json:"page"`
+  PageSize int64 `json:"pageSize"`
+ }
+ MemberUserListResponse {
+  Code int `json:"code"`
+  Message string `json:"message"`
+  Data MemberUserListData `json:"data"`
+  TraceId string `json:"traceId"`
+ }
+ MemberUserID { Id string `path:"id"` }
+ MemberUserEvent {
+  Id string `json:"id"`
+  Action string `json:"action"`
+  ActorKind string `json:"actorKind"`
+  ActorId string `json:"actorId"`
+  CreatedAt string `json:"createdAt"`
+  TraceId string `json:"traceId"`
+ }
+ MemberUserDetail {
+  User MemberUserRecord `json:"user"`
+  RecentEvents []MemberUserEvent `json:"recentEvents"`
+ }
+ MemberUserResponse {
+  Code int `json:"code"`
+  Message string `json:"message"`
+  Data MemberUserDetail `json:"data"`
+  TraceId string `json:"traceId"`
+ }
+ SetMemberUserStatusRequest {
+  Id string `path:"id"`
+  Enabled bool `json:"enabled"`
+  Revision string `json:"revision"`
+ }
+)
+@server (
+ prefix: /admin-api/v1/member
+ group: member
+ middleware: AdminAccess
+ tags: "Member management"
+)
+service admin-api {
+ @handler ListMemberUsers
+ get /users (ListManagementRequest) returns (MemberUserListResponse)
+ @handler GetMemberUser
+ get /users/:id (MemberUserID) returns (MemberUserResponse)
+}
+@server (
+ prefix: /admin-api/v1/member
+ group: member
+ middleware: BrowserOrigin,AdminAccess
+ tags: "Member management"
+)
+service admin-api {
+ @doc "Enable or disable a member; disabling revokes all sessions"
+ @handler SetMemberUserStatus
+ put /users/:id/status (SetMemberUserStatusRequest) returns (ActionResponse)
+}

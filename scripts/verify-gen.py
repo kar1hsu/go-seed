@@ -32,13 +32,15 @@ with tempfile.TemporaryDirectory(prefix='goseed-gen-') as temporary:
     differences = sorted(k for k in before.keys() | after.keys() if before.get(k) != after.get(k))
     if differences:
         raise SystemExit('Generated files are stale (run make gen):\n'+'\n'.join(differences))
-    handwritten = {k:v for k,v in after.items() if k.endswith('.go') and ('/logic/' in k or '/svc/' in k or '/config/' in k or '/handler/' in k and not k.endswith('/routes.go') or k in ['apps/admin/api/admin.go','apps/app/api/app.go','services/system/rpc/system.go'])}
+    handwritten = {k:v for k,v in after.items() if k.endswith('.go') and ('/logic/' in k or '/svc/' in k or '/config/' in k or '/handler/' in k and not k.endswith('/routes.go') or k in ['apps/admin/api/admin.go','apps/app/api/app.go','services/system/rpc/system.go','services/member/rpc/member.go'])}
     with (target/'apps/admin/api/desc/system/ping.api').open('a') as output:
         output.write('\ntype GenerationProbeRequest { Value string `json:"value"` }\n@server(prefix: /admin-api/v1\n group: generation)\nservice admin-api {\n @handler GenerationProbe\n post /generation-probe (GenerationProbeRequest) returns (PingResponse)\n}\n')
     with (target/'apps/admin/api/resources/endpoints.yaml').open('a') as output:
         output.write('- {method: post, path: /admin-api/v1/generation-probe, access: public}\n')
     proto = target/'services/system/rpc/system.proto'
     proto.write_text(proto.read_text().replace('service System {','service System {\n rpc GenerationProbe(PingRequest) returns (PingResponse);'))
+    proto = target/'services/member/rpc/member.proto'
+    proto.write_text(proto.read_text().replace('service Member {','service Member {\n rpc GenerationProbe(Empty) returns (Empty);'))
     run(['bash','scripts/gen.sh','all'], target)
     current = snapshot(target)
     for name, value in handwritten.items():

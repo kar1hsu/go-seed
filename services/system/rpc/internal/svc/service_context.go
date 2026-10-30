@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/kar1hsu/go-seed/pkg/storage"
+	"regexp"
 
 	"github.com/kar1hsu/go-seed/pkg/dbx"
 	"github.com/kar1hsu/go-seed/pkg/identity"
@@ -32,6 +33,11 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
+	for _, caller := range c.DomainCallers {
+		if !regexp.MustCompile(`^[a-z][a-z0-9_]*\.$`).MatchString(caller.PermissionPrefix) || caller.PermissionPrefix == "system." {
+			return nil, errors.New("invalid domain permission scope")
+		}
+	}
 	objects, err := storage.New(c.Storage)
 	if err != nil {
 		return nil, err

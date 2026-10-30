@@ -38,3 +38,8 @@ Storage:
 MethodTimeouts:
   - FullMethod: /goseed.system.v1.System/CompleteFileUpload
     Timeout: 30s
+
+DomainCallers:
+  - Name: member-rpc
+    Secret: "${MEMBER_SYSTEM_RPC_SECRET}"
+    PermissionPrefix: member.

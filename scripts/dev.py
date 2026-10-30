@@ -23,6 +23,7 @@ try:
         ['bin/system-worker', '-f', 'services/system/worker/etc/system-worker.yaml'],
         ['bin/system-scheduler', '-f', 'services/system/scheduler/etc/system-scheduler.yaml'],
         ['bin/system-rpc', '-f', 'services/system/rpc/etc/system.yaml'],
+        ['bin/member-rpc', '-f', 'services/member/rpc/etc/member.yaml'],
         ['bin/admin-api', '-f', 'apps/admin/api/etc/admin-api.yaml'],
         ['bin/app-api', '-f', 'apps/app/api/etc/app-api.yaml'],
         ['pnpm', '--dir', 'web/admin', 'dev'],

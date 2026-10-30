@@ -85,6 +85,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin-api/v1/member/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ListMemberUsers */
+        get: operations["memberListMemberUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin-api/v1/member/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetMemberUser */
+        get: operations["memberGetMemberUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin-api/v1/member/users/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Enable or disable a member; disabling revokes all sessions */
+        put: operations["memberSetMemberUserStatus"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin-api/v1/system/administrators": {
         parameters: {
             query?: never;
@@ -680,6 +731,47 @@ export interface components {
             password: string;
             username: string;
         };
+        MemberUserDetail: {
+            recentEvents: components["schemas"]["MemberUserEvent"][];
+            user: components["schemas"]["MemberUserRecord"];
+        };
+        MemberUserEvent: {
+            action: string;
+            actorId: string;
+            actorKind: string;
+            createdAt: string;
+            id: string;
+            traceId: string;
+        };
+        MemberUserID: Record<string, never>;
+        MemberUserListData: {
+            items: components["schemas"]["MemberUserRecord"][];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        MemberUserListResponse: {
+            code: number;
+            data: components["schemas"]["MemberUserListData"];
+            message: string;
+            traceId: string;
+        };
+        MemberUserRecord: {
+            createdAt: string;
+            enabled: boolean;
+            id: string;
+            lastLoginAt: string;
+            nickname: string;
+            revision: string;
+            updatedAt: string;
+            username: string;
+        };
+        MemberUserResponse: {
+            code: number;
+            data: components["schemas"]["MemberUserDetail"];
+            message: string;
+            traceId: string;
+        };
         PermissionListData: {
             items: components["schemas"]["PermissionRecord"][];
         };
@@ -737,6 +829,10 @@ export interface components {
             data: components["schemas"]["RoleRecord"];
             message: string;
             traceId: string;
+        };
+        SetMemberUserStatusRequest: {
+            enabled: boolean;
+            revision: string;
         };
         SettingListData: {
             items: components["schemas"]["SettingRecord"][];
@@ -1318,6 +1414,352 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuthResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    memberListMemberUsers: {
+        parameters: {
+            query: {
+                /** @example 1 */
+                page: number;
+                /** @example 20 */
+                pageSize: number;
+                keyword?: string;
+                /** @example all */
+                enabled: "all" | "enabled" | "disabled";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberUserListResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    memberGetMemberUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberUserResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    memberSetMemberUserStatus: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for same-origin write requests, including CLI clients. */
+                "X-GoSeed-CSRF": "1";
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetMemberUserStatusRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
                 };
             };
             /** @description GoSeed error envelope; code is stable, message is safe for clients. */

@@ -324,6 +324,56 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+type MemberUserDetail struct {
+	User         MemberUserRecord  `json:"user"`
+	RecentEvents []MemberUserEvent `json:"recentEvents"`
+}
+
+type MemberUserEvent struct {
+	Id        string `json:"id"`
+	Action    string `json:"action"`
+	ActorKind string `json:"actorKind"`
+	ActorId   string `json:"actorId"`
+	CreatedAt string `json:"createdAt"`
+	TraceId   string `json:"traceId"`
+}
+
+type MemberUserID struct {
+	Id string `path:"id"`
+}
+
+type MemberUserListData struct {
+	Items    []MemberUserRecord `json:"items"`
+	Total    int64              `json:"total"`
+	Page     int64              `json:"page"`
+	PageSize int64              `json:"pageSize"`
+}
+
+type MemberUserListResponse struct {
+	Code    int                `json:"code"`
+	Message string             `json:"message"`
+	Data    MemberUserListData `json:"data"`
+	TraceId string             `json:"traceId"`
+}
+
+type MemberUserRecord struct {
+	Id          string `json:"id"`
+	Username    string `json:"username"`
+	Nickname    string `json:"nickname"`
+	Enabled     bool   `json:"enabled"`
+	Revision    string `json:"revision"`
+	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updatedAt"`
+	LastLoginAt string `json:"lastLoginAt"`
+}
+
+type MemberUserResponse struct {
+	Code    int              `json:"code"`
+	Message string           `json:"message"`
+	Data    MemberUserDetail `json:"data"`
+	TraceId string           `json:"traceId"`
+}
+
 type PermissionListData struct {
 	Items []PermissionRecord `json:"items"`
 }
@@ -389,6 +439,12 @@ type RoleResponse struct {
 	Message string     `json:"message"`
 	Data    RoleRecord `json:"data"`
 	TraceId string     `json:"traceId"`
+}
+
+type SetMemberUserStatusRequest struct {
+	Id       string `path:"id"`
+	Enabled  bool   `json:"enabled"`
+	Revision string `json:"revision"`
 }
 
 type SettingListData struct {

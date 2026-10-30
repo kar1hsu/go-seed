@@ -2,20 +2,11 @@
 
 开发从契约和数据归属开始，按 HTTP、RPC、业务用例、数据访问、后台页面逐层实现。当前 Makefile 已提供生成、检查、构建、迁移和认证验证入口；实际命令及后续计划在下文分别列出。
 
-## 新增一个商品模块
+## 以会员样板新增模块
 
-以 `catalog.product` 为例，它同时演示管理端写入与业务端公开查询，不要求每个项目保留商品业务。
+当前可运行样板为 `member`：C 端注册登录和个人资料，后台查询与启停，独立 RPC、数据库账号和跨领域授权。完整文件对照与复制步骤见[新增模块教程](new-module-guide.md)，接口示例见[会员模块](member-module.md)。
 
-1. 在 `services/catalog` 定义领域，新增版本化迁移与商品实体；数据由 catalog 独占。
-2. 在 `rpc/catalog.proto` 定义 `CreateProduct`、`UpdateProduct`、`GetProduct`、`ListPublishedProducts` 等用例。管理查询与公开查询返回不同 DTO，公开查询只读取已发布记录。
-3. 在 admin API 的 `desc/catalog/product.api` 定义后台接口，在 app API 定义公开商品接口，分别导入各自契约入口。
-4. 运行 goctl 生成 HTTP/RPC 骨架，实现 catalog application 与 repository，装配 ServiceContext。
-5. 在 `services/catalog/resources/permissions.yaml` 声明 `catalog.product.read/create/update/delete/publish`；后台路由与 RPC 用例分别关联对应权限。
-6. 在 `web/admin/src/features/catalog/product` 添加列表、编辑与发布操作，菜单声明引用权限键。运行权限/菜单同步时不修改现有角色授权。
-7. 实现需要的异步任务及幂等；发布商品本身的事务不能依赖“入队通常会成功”。
-8. 验证后台创建与授权、公开列表字段过滤、未发布商品不可见、越权拒绝及任务重试，再更新服务 README。
-
-只有既有领域内新增资源时，直接增加 application、repository 和契约，不新建微服务。新建领域的依据是数据归属和业务生命周期，不是多了一张表。
+同一领域新增资源时，直接增加用例、仓储和契约，不新建微服务。新领域以数据归属和生命周期为依据，按需创建目录；只有身份领域维护会话，不能把会员登录复制到每一个业务服务。
 
 ## HTTP 契约
 
@@ -23,10 +14,10 @@
 | --- | --- |
 | 管理端前缀 | `/admin-api/v1` |
 | 业务端前缀 | `/api/v1` |
-| 列表查询 | `GET /products?page=1&pageSize=20`，pageSize 上限默认 100 |
-| 详情与更新 | `GET/PATCH /products/:id`，路径以 go-zero 契约语法声明 |
-| 创建与删除 | `POST /products`、`DELETE /products/:id` |
-| 业务动作 | `POST /products/:id/publish`，明确动作语义 |
+| 列表查询 | `GET /member/users?page=1&pageSize=20`，pageSize 上限默认 100 |
+| 详情与更新 | `GET/PATCH /member/users/:id`，路径以 go-zero 契约语法声明 |
+| 创建与删除 | `POST /member/users`、`DELETE /member/users/:id` |
+| 业务动作 | `PUT /member/users/:id/status`，明确动作语义 |
 | ID | HTTP 与 RPC 中统一传十进制字符串，避免 JavaScript 大整数精度损失 |
 | 时间 | HTTP 使用 UTC RFC3339，数据库统一 UTC；内部 RPC 使用明确的时间类型 |
 | 金额 | 整数最小单位或十进制定点字符串，契约注明币种和单位 |
@@ -38,7 +29,7 @@
 {
   "code": 0,
   "message": "ok",
-  "data": { "id": "10001", "name": "示例商品" },
+  "data": { "id": "10001", "nickname": "示例会员" },
   "traceId": "example-trace-id"
 }
 ```
@@ -62,7 +53,7 @@
 | 请求取消 | 408 | Canceled |
 | 未知内部错误 | 500 | Internal |
 
-业务错误码由 `pkg/xerr` 约定公共范围，各领域分配独立范围，例如通用 100xxx、system 200xxx、catalog 300xxx。第一阶段只有公共错误映射，由 gRPC status code 映射稳定 100xxx 错误码；后续领域业务错误通过 status 与结构化 details 传递稳定错误标识，API 只映射已知标识，未知错误统一返回通用消息并记录完整内部日志。
+业务错误码由 `pkg/xerr` 约定公共范围，各领域分配独立范围，例如通用 100xxx、system 200xxx、member 300xxx。第一阶段只有公共错误映射，由 gRPC status code 映射稳定 100xxx 错误码；后续领域业务错误通过 status 与结构化 details 传递稳定错误标识，API 只映射已知标识，未知错误统一返回通用消息并记录完整内部日志。
 
 参数校验分两层：API 检查类型、必填、长度和范围；application 检查状态、唯一性、权限与数据归属。若使用 validator 标签，必须接入实际执行路径，不能只写标签。幂等键、唯一约束和事务共同处理重复写请求，禁止仅凭前端按钮禁用保证幂等。
 
@@ -140,7 +131,7 @@ API client 统一处理基础 URL、超时、错误码、request ID 和 refresh 
 | `make check` | 格式、静态检查、类型检查及契约一致性 |
 | `make test` | 不依赖外部服务的测试，包含内存 gRPC；真实依赖单独用 `make smoke` |
 | `make build` | 构建各进程与前端 |
-| `make new-module DOMAIN=catalog RESOURCE=product` | 样板稳定后增加；默认不覆盖已有文件 |
+| `make new-module DOMAIN=<domain> RESOURCE=<resource>` | 样板稳定后增加；默认不覆盖已有文件 |
 
 首版先实现少量脚本和 Makefile，不先开发一个复杂脚手架 CLI。新建项目时替换 module、镜像名、环境前缀与品牌配置，再运行契约生成及检查，避免全仓库无差别字符串替换。
 

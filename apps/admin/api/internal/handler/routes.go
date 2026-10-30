@@ -11,6 +11,7 @@ import (
 	auth "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/auth"
 	files "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/files"
 	management "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/management"
+	member "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/member"
 	settings "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/settings"
 	system "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/system"
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/svc"
@@ -242,6 +243,40 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/admin-api/v1/system"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					Method:  http.MethodGet,
+					Path:    "/users",
+					Handler: member.ListMemberUsersHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/users/:id",
+					Handler: member.GetMemberUserHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/member"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.BrowserOrigin, serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					// Enable or disable a member; disabling revokes all sessions
+					Method:  http.MethodPut,
+					Path:    "/users/:id/status",
+					Handler: member.SetMemberUserStatusHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/member"),
 	)
 
 	server.AddRoutes(

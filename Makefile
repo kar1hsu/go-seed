@@ -4,13 +4,14 @@ COMPOSE := docker compose --env-file .env -p goseed -f deploy/compose/compose.ya
 
 .PHONY: help tools doctor infra-up infra-down dev build-go build check test gen gen-api gen-rpc gen-web verify-gen smoke compose-up compose-down
 help:
-	@echo 'init tools doctor infra-up infra-down migrate bootstrap dev gen check test test-auth test-rbac sync-resources build smoke auth-smoke rbac-smoke compose-up compose-migrate compose-bootstrap compose-down'
+	@echo 'init tools doctor infra-up infra-down migrate bootstrap dev gen check test test-auth test-rbac test-member sync-resources build smoke auth-smoke rbac-smoke member-smoke compose-up compose-migrate compose-bootstrap compose-down'
 tools:
 	bash scripts/install-tools.sh
 doctor:
 	bash scripts/doctor.sh
 infra-up:
 	$(COMPOSE) up -d --wait mysql redis
+	python3 scripts/provision-member.py
 infra-down:
 	$(COMPOSE) stop mysql redis
 build-go:
@@ -18,6 +19,7 @@ build-go:
 	go build -o bin/admin-api ./apps/admin/api
 	go build -o bin/app-api ./apps/app/api
 	go build -o bin/system-rpc ./services/system/rpc
+	go build -o bin/member-rpc ./services/member/rpc
 	go build -o bin/system-worker ./services/system/worker
 	go build -o bin/system-scheduler ./services/system/scheduler
 	go build -o bin/probe ./cmd/probe
@@ -47,7 +49,7 @@ verify-gen:
 	python3 scripts/verify-gen.py
 smoke:
 	python3 scripts/smoke.py
-compose-up:
+compose-up: infra-up
 	$(COMPOSE) up -d --build --wait
 compose-down:
 	$(COMPOSE) down
@@ -57,10 +59,12 @@ init:
 	python3 scripts/init-env.py
 migrate:
 	python3 scripts/system.py migrate
+	python3 scripts/member.py migrate
 bootstrap:
 	python3 scripts/system.py bootstrap
 compose-migrate:
 	python3 scripts/system.py --compose migrate
+	python3 scripts/member.py --compose migrate
 compose-bootstrap:
 	python3 scripts/system.py --compose bootstrap
 test-auth:
@@ -83,3 +87,9 @@ rbac-smoke:
 .PHONY: test-storage
 test-storage:
 	python3 scripts/test-storage.py
+
+.PHONY: test-member member-smoke
+test-member:
+	python3 scripts/test-member.py
+member-smoke:
+	python3 scripts/test-member.py --http

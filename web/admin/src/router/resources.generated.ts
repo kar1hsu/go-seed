@@ -55,6 +55,14 @@ export const menuResources = [
     permission: 'system.setting.read',
   },
   {
+    path: '/member/users',
+    title: '会员管理',
+    group: '业务管理',
+    icon: 'User',
+    component: 'members',
+    permission: 'member.user.read',
+  },
+  {
     path: '/api-docs',
     title: '接口文档',
     group: '开发工具',

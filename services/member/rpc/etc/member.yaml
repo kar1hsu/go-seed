@@ -1,0 +1,37 @@
+Name: member-rpc
+ListenOn: ${MEMBER_RPC_HOST}:${MEMBER_RPC_PORT}
+Mode: dev
+Timeout: 3000
+Health: true
+Log:
+  ServiceName: member-rpc
+  Mode: console
+  Encoding: json
+MySQL:
+  Host: ${MYSQL_HOST}
+  Port: ${MYSQL_PORT}
+  Database: ${MEMBER_MYSQL_DATABASE}
+  User: ${MEMBER_MYSQL_USER}
+  Password: "${MEMBER_MYSQL_PASSWORD}"
+Cache:
+  Host: ${REDIS_HOST}:${REDIS_PORT}
+  Type: node
+  NonBlock: true
+Tokens:
+  Kind: member
+  Secret: "${MEMBER_TOKEN_SECRET}"
+  Issuer: go-seed-member
+  Audience: go-seed-app-api
+  AccessTTL: 15m
+RefreshTTL: 168h
+AdminAPISecret: "${MEMBER_ADMIN_RPC_SECRET}"
+AppAPISecret: "${MEMBER_APP_RPC_SECRET}"
+SystemRPC:
+  Endpoints: ["${SYSTEM_RPC_HOST}:${SYSTEM_RPC_PORT}"]
+  NonBlock: true
+  Timeout: 2000
+SystemCredential:
+  Name: member-rpc
+  Secret: "${MEMBER_SYSTEM_RPC_SECRET}"
+RegisterPerMinute: ${MEMBER_REGISTER_RATE}
+LoginPerMinute: ${MEMBER_LOGIN_RATE}

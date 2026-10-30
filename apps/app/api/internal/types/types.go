@@ -3,6 +3,55 @@
 
 package types
 
+type MemberActionData struct {
+	Success bool `json:"success"`
+}
+
+type MemberActionResponse struct {
+	Code    int              `json:"code"`
+	Message string           `json:"message"`
+	Data    MemberActionData `json:"data"`
+	TraceId string           `json:"traceId"`
+}
+
+type MemberAuthData struct {
+	User        MemberProfile `json:"user"`
+	AccessToken string        `json:"accessToken"`
+	ExpiresAt   string        `json:"expiresAt"`
+}
+
+type MemberAuthResponse struct {
+	Code    int            `json:"code"`
+	Message string         `json:"message"`
+	Data    MemberAuthData `json:"data"`
+	TraceId string         `json:"traceId"`
+}
+
+type MemberLoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type MemberPasswordRequest struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword"`
+}
+
+type MemberProfile struct {
+	Id        string `json:"id"`
+	Username  string `json:"username"`
+	Nickname  string `json:"nickname"`
+	Revision  string `json:"revision"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type MemberProfileResponse struct {
+	Code    int           `json:"code"`
+	Message string        `json:"message"`
+	Data    MemberProfile `json:"data"`
+	TraceId string        `json:"traceId"`
+}
+
 type PingData struct {
 	Service string `json:"service"`
 	Version string `json:"version"`
@@ -14,4 +63,15 @@ type PingResponse struct {
 	Message string   `json:"message"`
 	Data    PingData `json:"data"`
 	TraceId string   `json:"traceId"`
+}
+
+type RegisterMemberRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Nickname string `json:"nickname"`
+}
+
+type UpdateMemberProfileRequest struct {
+	Nickname string `json:"nickname"`
+	Revision string `json:"revision"`
 }

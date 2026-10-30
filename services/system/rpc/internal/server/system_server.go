@@ -23,6 +23,11 @@ func NewSystemServer(svcCtx *svc.ServiceContext) *SystemServer {
 	}
 }
 
+func (s *SystemServer) CheckAccess(ctx context.Context, in *pb.CheckAccessRequest) (*pb.CheckAccessResponse, error) {
+	l := logic.NewCheckAccessLogic(ctx, s.svcCtx)
+	return l.CheckAccess(in)
+}
+
 func (s *SystemServer) ListFiles(ctx context.Context, in *pb.ListFilesTasksRequest) (*pb.FilesResponse, error) {
 	l := logic.NewListFilesLogic(ctx, s.svcCtx)
 	return l.ListFiles(in)

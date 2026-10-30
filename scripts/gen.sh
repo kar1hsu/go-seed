@@ -13,11 +13,14 @@ if [[ "$mode" == api || "$mode" == all ]]; then
  done
 fi
 if [[ "$mode" == rpc || "$mode" == all ]]; then
- [[ "${DOMAIN:-system}" == system ]] || { echo "Unknown domain" >&2; exit 1; }
+
  [[ "$(protoc --version)" == "libprotoc $PROTOC_VERSION" ]] || exit 1
  [[ "$(protoc-gen-go --version)" == "protoc-gen-go v$PROTOC_GEN_GO_VERSION" ]] || exit 1
  [[ "$(protoc-gen-go-grpc --version)" == "protoc-gen-go-grpc $PROTOC_GEN_GO_GRPC_VERSION" ]] || exit 1
- goctl rpc protoc services/system/rpc/system.proto --proto_path=services/system/rpc   --go_out=. --go_opt=module=github.com/kar1hsu/go-seed   --go-grpc_out=. --go-grpc_opt=module=github.com/kar1hsu/go-seed   --zrpc_out=services/system/rpc --style go_zero --name-from-filename --home templates/goctl
+ for domain in ${DOMAIN:-system member}; do
+  [[ "$domain" == system || "$domain" == member ]] || { echo "Unknown domain" >&2; exit 1; }
+  goctl rpc protoc "services/$domain/rpc/$domain.proto" --proto_path="services/$domain/rpc" --go_out=. --go_opt=module=github.com/kar1hsu/go-seed --go-grpc_out=. --go-grpc_opt=module=github.com/kar1hsu/go-seed --zrpc_out="services/$domain/rpc" --style go_zero --name-from-filename --home templates/goctl
+ done
 fi
 if [[ "$mode" == web || "$mode" == all ]]; then
  for app in admin app; do

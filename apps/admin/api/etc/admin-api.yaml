@@ -34,3 +34,11 @@ Storage:
   SecretKey: "${S3_SECRET_KEY}"
   Secure: ${S3_SECURE}
   Region: "${S3_REGION}"
+
+MemberRPC:
+  Endpoints: ["${MEMBER_RPC_HOST}:${MEMBER_RPC_PORT}"]
+  NonBlock: true
+  Timeout: 3000
+MemberCredential:
+  Name: admin-api
+  Secret: "${MEMBER_ADMIN_RPC_SECRET}"

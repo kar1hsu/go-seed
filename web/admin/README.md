@@ -48,3 +48,5 @@ pnpm lockfile 固定依赖，workspace 仅允许 esbuild 构建脚本。Prettier
 字典管理和普通业务配置已接入，支持独立读写权限、版本冲突与事务审计。使用与接口边界见[字典与系统配置](../../docs/system-settings.md)。后台侧栏按分组展开/收起，标签支持右键菜单、键盘 Shift+F10 和右上角操作入口。
 
 文件上传、任务中心和定时清理见[文件与任务](../../docs/files-and-tasks.md)。
+
+“业务管理 → 会员管理”提供会员列表、筛选、详情、最近事件与启停；独立 feature 位于 `src/features/member/users`。跨领域可复用的筛选、分页请求逻辑和响应工具位于 components、composables、lib。会员 C 端类型生成到 `src/api/generated/app-schema.ts`，独立 client 示例为 `src/api/member-client.ts`，不使用管理员登录状态。

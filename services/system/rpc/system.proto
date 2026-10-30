@@ -309,7 +309,11 @@ message TasksResponse { repeated TaskRecord items = 1; int64 total = 2; }
 // Internal transfer reference, never returned in HTTP JSON or persisted in a browser.
 message FileTransferResponse { string key = 1; FileRecord record = 2; }
 
+message CheckAccessRequest { string permission = 1; }
+message CheckAccessResponse { string admin_id = 1; }
+
 service System {
+ rpc CheckAccess(CheckAccessRequest) returns (CheckAccessResponse);
  rpc ListFiles(ListFilesTasksRequest) returns (FilesResponse);
  rpc CreateFile(CreateFileRequest) returns (FileResponse);
  rpc AuthorizeFileUpload(FileTaskIDRequest) returns (FileTransferResponse);

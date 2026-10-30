@@ -86,6 +86,14 @@ func Server(callers []Caller, public []string) (grpc.UnaryServerInterceptor, err
 		if len(values) == 1 {
 			ctx = identity.WithToken(ctx, values[0])
 		}
-		return next(ctx, req)
+		return next(context.WithValue(ctx, callerKey{}, names[0]), req)
 	}, nil
+}
+
+// ServiceName is set only after validating the service credential and method grant.
+type callerKey struct{}
+
+func ServiceName(ctx context.Context) string {
+	value, _ := ctx.Value(callerKey{}).(string)
+	return value
 }
