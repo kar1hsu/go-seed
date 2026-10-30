@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { validPassword } from '../../../lib/random'
 import { computed, reactive, ref, watch } from 'vue'
 import {
   ElButton,
@@ -39,6 +40,7 @@ const roles = ref<Role[]>([])
 const saving = ref(false)
 const rolesLoading = ref(false)
 const formError = ref('')
+const rolesLoadFailed = ref(false)
 const title = computed(
   () =>
     ({ create: '新增管理员', edit: '编辑管理员', roles: '分配角色', '': '' })[
@@ -66,9 +68,12 @@ const rules: FormRules = {
   password: [
     {
       required: true,
-      min: 12,
-      max: 72,
-      message: '请输入 12–72 位密码',
+      validator: (_rule, value, callback) =>
+        callback(
+          validPassword(value)
+            ? undefined
+            : new Error('密码须为 12–72 字节，中文通常占 3 字节'),
+        ),
       trigger: 'blur',
     },
   ],
@@ -85,6 +90,7 @@ async function open(mode: 'create' | 'edit' | 'roles', row?: Administrator) {
     roleIds: [...(row?.roleIds || [])],
   })
   formError.value = ''
+  rolesLoadFailed.value = false
   drawer.value = mode
   if (mode !== 'roles') return
   roles.value = []
@@ -105,7 +111,10 @@ async function open(mode: 'create' | 'edit' | 'roles', row?: Administrator) {
     }
     roles.value = all
   } catch (cause) {
-    if (attempt === openSequence) formError.value = authMessage(cause)
+    if (attempt === openSequence) {
+      formError.value = authMessage(cause)
+      rolesLoadFailed.value = true
+    }
   } finally {
     if (attempt === openSequence) rolesLoading.value = false
   }
@@ -382,7 +391,7 @@ function date(value: string) {
       ><ElButton
         type="primary"
         :loading="saving"
-        :disabled="rolesLoading || (drawer === 'roles' && !!formError)"
+        :disabled="rolesLoading || (drawer === 'roles' && rolesLoadFailed)"
         @click="save"
         >保存</ElButton
       ></template

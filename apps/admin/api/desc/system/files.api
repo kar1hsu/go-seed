@@ -103,7 +103,7 @@ service admin-api {
 	prefix:     /admin-api/v1/system
 	group:      files
 	middleware: AdminAccess
-	timeout:    60s
+	timeout:    0s
 )
 service admin-api {
 	@doc "Private attachment stream; application/octet-stream, no JSON envelope on success."

@@ -25,6 +25,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.AdminAccess},
 			[]rest.Route{
 				{
+					// Audit search; page offset must be below 10000 and time window at most 366 days
 					Method:  http.MethodGet,
 					Path:    "/audit-logs",
 					Handler: audit.ListAuditLogsHandler(serverCtx),
@@ -128,7 +129,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/admin-api/v1/system"),
-		rest.WithTimeout(60000*time.Millisecond),
+		rest.WithTimeout(0*time.Nanosecond),
 	)
 
 	server.AddRoutes(

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { randomUUID } from '../../../lib/random'
 import { ref } from 'vue'
 import {
   ElButton,
@@ -36,8 +37,8 @@ const creating = ref(false),
 async function create() {
   if (creating.value) return
   creating.value = true
-  if (!requestKey.value) requestKey.value = crypto.randomUUID()
   try {
+    if (!requestKey.value) requestKey.value = randomUUID()
     await tasks.export(requestKey.value)
     requestKey.value = ''
     ElMessage.success('导出任务已提交')

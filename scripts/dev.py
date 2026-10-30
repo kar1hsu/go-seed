@@ -6,7 +6,7 @@ import signal
 import subprocess
 import sys
 import time
-from env import environment
+from env import environment, service_environment
 
 root = Path(__file__).resolve().parents[1]
 os.chdir(root)
@@ -29,7 +29,8 @@ try:
         ['pnpm', '--dir', 'web/admin', 'dev'],
     ]
     for command in commands:
-        children.append(subprocess.Popen(command, env=env, start_new_session=True))
+        service = Path(command[0]).name if command[0].startswith('bin/') else 'web'
+        children.append(subprocess.Popen(command, env=service_environment(env, service), start_new_session=True))
     print(f"GoSeed admin: http://127.0.0.1:{env['WEB_PORT']} (Ctrl+C stops all child processes)", flush=True)
     while True:
         for child in children:

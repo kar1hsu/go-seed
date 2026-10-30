@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -39,7 +39,28 @@ type Store interface {
 	CleanupTemporary(context.Context, time.Time) error
 }
 
-func validKey(key string) bool { return regexp.MustCompile(`^[a-f0-9]{32}$`).MatchString(key) }
+func validKey(key string) bool {
+	// Flat keys remain readable for files created before dated directories.
+	if len(key) == 41 {
+		if key[8] != '/' {
+			return false
+		}
+		date, err := time.Parse("20060102", key[:8])
+		if err != nil || date.Year() < 1 || date.Format("20060102") != key[:8] {
+			return false
+		}
+		key = key[9:]
+	}
+	if len(key) != 32 {
+		return false
+	}
+	for _, c := range key {
+		if !(c >= '0' && c <= '9' || c >= 'a' && c <= 'f') {
+			return false
+		}
+	}
+	return true
+}
 func New(c Config) (Store, error) {
 	switch c.Driver {
 	case "local":
@@ -62,7 +83,11 @@ func New(c Config) (Store, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &s3{client, c.Bucket}, nil
+		tempDir := filepath.Join(c.Root, ".spool")
+		if err := os.MkdirAll(tempDir, 0700); err != nil {
+			return nil, err
+		}
+		return &s3{client: client, bucket: c.Bucket, tempDir: tempDir}, nil
 	default:
 		return nil, fmt.Errorf("unsupported storage driver %q", c.Driver)
 	}
@@ -128,19 +153,36 @@ func (s *local) Put(ctx context.Context, key string, r io.Reader, size int64) er
 	if err = ctx.Err(); err != nil {
 		return err
 	}
-	err = os.Link(f.Name(), filepath.Join(s.root, key))
+	root, err := os.OpenRoot(s.root)
+	if err != nil {
+		return err
+	}
+	defer root.Close()
+	directory := path.Dir(key)
+	if err = root.MkdirAll(directory, 0700); err != nil {
+		return err
+	}
+	// Root confines every directory operation, including symlink traversal.
+	err = root.Link(filepath.Base(f.Name()), key)
 	if os.IsExist(err) {
 		return ErrExists
 	}
 	if err != nil {
 		return err
 	}
-	dir, err := os.Open(s.root)
-	if err != nil {
-		return err
+	// Persist the object entry and any newly created date directories.
+	for {
+		dir, err := root.Open(directory)
+		if err != nil {
+			return err
+		}
+		err = dir.Sync()
+		dir.Close()
+		if err != nil || directory == "." {
+			return err
+		}
+		directory = path.Dir(directory)
 	}
-	defer dir.Close()
-	return dir.Sync()
 }
 func (s *local) Open(ctx context.Context, key string) (io.ReadCloser, error) {
 	if !validKey(key) {
@@ -163,7 +205,12 @@ func (s *local) Delete(ctx context.Context, key string) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	err := os.Remove(filepath.Join(s.root, key))
+	root, err := os.OpenRoot(s.root)
+	if err != nil {
+		return err
+	}
+	defer root.Close()
+	err = root.Remove(key)
 	if os.IsNotExist(err) {
 		return nil
 	}
@@ -178,15 +225,16 @@ func (s *local) Check(ctx context.Context) error {
 }
 
 type s3 struct {
-	client *minio.Client
-	bucket string
+	client  *minio.Client
+	bucket  string
+	tempDir string
 }
 
 func (s *s3) Put(ctx context.Context, key string, r io.Reader, size int64) error {
 	if !validKey(key) {
 		return errors.New("invalid object key")
 	}
-	f, err := spool(ctx, "", r, size)
+	f, err := spool(ctx, s.tempDir, r, size)
 	if err != nil {
 		return err
 	}
@@ -262,5 +310,5 @@ func (s *local) CleanupTemporary(ctx context.Context, before time.Time) error {
 	return cleanupTemporary(ctx, s.root, before)
 }
 func (s *s3) CleanupTemporary(ctx context.Context, before time.Time) error {
-	return cleanupTemporary(ctx, os.TempDir(), before)
+	return cleanupTemporary(ctx, s.tempDir, before)
 }

@@ -31,15 +31,19 @@ import (
 )
 
 type Service struct {
-	store   *repository.FilesTasks
-	rbac    *repository.RBAC
-	auth    *authorization.Authorizer
-	objects storage.Store
+	store         *repository.FilesTasks
+	rbac          *repository.RBAC
+	auth          *authorization.Authorizer
+	objects       storage.Store
+	retentionDays int
 }
 
 func New(store *repository.FilesTasks, rbac *repository.RBAC, auth *authorization.Authorizer, objects storage.Store) *Service {
-	return &Service{store, rbac, auth, objects}
+	return &Service{store: store, rbac: rbac, auth: auth, objects: objects}
 }
+
+// SetAuditRetention is applied once during explicit process assembly; 0 retains all logs.
+func (s *Service) SetAuditRetention(days int) { s.retentionDays = days }
 
 // Dispatch keeps the outbox until business completion. Periodic redelivery also repairs lost Redis data.
 func (s *Service) Dispatch(ctx context.Context, enqueue func(context.Context, *asynq.Task, ...asynq.Option) (*asynq.TaskInfo, error), queue string) error {
@@ -56,7 +60,14 @@ func (s *Service) Dispatch(ctx context.Context, enqueue func(context.Context, *a
 		if job.Status == "succeeded" || job.Status == "failed" || job.Generation != o.Generation {
 			continue
 		}
-		id := fmt.Sprintf("job-%d-%d-%d", job.ID, job.Generation, job.Attempts+1)
+		reserved, err := s.store.ReserveDelivery(ctx, o, now)
+		if err != nil {
+			return err
+		}
+		if !reserved {
+			continue
+		}
+		id := fmt.Sprintf("job-%d-%d-delivery-%d", job.ID, job.Generation, o.Delivery+1)
 		_, err = enqueue(ctx, task.Message(job.ID, job.Generation), asynq.Queue(queue), asynq.TaskID(id), asynq.Timeout(time.Minute), asynq.MaxRetry(10), asynq.Retention(2*time.Minute))
 		if err != nil && !errors.Is(err, asynq.ErrTaskIDConflict) {
 			return err
@@ -69,8 +80,11 @@ func (s *Service) Dispatch(ctx context.Context, enqueue func(context.Context, *a
 }
 func (s *Service) Schedule(ctx context.Context, data []byte) error {
 	var p task.Schedule
-	if err := json.Unmarshal(data, &p); err != nil || p.Slot <= 0 || p.Slot%3600 != 0 || p.Slot > time.Now().UTC().Truncate(time.Hour).Unix() {
+	if err := json.Unmarshal(data, &p); err != nil || p.Slot <= 0 || p.Slot%3600 != 0 {
 		return asynq.SkipRetry
+	}
+	if p.Slot > time.Now().UTC().Truncate(time.Hour).Unix() {
+		return errors.New("schedule slot is ahead of the worker clock")
 	}
 	key := fmt.Sprintf("upload-cleanup:%d", p.Slot)
 	return s.rbac.Transaction(ctx, true, func(tx *repository.RBAC) error {
@@ -345,6 +359,7 @@ func (s *Service) cleanup(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	var failures []error
 	for _, f := range rows {
 		if err = s.rbac.Transaction(ctx, true, func(tx *repository.RBAC) error { return tx.FilesTasks().MarkDeleting(ctx, f.ID, cutoff) }); err != nil {
 			return err
@@ -355,9 +370,20 @@ func (s *Service) cleanup(ctx context.Context) error {
 		}
 		if current.Status == "deleting" {
 			if err = s.deleteFile(ctx, f.ID); err != nil {
-				return err
+				if ctx.Err() != nil {
+					return ctx.Err()
+				}
+				// Do not let a permanently broken object monopolize the first batch.
+				if deferErr := s.store.DeferCleanup(ctx, f.ID, time.Now().UTC().Add(time.Hour)); deferErr != nil {
+					return deferErr
+				}
+				logx.WithContext(ctx).Errorw("file cleanup deferred", logx.Field("fileId", f.ID), logx.Field("errorType", fmt.Sprintf("%T", err)))
+				failures = append(failures, fmt.Errorf("file %d cleanup failed", f.ID))
 			}
 		}
 	}
-	return s.objects.CleanupTemporary(ctx, cutoff)
+	if s.retentionDays > 0 {
+		failures = append(failures, s.rbac.Audit().Prune(ctx, time.Now().UTC().AddDate(0, 0, -s.retentionDays)))
+	}
+	return errors.Join(append(failures, s.objects.CleanupTemporary(ctx, cutoff))...)
 }

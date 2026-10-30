@@ -146,10 +146,20 @@ p {
 }
 .side-menu {
   flex: 1;
-  overflow: auto;
+  min-height: 0;
+  overflow: hidden;
+}
+.side-menu-scroll {
+  overflow-x: hidden;
+}
+.side-menu-content {
   padding: 10px 8px;
 }
-.side-menu > .el-menu {
+.side-menu .el-menu {
+  /* Keep item margins inside the menu when the height animation changes overflow. */
+  display: flow-root;
+}
+.side-menu-content > .el-menu {
   border-right: 0;
   width: 100%;
   --el-menu-item-height: 42px;
@@ -159,6 +169,10 @@ p {
 .side-menu .el-menu-item {
   border-radius: 6px;
   margin: 3px 0;
+}
+.side-menu .el-menu-item {
+  /* A trailing margin is excluded from scrollHeight while the menu is closed. */
+  margin-bottom: 0;
 }
 .side-menu .el-menu-item.is-active,
 .sidebar-submenu .el-menu-item.is-active {

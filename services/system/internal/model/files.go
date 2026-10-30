@@ -3,17 +3,18 @@ package model
 import "time"
 
 type File struct {
-	ID          uint64 `gorm:"primaryKey"`
-	OwnerID     uint64
-	Name        string
-	ObjectKey   string
-	Size        int64
-	ContentType string
-	Status      string
-	Source      string
-	SHA256      string `gorm:"column:sha256"`
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID           uint64 `gorm:"primaryKey"`
+	OwnerID      uint64
+	Name         string
+	ObjectKey    string
+	Size         int64
+	ContentType  string
+	Status       string
+	Source       string
+	SHA256       string `gorm:"column:sha256"`
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	CleanupAfter *time.Time
 }
 type Task struct {
 	Retryable   bool   `gorm:"-"`
@@ -35,6 +36,7 @@ type Task struct {
 }
 type TaskOutbox struct {
 	TaskID      uint64 `gorm:"primaryKey"`
+	Delivery    uint64
 	Generation  int64
 	AvailableAt time.Time
 	DeliveredAt *time.Time

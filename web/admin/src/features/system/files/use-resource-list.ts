@@ -18,7 +18,19 @@ export function useResourceList<T>(
     error = ref('')
   let sequence = 0,
     timer: ReturnType<typeof setInterval> | undefined
-  async function load() {
+  let pending: Promise<void> | undefined
+  let pendingKey = ''
+  function load(): Promise<void> {
+    const key = JSON.stringify(query)
+    if (pending && pendingKey === key) return pending
+    pendingKey = key
+    const operation = performLoad().finally(() => {
+      if (pending === operation) pending = undefined
+    })
+    pending = operation
+    return operation
+  }
+  async function performLoad() {
     const attempt = ++sequence
     loading.value = true
     error.value = ''
@@ -35,7 +47,6 @@ export function useResourceList<T>(
       if (attempt === sequence) {
         error.value = authMessage(cause)
         items.value = []
-        total.value = 0
       }
     } finally {
       if (attempt === sequence) loading.value = false

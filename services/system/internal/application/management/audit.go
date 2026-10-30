@@ -47,7 +47,7 @@ type AuditDetail struct {
 func auditFilter(q AuditQuery) (repository.AuditFilter, error) {
 	f := repository.AuditFilter{Page: q.Page, PageSize: q.PageSize, Keyword: strings.TrimSpace(q.Keyword), Action: q.Action, TraceID: q.TraceID}
 	invalid := xerr.New(codes.InvalidArgument)
-	if q.Page < 1 || q.Page > 100000 || q.PageSize < 1 || q.PageSize > 100 || len([]rune(q.Keyword)) > 64 {
+	if q.Page < 1 || q.PageSize < 1 || q.PageSize > 100 || q.Page > (10000+q.PageSize-1)/q.PageSize || len([]rune(q.Keyword)) > 64 {
 		return f, invalid
 	}
 	if q.Action != "" {
@@ -91,7 +91,15 @@ func auditFilter(q AuditQuery) (repository.AuditFilter, error) {
 			*v.dest = &t
 		}
 	}
-	if f.From != nil && f.To != nil && !f.From.Before(*f.To) {
+	if f.To == nil {
+		v := time.Now().UTC()
+		f.To = &v
+	}
+	if f.From == nil {
+		v := f.To.AddDate(0, 0, -90)
+		f.From = &v
+	}
+	if f.To.Sub(*f.From) > 366*24*time.Hour || !f.From.Before(*f.To) {
 		return f, invalid
 	}
 	return f, nil

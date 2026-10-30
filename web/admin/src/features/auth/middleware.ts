@@ -34,14 +34,36 @@ export function authMiddleware(
       }
       return request
     },
-    onResponse({ request, response }) {
+    async onResponse({ request, response }) {
       if (
         response.status === 401 &&
         request.headers.get('Authorization') === `Bearer ${auth.accessToken}` &&
         !publicAuth.has(new URL(request.url).pathname)
       ) {
-        auth.clear()
-        onExpired()
+        const failed = auth.accessToken
+        const recovered = await auth.recover(failed)
+        if (!recovered) {
+          onExpired()
+          return response
+        }
+        if (['GET', 'HEAD'].includes(request.method)) {
+          const retry = new Request(request, { headers: request.headers })
+          retry.headers.set('Authorization', `Bearer ${auth.accessToken}`)
+          const retryToken = auth.accessToken
+          const result = await fetch(retry, {
+            credentials: 'same-origin',
+            signal: AbortSignal.any([
+              request.signal,
+              AbortSignal.timeout(5000),
+            ]),
+          })
+          if (result.status === 401 && retryToken === auth.accessToken) {
+            auth.clear()
+            onExpired()
+          }
+          return result
+        }
+        // Mutations are never repeated automatically: the user can retry explicitly.
       }
       if (
         response.status === 403 &&

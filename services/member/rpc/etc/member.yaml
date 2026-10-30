@@ -1,6 +1,6 @@
 Name: member-rpc
 ListenOn: ${MEMBER_RPC_HOST}:${MEMBER_RPC_PORT}
-Mode: dev
+Mode: ${GOSEED_MODE}
 Timeout: 3000
 Health: true
 Log:
@@ -19,7 +19,9 @@ Cache:
   NonBlock: true
 Tokens:
   Kind: member
-  Secret: "${MEMBER_TOKEN_SECRET}"
+  PublicKey: "${MEMBER_TOKEN_PUBLIC_KEY}"
+  PrivateKey: "${MEMBER_TOKEN_PRIVATE_KEY}"
+  RefreshKey: "${MEMBER_REFRESH_KEY}"
   Issuer: go-seed-member
   Audience: go-seed-app-api
   AccessTTL: 15m
@@ -35,3 +37,10 @@ SystemCredential:
   Secret: "${MEMBER_SYSTEM_RPC_SECRET}"
 RegisterPerMinute: ${MEMBER_REGISTER_RATE}
 LoginPerMinute: ${MEMBER_LOGIN_RATE}
+
+TLS:
+  CertFile: "${MEMBER_RPC_TLS_CERT}"
+  KeyFile: "${MEMBER_RPC_TLS_KEY}"
+SystemTLS:
+  CAFile: "${RPC_TLS_CA}"
+  ServerName: "${SYSTEM_RPC_TLS_NAME}"

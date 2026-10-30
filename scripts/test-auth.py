@@ -11,4 +11,4 @@ args = ['go','test','-race','-count=1','-tags=integration']
 if '--http' in sys.argv:
     env['AUTH_SMOKE_URL'] = env.get('AUTH_SMOKE_URL', f"http://127.0.0.1:{env['ADMIN_API_PORT']}")
     args += ['-run','^TestHTTPAuthLifecycle$']
-subprocess.run(args + ['./services/system/internal/application/auth'], cwd=root, env=env, check=True)
+subprocess.run(args + ['./services/system/internal/application/auth'] + ([] if '--http' in sys.argv else ['./pkg/dbx']), cwd=root, env=env, check=True)

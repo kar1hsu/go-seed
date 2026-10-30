@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/kar1hsu/go-seed/pkg/authlimit"
 	"regexp"
 	"strconv"
 	"strings"
@@ -28,11 +29,12 @@ const passwordCost = 12
 var usernamePattern = regexp.MustCompile(`^[a-z][a-z0-9_.-]{2,31}$`)
 
 type Service struct {
-	store      *repository.Auth
-	tokens     *identity.Tokens
-	refreshTTL time.Duration
-	allowLogin func(context.Context, string) error
-	dummyHash  []byte
+	store        *repository.Auth
+	tokens       *identity.Signer
+	refreshTTL   time.Duration
+	allowLogin   func(context.Context, string) error
+	dummyHash    []byte
+	passwordGate authlimit.Gate
 }
 
 type Session struct {
@@ -43,7 +45,7 @@ type Session struct {
 	RefreshExpiresAt time.Time
 }
 
-func New(store *repository.Auth, tokens *identity.Tokens, refreshTTL time.Duration, allowLogin func(context.Context, string) error) (*Service, error) {
+func New(store *repository.Auth, tokens *identity.Signer, refreshTTL time.Duration, allowLogin func(context.Context, string) error) (*Service, error) {
 	if refreshTTL < time.Hour || refreshTTL > 30*24*time.Hour || allowLogin == nil {
 		return nil, errors.New("invalid authentication configuration")
 	}
@@ -51,7 +53,7 @@ func New(store *repository.Auth, tokens *identity.Tokens, refreshTTL time.Durati
 	if err != nil {
 		return nil, err
 	}
-	return &Service{store: store, tokens: tokens, refreshTTL: refreshTTL, allowLogin: allowLogin, dummyHash: dummy}, nil
+	return &Service{store: store, tokens: tokens, refreshTTL: refreshTTL, allowLogin: allowLogin, dummyHash: dummy, passwordGate: authlimit.NewGate(4)}, nil
 }
 
 func ValidUsername(value string) bool { return usernamePattern.MatchString(value) }
@@ -66,15 +68,22 @@ func (s *Service) Login(ctx context.Context, username, password string) (*Sessio
 	if err := s.allowLogin(ctx, username); err != nil {
 		return nil, err
 	}
+	release, err := s.passwordGate.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer release()
 	a, err := s.store.ByUsername(ctx, username)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		_ = bcrypt.CompareHashAndPassword(s.dummyHash, []byte(password))
+		logx.WithContext(ctx).Infow("security event", logx.Field("action", "login_failed"))
 		return nil, xerr.New(codes.Unauthenticated)
 	}
 	if err != nil {
 		return nil, storageError(ctx, err)
 	}
 	if bcrypt.CompareHashAndPassword([]byte(a.PasswordHash), []byte(password)) != nil || !a.Enabled {
+		logx.WithContext(ctx).Infow("security event", logx.Field("action", "login_failed"))
 		return nil, xerr.New(codes.Unauthenticated)
 	}
 	var result *Session
@@ -107,16 +116,25 @@ func (s *Service) Login(ctx context.Context, username, password string) (*Sessio
 	return result, nil
 }
 
-func (s *Service) issue(ctx context.Context, tx *repository.Auth, a *model.User, session *model.MemberSession) (*Session, error) {
-	secret, err := identity.Random()
-	if err != nil {
-		return nil, err
+func (s *Service) issue(ctx context.Context, tx *repository.Auth, a *model.User, session *model.MemberSession, secrets ...string) (*Session, error) {
+	var secret string
+	var err error
+	if len(secrets) > 0 {
+		secret = secrets[0]
+	} else {
+		secret, err = identity.Random()
+		if err != nil {
+			return nil, err
+		}
 	}
 	refresh := session.ID + "." + secret
 	token := model.MemberRefreshToken{Digest: digest(refresh), SessionID: session.ID, CreatedAt: time.Now().UTC()}
 	if err = tx.CreateToken(ctx, &token); err != nil {
 		return nil, err
 	}
+	return s.sessionResult(a, session, refresh)
+}
+func (s *Service) sessionResult(a *model.User, session *model.MemberSession, refresh string) (*Session, error) {
 	access, expires, err := s.tokens.Issue(a.ID, session.ID, a.TokenVersion)
 	if err != nil {
 		return nil, err
@@ -152,15 +170,41 @@ func (s *Service) Refresh(ctx context.Context, raw string) (*Session, error) {
 		if err != nil {
 			return err
 		}
-		if token.ConsumedAt != nil {
-			// Commit the revocation before returning 401; returning an error inside the transaction would undo it.
-			rejected = true
-			return tx.Revoke(ctx, sid, time.Now().UTC())
+		key := identity.RefreshKey(ctx)
+		if !identity.ValidRefreshKey(key) {
+			return xerr.New(codes.InvalidArgument)
 		}
-		if err = tx.ConsumeToken(ctx, token.Digest, time.Now().UTC()); err != nil {
+		now := time.Now().UTC()
+		secret := ""
+		if key != "" {
+			secret = s.tokens.RefreshSecret(raw, key)
+		}
+		if token.ConsumedAt != nil {
+			// A lost response can be recovered only by the original random request key,
+			// while the successor is still current. Replays otherwise revoke as before.
+			if key != "" && token.RetryKey == identity.RefreshKeyDigest(key) && now.Before(token.ConsumedAt.Add(time.Minute)) {
+				successor, e := tx.Token(ctx, token.SuccessorDigest, sid)
+				if e != nil && !errors.Is(e, gorm.ErrRecordNotFound) {
+					return e
+				}
+				if e == nil && successor.ConsumedAt == nil && digest(sid+"."+secret) == successor.Digest {
+					result, err = s.sessionResult(a, session, sid+"."+secret)
+					return err
+				}
+			}
+			rejected = true
+			logx.WithContext(ctx).Infow("security event", logx.Field("action", "refresh_reuse"))
+			return tx.Revoke(ctx, sid, now)
+		}
+		if secret == "" {
+			result, err = s.issue(ctx, tx, a, session)
+		} else {
+			result, err = s.issue(ctx, tx, a, session, secret)
+		}
+		if err != nil {
 			return err
 		}
-		result, err = s.issue(ctx, tx, a, session)
+		err = tx.ConsumeToken(ctx, token.Digest, now, identity.RefreshKeyDigest(key), digest(result.RefreshToken))
 		return err
 	})
 	if err != nil {
@@ -217,6 +261,14 @@ func (s *Service) ChangePassword(ctx context.Context, raw, currentPassword, newP
 	if err != nil {
 		return err
 	}
+	if err := s.allowLogin(ctx, "password:"+strconv.FormatUint(a.ID, 10)); err != nil {
+		return err
+	}
+	release, err := s.passwordGate.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer release()
 	if bcrypt.CompareHashAndPassword([]byte(a.PasswordHash), []byte(currentPassword)) != nil {
 		return xerr.New(codes.InvalidArgument)
 	}

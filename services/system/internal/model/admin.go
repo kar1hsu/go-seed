@@ -21,8 +21,10 @@ type AdminSession struct {
 	CreatedAt    time.Time
 }
 type AdminRefreshToken struct {
-	Digest     string `gorm:"primaryKey"`
-	SessionID  string
-	ConsumedAt *time.Time
-	CreatedAt  time.Time
+	RetryKey        string
+	SuccessorDigest string
+	Digest          string `gorm:"primaryKey"`
+	SessionID       string
+	ConsumedAt      *time.Time
+	CreatedAt       time.Time
 }

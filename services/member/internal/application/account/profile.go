@@ -16,7 +16,7 @@ import (
 )
 
 func ValidNickname(v string) bool {
-	return utf8.ValidString(v) && strings.TrimSpace(v) != "" && len([]rune(v)) <= 64 && !strings.ContainsFunc(v, unicode.IsControl)
+	return utf8.ValidString(v) && strings.TrimSpace(v) != "" && len([]rune(v)) <= 64 && !strings.ContainsFunc(v, func(r rune) bool { return unicode.IsControl(r) || unicode.Is(unicode.Cf, r) })
 }
 func Revision(t time.Time) string { return t.UTC().Format(time.RFC3339Nano) }
 func NextTime(t time.Time) time.Time {
@@ -33,6 +33,11 @@ func (s *Service) Register(ctx context.Context, username, password, nickname str
 	if err := s.allowLogin(ctx, "register:"+username); err != nil {
 		return nil, err
 	}
+	release, err := s.passwordGate.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer release()
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), passwordCost)
 	if err != nil {
 		return nil, storageError(ctx, err)

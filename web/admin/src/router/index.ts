@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore, authMessage } from '../features/auth/store'
+import { useAuthStore } from '../features/auth/store'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { guard } from './guard'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import { navigation } from './navigation'
 
@@ -54,31 +56,31 @@ export const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
 })
 
-router.beforeEach(async (to) => {
-  const auth = useAuthStore()
-  await auth.restore()
-  if (to.name === 'login') {
-    document.title = '登录 - GoSeed'
-    if (auth.admin) return '/'
-    return true
-  }
-  if (to.meta.requiresAuth) {
-    if (!auth.admin) return { path: '/login', query: { redirect: to.fullPath } }
-    try {
-      await auth.current()
-      if (
-        typeof to.meta.permission === 'string' &&
-        !auth.has(to.meta.permission)
-      )
-        return '/forbidden'
-    } catch (error) {
-      auth.connectionError = authMessage(error)
-      auth.clear()
-      return {
-        path: '/login',
-        query: { redirect: to.fullPath, reason: 'expired' },
-      }
-    }
-  }
-  return true
+router.beforeEach((to) =>
+  guard(to, useAuthStore(), (message) => ElMessage.error(message)),
+)
+let loadingNotice = false
+router.onError((error) => {
+  if (loadingNotice) return
+  loadingNotice = true
+  const chunk =
+    /dynamically imported module|Loading chunk|Importing a module script/i.test(
+      String(error),
+    )
+  void ElMessageBox.confirm(
+    chunk
+      ? '页面资源加载失败，可能有新版本发布。请检查网络后重新加载。'
+      : '页面暂时无法打开，请重试。',
+    '页面加载失败',
+    {
+      confirmButtonText: '重新加载',
+      cancelButtonText: '取消',
+      type: 'warning',
+    },
+  )
+    .then(() => window.location.reload())
+    .catch(() => {})
+    .finally(() => {
+      loadingNotice = false
+    })
 })

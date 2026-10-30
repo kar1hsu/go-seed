@@ -33,17 +33,21 @@ export const files = {
         params: { path: { id }, header },
       }),
     ),
-  async download(id: string, name: string) {
+  async content(id: string, signal?: AbortSignal): Promise<Blob> {
     const { data, error, response } = await api.GET(
       '/admin-api/v1/system/files/{id}/content',
-      { params: { path: { id } }, parseAs: 'blob' },
+      { params: { path: { id } }, parseAs: 'blob', signal },
     )
     if (!response.ok || error || !data)
       throw new APIError(
-        error?.message || '下载失败',
+        error?.message || '读取文件失败',
         error?.code,
         error?.traceId,
       )
+    return data
+  },
+  async download(id: string, name: string) {
+    const data = await files.content(id)
     const url = URL.createObjectURL(data),
       link = document.createElement('a')
     link.href = url

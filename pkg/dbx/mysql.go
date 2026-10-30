@@ -26,6 +26,16 @@ type MySQLConfig struct {
 // OpenMySQL creates a pool without requiring a dependency to be ready at boot.
 // Readiness probes report outages; no schema changes run during startup.
 func OpenMySQL(c MySQLConfig) (*gorm.DB, error) {
+	return openMySQL(c, 2*time.Second)
+}
+
+// OpenMigrationMySQL uses the command context deadline for long-running DDL and
+// advisory locks. Request-serving pools retain their short socket timeout.
+func OpenMigrationMySQL(c MySQLConfig) (*gorm.DB, error) {
+	return openMySQL(c, 0)
+}
+
+func openMySQL(c MySQLConfig, readTimeout time.Duration) (*gorm.DB, error) {
 	if c.Host == "" || c.Database == "" || c.User == "" || c.Port < 1 || c.Port > 65535 || c.MaxOpenConns < 1 || c.MaxIdleConns < 0 || c.MaxIdleConns > c.MaxOpenConns || c.ConnMaxLifetime <= 0 {
 		return nil, fmt.Errorf("invalid MySQL connection or pool configuration")
 	}
@@ -33,8 +43,10 @@ func OpenMySQL(c MySQLConfig) (*gorm.DB, error) {
 	dsn.User, dsn.Passwd, dsn.DBName = c.User, c.Password, c.Database
 	dsn.Net, dsn.Addr = "tcp", net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 	dsn.ParseTime, dsn.Loc = true, time.UTC
-	dsn.Timeout, dsn.ReadTimeout, dsn.WriteTimeout = 2*time.Second, 2*time.Second, 2*time.Second
-	dsn.Params = map[string]string{"charset": "utf8mb4"}
+	dsn.Timeout, dsn.ReadTimeout, dsn.WriteTimeout = 2*time.Second, readTimeout, 2*time.Second
+	// Session SQL time remains UTC even when the MySQL container uses a civil
+	// timezone. This keeps NOW(), defaults and parsed DATETIME values consistent.
+	dsn.Params = map[string]string{"charset": "utf8mb4", "time_zone": "'+00:00'"}
 	db, err := gorm.Open(mysql.New(mysql.Config{DSN: dsn.FormatDSN(), SkipInitializeWithVersion: true}), &gorm.Config{
 		DisableAutomaticPing: true,
 		Logger:               logger.Default.LogMode(logger.Silent),

@@ -1,5 +1,7 @@
 Name: system-scheduler
-Mode: dev
+Mode: ${GOSEED_MODE}
+Shutdown:
+  WaitTime: 20s
 ListenOn: ${TASK_HOST}:${SYSTEM_SCHEDULER_PORT}
 Log:
   ServiceName: system-scheduler

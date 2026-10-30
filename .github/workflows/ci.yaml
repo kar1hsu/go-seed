@@ -5,6 +5,16 @@ on:
 permissions:
   contents: read
 jobs:
+  runtime-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.25.11
+          cache: true
+      - run: make test-runtime
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20

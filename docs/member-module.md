@@ -25,12 +25,12 @@ Member 是独立业务领域。后台账号用于管理，会员账号用于 C �
 
 ## 身份与会话
 
-- 会员 access JWT：HS256，默认 15 分钟，`kind=member`、issuer `go-seed-member`、audience `go-seed-app-api`，使用独立 `MEMBER_TOKEN_SECRET`。
+- 会员 access JWT：EdDSA（Ed25519），默认 15 分钟，`kind=member`、issuer `go-seed-member`、audience `go-seed-app-api`，由 member-rpc 使用独立 `MEMBER_TOKEN_PRIVATE_KEY` 签发，app-api 只持有 `MEMBER_TOKEN_PUBLIC_KEY` 验签；刷新恢复另用 `MEMBER_REFRESH_KEY`。
 - 会员 refresh token：随机值，数据库只保存 SHA-256 摘要；会话默认 7 天绝对有效期，刷新不延长整个会话寿命。
 - Cookie：`goseed_member_refresh`，Host-only、HttpOnly、SameSite=Strict、Path `/api/v1/auth`；生产启用 `MEMBER_COOKIE_SECURE=true` 并使用 HTTPS。
 - 所有写请求要求 `X-GoSeed-CSRF: 1`。浏览器来源必须在 `MEMBER_ALLOWED_ORIGINS`；默认不启用跨域 CORS。C 端页面使用同源代理。CLI 仍需 CSRF 请求头。
 - JWT 仅作入口校验。member-rpc 从主库确认账号启用、token version、session 未撤销且未过期；退出、改密和停用后，新请求不能沿用旧 JWT。
-- refresh token 只能消费一次；并行刷新可能触发重放保护，客户端必须串行刷新。刷新遇到结果未知的网络错误时重新登录，避免盲目重试旧 token。
+- refresh token 只能消费一次；并行刷新可能触发重放保护，客户端必须串行刷新。为同一次刷新生成并复用 `X-GoSeed-Refresh-Key`（32 字节随机 base64url，43 字符，无 padding），可在 60 秒内取回尚未消费的同一后继 token；未携带标识的旧客户端保持严格重用检测。标识在结果未知时保留，成功后清除；不能用新标识重试旧 Cookie。
 
 会员不使用管理员的 Cookie、密钥、权限或会话表。会员 JWT 无法用于后台；管理员 JWT 无法作为会员访问 `/me`。
 
@@ -88,3 +88,5 @@ unset member_access member_login
 `make test-member` 使用独立临时数据库验证重复注册、双实例刷新重放、并发资料更新、启停/改密撤销、权限失败关闭、审计失败回滚。`make member-smoke` 验证真实 HTTP → RPC 链路、身份隔离、Cookie、DTO、权限拒绝和两个数据库账号的隔离；唯一命名的测试数据结束后清理。
 
 首版未提供短信/邮件、找回密码、第三方登录、头像上传、销户、会员管理端代改密码或 C 端页面。账号和会话的保留/清理策略需按实际项目定义；当前不自动删除过期会话记录。新增模块的复制顺序见[开发教程](new-module-guide.md)。
+
+登录配额 `MEMBER_LOGIN_RATE`（默认 120）和注册配额 `MEMBER_REGISTER_RATE`（默认 10）均按可信 IP 每分钟计算；登录再限制 IP + 账号每分钟 10 次，改密按已认证账号每分钟 5 次。每个服务最多并发 4 个密码操作，超限 429 不排长队。

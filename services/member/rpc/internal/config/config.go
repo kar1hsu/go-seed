@@ -10,10 +10,12 @@ import (
 )
 
 type Config struct {
+	SystemTLS rpcx.ClientTLS `json:",optional"`
+	TLS       rpcx.ServerTLS `json:",optional"`
 	zrpc.RpcServerConf
 	MySQL             dbx.MySQLConfig
 	Cache             redis.RedisConf
-	Tokens            identity.Config
+	Tokens            identity.SignerConfig
 	RefreshTTL        time.Duration `json:",default=168h"`
 	AdminAPISecret    string
 	AppAPISecret      string

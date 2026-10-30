@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { randomKey } from '../../lib/random'
 import { api, APIError } from '../../lib/http'
 import type { components } from '../../api/generated/schema'
 
@@ -45,6 +46,18 @@ export const useAuthStore = defineStore('auth', () => {
   const initialized = ref(false)
   const connectionError = ref('')
   let sessionEpoch = 0
+  let accessDeadline = 0
+  let retryKey = ''
+  try {
+    retryKey = sessionStorage.getItem('goseed.refresh.retry') || ''
+  } catch {}
+  function rememberRetry(key: string) {
+    retryKey = key
+    try {
+      if (key) sessionStorage.setItem('goseed.refresh.retry', key)
+      else sessionStorage.removeItem('goseed.refresh.retry')
+    } catch {}
+  }
   let refreshPromise: Promise<boolean> | null = null
   let channel: BroadcastChannel | null = null
 
@@ -57,12 +70,19 @@ export const useAuthStore = defineStore('auth', () => {
     superAdmin.value = false
     accessToken.value = ''
     expiresAt.value = 0
+    accessDeadline = 0
+    rememberRetry('')
   }
-  function setSession(data: AuthData) {
-    sessionEpoch++
+  function setSession(data: AuthData, response: Response, started: number) {
     admin.value = data.admin
     accessToken.value = data.accessToken
     expiresAt.value = Date.parse(data.expiresAt)
+    const serverTime = Date.parse(response.headers.get('Date') || '')
+    const remaining =
+      expiresAt.value - (Number.isFinite(serverTime) ? serverTime : Date.now())
+    accessDeadline =
+      performance.now() +
+      Math.max(0, remaining - (performance.now() - started) - 1000)
     initialized.value = true
     connectionError.value = ''
   }
@@ -107,11 +127,20 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function refresh(): Promise<boolean> {
     if (refreshPromise) return refreshPromise
+    const epoch = sessionEpoch
     refreshPromise = cookieOperation(async () => {
+      if (epoch !== sessionEpoch) return false
+      if (!retryKey) rememberRetry(randomKey())
+      const started = performance.now()
       const { data, error, response } = await api.POST(
         '/admin-api/v1/auth/refresh',
-        { params: csrf },
+        {
+          params: {
+            header: { ...csrf.header, 'X-GoSeed-Refresh-Key': retryKey },
+          },
+        },
       )
+      if (epoch !== sessionEpoch) return false
       if (response.status === 401) {
         clear()
         return false
@@ -122,32 +151,37 @@ export const useAuthStore = defineStore('auth', () => {
           error?.code,
           error?.traceId,
         )
-      setSession(data.data)
+      rememberRetry('')
+      setSession(data.data, response, started)
       return true
     }).finally(() => {
       refreshPromise = null
     })
     return refreshPromise
   }
+  async function recover(failedToken: string) {
+    if (failedToken !== accessToken.value) return !!accessToken.value
+    return refresh()
+  }
   async function restore() {
     if (initialized.value) return
     try {
       await refresh()
     } catch (error) {
-      clear()
       connectionError.value = authMessage(error)
     } finally {
       initialized.value = true
     }
   }
   async function ensureAccess() {
-    if (!accessToken.value || expiresAt.value <= Date.now() + 30_000) {
+    if (!accessToken.value || accessDeadline <= performance.now() + 30_000) {
       if (!(await refresh())) throw new APIError('登录已失效', 100401)
     }
     return accessToken.value
   }
   async function login(username: string, password: string) {
     await cookieOperation(async () => {
+      const started = performance.now()
       const { data, error, response } = await api.POST(
         '/admin-api/v1/auth/login',
         { params: csrf, body: { username, password } },
@@ -158,7 +192,9 @@ export const useAuthStore = defineStore('auth', () => {
           error?.code,
           error?.traceId,
         )
-      setSession(data.data)
+      sessionEpoch++
+      rememberRetry('')
+      setSession(data.data, response, started)
     })
   }
   async function current() {
@@ -168,7 +204,7 @@ export const useAuthStore = defineStore('auth', () => {
       headers: { Authorization: `Bearer ${token}` },
     })
     // A delayed poll must not restore a signed-out session or overwrite a newer login.
-    if (epoch !== sessionEpoch || token !== accessToken.value) return
+    if (epoch !== sessionEpoch) return
     if (!response.ok || error || !data)
       throw new APIError(
         error?.message || '会话已失效',
@@ -242,6 +278,7 @@ export const useAuthStore = defineStore('auth', () => {
     sync,
     restore,
     ensureAccess,
+    recover,
     login,
     current,
     logout,

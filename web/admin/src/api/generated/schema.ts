@@ -195,7 +195,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** ListAuditLogs */
+        /** Audit search; page offset must be below 10000 and time window at most 366 days */
         get: operations["auditListAuditLogs"];
         put?: never;
         post?: never;
@@ -799,6 +799,7 @@ export interface components {
             message: string;
             traceId: string;
         };
+        RefreshRequest: Record<string, never>;
         RoleListData: {
             items: components["schemas"]["RoleRecord"][];
             page: number;
@@ -1398,6 +1399,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
+                "X-GoSeed-Refresh-Key"?: string;
                 /** @description Required for same-origin write requests, including CLI clients. */
                 "X-GoSeed-CSRF": "1";
             };
@@ -2334,9 +2336,9 @@ export interface operations {
                 action?: string;
                 actorId?: string;
                 traceId?: string;
-                /** @description Inclusive RFC3339 timestamp. */
+                /** @description Inclusive RFC3339 timestamp; defaults to 90 days before to. */
                 from?: string;
-                /** @description Exclusive RFC3339 timestamp. */
+                /** @description Exclusive RFC3339 timestamp; defaults to now. Maximum window: 366 days. */
                 to?: string;
             };
             header?: never;

@@ -4,12 +4,15 @@
 package files
 
 import (
+	"context"
 	"github.com/kar1hsu/go-seed/pkg/xerr"
+	"github.com/kar1hsu/go-seed/pkg/xhttp"
+	"github.com/zeromicro/go-zero/core/logx"
 	"google.golang.org/grpc/codes"
-	"io"
 	"mime"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/logic/files"
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/svc"
@@ -20,6 +23,9 @@ import (
 // Private attachment stream; application/octet-stream, no JSON envelope on success.
 func DownloadFileHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
+		defer cancel()
+		r = r.WithContext(ctx)
 		var req types.FileTaskIDRequest
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, xerr.New(codes.InvalidArgument))
@@ -37,7 +43,10 @@ func DownloadFileHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			w.Header().Set("Content-Length", strconv.FormatInt(record.Size, 10))
 			w.Header().Set("Cache-Control", "private, no-store")
 			w.Header().Set("X-Content-Type-Options", "nosniff")
-			_, _ = io.Copy(w, body)
+			deadline, _ := ctx.Deadline()
+			if err := xhttp.Stream(ctx, w, body, deadline); err != nil {
+				logx.WithContext(ctx).Errorf("download stream interrupted (%T)", err)
+			}
 		}
 	}
 }

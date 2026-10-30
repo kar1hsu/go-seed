@@ -105,6 +105,9 @@ function targetName(type: string) {
   <div class="page-heading">
     <div>
       <h1>操作日志</h1>
+      <p>
+        默认查询最近 90 天；单次日期范围最长一年，超过 10,000 条请缩小筛选范围。
+      </p>
       <p>查看管理员与角色的变更记录，追溯操作人和修改内容。</p>
     </div>
   </div>
@@ -235,7 +238,7 @@ function targetName(type: string) {
         v-model:current-page="query.page"
         v-model:page-size="query.pageSize"
         :page-sizes="[10, 20, 50]"
-        :total="total"
+        :total="Math.min(total, 10000)"
         layout="sizes, prev, pager, next"
         @change="load"
       />

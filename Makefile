@@ -4,7 +4,7 @@ COMPOSE := docker compose --env-file .env -p goseed -f deploy/compose/compose.ya
 
 .PHONY: help tools doctor infra-up infra-down dev build-go build check test gen gen-api gen-rpc gen-web verify-gen smoke compose-up compose-down
 help:
-	@echo 'init tools doctor infra-up infra-down migrate bootstrap dev gen check test test-auth test-rbac test-member sync-resources build smoke auth-smoke rbac-smoke member-smoke compose-up compose-migrate compose-bootstrap compose-down'
+	@echo 'init tools doctor infra-up infra-down migrate bootstrap dev gen check test test-auth test-rbac test-member test-storage test-runtime sync-resources build smoke auth-smoke rbac-smoke member-smoke compose-up compose-migrate compose-bootstrap compose-down'
 tools:
 	bash scripts/install-tools.sh
 doctor:
@@ -35,6 +35,7 @@ check:
 	pnpm --dir web/admin format:check
 	$(MAKE) verify-gen
 test:
+	python3 -m unittest discover -s scripts/tests
 	go test ./...
 	pnpm --dir web/admin test
 gen:
@@ -84,9 +85,11 @@ test-rbac:
 rbac-smoke:
 	python3 scripts/test-rbac.py --http
 
-.PHONY: test-storage
+.PHONY: test-storage test-runtime
 test-storage:
 	python3 scripts/test-storage.py
+test-runtime:
+	python3 scripts/test-runtime.py
 
 .PHONY: test-member member-smoke
 test-member:

@@ -31,7 +31,19 @@ export function createAuditState(request = auditAPI) {
   const selectedId = ref('')
   let listSequence = 0
   let detailSequence = 0
-  async function load() {
+  let pending: Promise<void> | undefined
+  let pendingKey = ''
+  function load(): Promise<void> {
+    const key = JSON.stringify(query)
+    if (pending && key === pendingKey) return pending
+    pendingKey = key
+    const operation = performLoad().finally(() => {
+      if (pending === operation) pending = undefined
+    })
+    pending = operation
+    return operation
+  }
+  async function performLoad() {
     const attempt = ++listSequence
     loading.value = true
     error.value = ''
@@ -44,7 +56,6 @@ export function createAuditState(request = auditAPI) {
     } catch (cause) {
       if (attempt !== listSequence) return
       items.value = []
-      total.value = 0
       error.value = authMessage(cause)
     } finally {
       if (attempt === listSequence) loading.value = false

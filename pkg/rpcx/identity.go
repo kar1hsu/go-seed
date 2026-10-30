@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"errors"
+	"github.com/kar1hsu/go-seed/pkg/clientip"
 
 	"github.com/kar1hsu/go-seed/pkg/identity"
 	"github.com/kar1hsu/go-seed/pkg/xerr"
@@ -31,6 +32,14 @@ func Client(c Credential) (grpc.UnaryClientInterceptor, error) {
 		md = md.Copy()
 		md.Set("x-service-name", c.Name)
 		md.Set("x-service-secret", c.Secret)
+		md.Delete("x-refresh-key")
+		if key := identity.RefreshKey(ctx); key != "" && identity.ValidRefreshKey(key) {
+			md.Set("x-refresh-key", key)
+		}
+		md.Delete("x-client-ip")
+		if ip := clientip.From(ctx); clientip.Valid(ip) {
+			md.Set("x-client-ip", ip)
+		}
 		md.Delete("x-user-token")
 		if token := identity.RawToken(ctx); token != "" {
 			md.Set("x-user-token", token)
@@ -78,6 +87,20 @@ func Server(callers []Caller, public []string) (grpc.UnaryServerInterceptor, err
 		}
 		if !caller.methods[info.FullMethod] {
 			return nil, xerr.New(codes.PermissionDenied)
+		}
+		keys := md.Get("x-refresh-key")
+		if len(keys) > 1 || (len(keys) == 1 && !identity.ValidRefreshKey(keys[0])) {
+			return nil, xerr.New(codes.Unauthenticated)
+		}
+		if len(keys) == 1 {
+			ctx = identity.WithRefreshKey(ctx, keys[0])
+		}
+		ips := md.Get("x-client-ip")
+		if len(ips) > 1 || (len(ips) == 1 && !clientip.Valid(ips[0])) {
+			return nil, xerr.New(codes.Unauthenticated)
+		}
+		if len(ips) == 1 {
+			ctx = clientip.With(ctx, ips[0])
 		}
 		values := md.Get("x-user-token")
 		if len(values) > 1 {

@@ -7,6 +7,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/kar1hsu/go-seed/pkg/clientip"
+	"github.com/kar1hsu/go-seed/pkg/timezone"
 	"log"
 
 	"github.com/kar1hsu/go-seed/apps/app/api/internal/config"
@@ -23,6 +25,9 @@ import (
 var configFile = flag.String("f", "etc/app-api.yaml", "the config file")
 
 func main() {
+	if err := timezone.Configure(); err != nil {
+		log.Fatal(err)
+	}
 	flag.Parse()
 
 	var c config.Config
@@ -45,6 +50,11 @@ func main() {
 		_, err := ctx.Member.CheckReady(callCtx, &memberpb.Empty{})
 		return err
 	})
+	ipMiddleware, err := clientip.Middleware(c.TrustedProxies)
+	if err != nil {
+		log.Fatal(err)
+	}
+	server.Use(ipMiddleware)
 	handler.RegisterHandlers(server, ctx)
 
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)

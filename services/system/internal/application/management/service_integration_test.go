@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -21,6 +20,7 @@ import (
 	"github.com/kar1hsu/go-seed/services/system/internal/repository"
 	"github.com/kar1hsu/go-seed/services/system/migrations"
 	"github.com/kar1hsu/go-seed/services/system/resources"
+	testidentity "github.com/kar1hsu/go-seed/tests/fixtures/identity"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -76,12 +76,12 @@ func setup(t *testing.T) *fixture {
 	t.Cleanup(func() { pool.Close() })
 	require(t, migrations.Up(ctx, pool))
 	require(t, migrations.Up(ctx, pool))
-	tokens, err := identity.New(identity.Config{Secret: strings.Repeat("r", 48), Issuer: "test-rbac", Audience: "test-api", AccessTTL: time.Hour})
+	tokens, err := identity.NewSigner(testidentity.Config(2, "admin", "test-rbac", "test-api", time.Hour))
 	require(t, err)
 	as, err := auth.New(repository.NewAuth(db), tokens, 24*time.Hour, func(context.Context, string) error { return nil })
 	require(t, err)
 	makeService := func() *Service {
-		s, err := New(repository.NewRBAC(db), authorization.New(tokens), nil)
+		s, err := New(repository.NewRBAC(db), authorization.New(tokens.Verifier), nil, time.UTC)
 		require(t, err)
 		return s
 	}

@@ -22,10 +22,12 @@ type MemberSession struct {
 	CreatedAt    time.Time
 }
 type MemberRefreshToken struct {
-	Digest     string `gorm:"primaryKey"`
-	SessionID  string
-	ConsumedAt *time.Time
-	CreatedAt  time.Time
+	RetryKey        string
+	SuccessorDigest string
+	Digest          string `gorm:"primaryKey"`
+	SessionID       string
+	ConsumedAt      *time.Time
+	CreatedAt       time.Time
 }
 type AuditEvent struct {
 	ID        uint64 `gorm:"primaryKey"`

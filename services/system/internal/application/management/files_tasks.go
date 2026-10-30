@@ -54,7 +54,7 @@ func (s *Service) CreateFile(ctx context.Context, raw, name, kind string, size i
 		return nil, xerr.New(codes.InvalidArgument)
 	}
 	now := time.Now().UTC()
-	f := &model.File{Name: name, ContentType: kind, Size: size, ObjectKey: filemeta.Key(), Status: "pending", Source: "upload", CreatedAt: now, UpdatedAt: now}
+	f := &model.File{Name: name, ContentType: kind, Size: size, ObjectKey: filemeta.Key(now, s.location), Status: "pending", Source: "upload", CreatedAt: now, UpdatedAt: now}
 	err := s.runData(ctx, raw, resources.FileUpload, true, func(tx *repository.RBAC, a *authorization.Access) error {
 		f.OwnerID = a.Admin.ID
 		return tx.FilesTasks().CreateFile(ctx, f)
@@ -187,7 +187,7 @@ func (s *Service) ExportDictionaries(ctx context.Context, raw, key string) (*mod
 			return err
 		}
 		now := time.Now().UTC()
-		f := &model.File{OwnerID: a.Admin.ID, Name: "dictionaries-" + now.Format("20060102-150405") + ".csv", ObjectKey: filemeta.Key(), ContentType: "text/csv", Status: "pending", Source: "export", CreatedAt: now, UpdatedAt: now}
+		f := &model.File{OwnerID: a.Admin.ID, Name: "dictionaries-" + now.In(s.location).Format("20060102-150405") + ".csv", ObjectKey: filemeta.Key(now, s.location), ContentType: "text/csv", Status: "pending", Source: "export", CreatedAt: now, UpdatedAt: now}
 		if err = tx.FilesTasks().CreateFile(ctx, f); err != nil {
 			return err
 		}
@@ -243,11 +243,11 @@ func (s *Service) RetryTask(ctx context.Context, raw string, id uint64) error {
 				return xerr.New(codes.FailedPrecondition)
 			}
 			if f.Status == "deleted" {
-				f.ObjectKey = filemeta.Key()
+				f.CreatedAt = time.Now().UTC()
+				f.ObjectKey = filemeta.Key(f.CreatedAt, s.location)
 				f.Status = "pending"
 				f.Size = 0
 				f.SHA256 = ""
-				f.CreatedAt = time.Now().UTC()
 				f.UpdatedAt = f.CreatedAt
 				if err = tx.FilesTasks().SaveFile(ctx, f); err != nil {
 					return err

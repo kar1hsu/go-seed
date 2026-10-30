@@ -1,3 +1,13 @@
+x-timezone-env: &timezone-env
+  TZ: ${TZ-Asia/Shanghai}
+x-tls-env: &tls-env
+  RPC_TLS_CA: ${RPC_TLS_CA:-}
+  SYSTEM_RPC_TLS_NAME: ${SYSTEM_RPC_TLS_NAME:-}
+  SYSTEM_RPC_TLS_CERT: ${SYSTEM_RPC_TLS_CERT:-}
+  SYSTEM_RPC_TLS_KEY: ${SYSTEM_RPC_TLS_KEY:-}
+  MEMBER_RPC_TLS_NAME: ${MEMBER_RPC_TLS_NAME:-}
+  MEMBER_RPC_TLS_CERT: ${MEMBER_RPC_TLS_CERT:-}
+  MEMBER_RPC_TLS_KEY: ${MEMBER_RPC_TLS_KEY:-}
 x-storage-env: &storage-env
   STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
   STORAGE_ROOT: /app/data/files
@@ -18,11 +28,12 @@ services:
   mysql:
     image: mysql:8.4.6
     environment:
+      <<: *timezone-env
+      GOSEED_MODE: ${GOSEED_MODE:-dev}
       MYSQL_DATABASE: ${MYSQL_DATABASE:?copy .env.example to .env}
       MYSQL_USER: ${MYSQL_USER:?}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?}
-      TZ: UTC
     ports: ["127.0.0.1:${MYSQL_PORT:-13306}:3306"]
     volumes: ["mysql-data:/var/lib/mysql"]
     healthcheck:
@@ -33,6 +44,8 @@ services:
       start_period: 20s
   redis:
     image: redis:8.2.1-alpine
+    environment:
+      <<: *timezone-env
     command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
     ports: ["127.0.0.1:${REDIS_PORT:-16379}:6379"]
     volumes: ["redis-data:/data"]
@@ -42,14 +55,18 @@ services:
       timeout: 3s
       retries: 10
   system-rpc:
+    restart: unless-stopped
     build:
       context: ../..
       dockerfile: deploy/docker/service.Dockerfile
       args: { SERVICE_PATH: services/system/rpc }
     command: ["-f", "services/system/rpc/etc/system.yaml"]
     environment:
-      <<: *storage-env
-      ADMIN_TOKEN_SECRET: ${ADMIN_TOKEN_SECRET:?run make init}
+      GOSEED_MODE: ${GOSEED_MODE:-dev}
+      <<: [*timezone-env, *storage-env, *tls-env]
+      ADMIN_TOKEN_PUBLIC_KEY: ${ADMIN_TOKEN_PUBLIC_KEY:?run make init}
+      ADMIN_TOKEN_PRIVATE_KEY: ${ADMIN_TOKEN_PRIVATE_KEY:?run make init}
+      ADMIN_REFRESH_KEY: ${ADMIN_REFRESH_KEY:?run make init}
       MEMBER_SYSTEM_RPC_SECRET: ${MEMBER_SYSTEM_RPC_SECRET:?run make init}
       ADMIN_RPC_SECRET: ${ADMIN_RPC_SECRET:?run make init}
       SYSTEM_RPC_HOST: 0.0.0.0
@@ -71,15 +88,20 @@ services:
       timeout: 4s
       retries: 10
   member-rpc:
+    restart: unless-stopped
     build:
       context: ../..
       dockerfile: deploy/docker/service.Dockerfile
       args: { SERVICE_PATH: services/member/rpc }
     command: ["-f", "services/member/rpc/etc/member.yaml"]
     environment:
+      <<: [*timezone-env, *tls-env]
+      GOSEED_MODE: ${GOSEED_MODE:-dev}
       MEMBER_RPC_HOST: 0.0.0.0
       MEMBER_RPC_PORT: 9002
-      MEMBER_TOKEN_SECRET: ${MEMBER_TOKEN_SECRET:?run make init}
+      MEMBER_TOKEN_PUBLIC_KEY: ${MEMBER_TOKEN_PUBLIC_KEY:?run make init}
+      MEMBER_TOKEN_PRIVATE_KEY: ${MEMBER_TOKEN_PRIVATE_KEY:?run make init}
+      MEMBER_REFRESH_KEY: ${MEMBER_REFRESH_KEY:?run make init}
       MEMBER_ADMIN_RPC_SECRET: ${MEMBER_ADMIN_RPC_SECRET:?run make init}
       MEMBER_APP_RPC_SECRET: ${MEMBER_APP_RPC_SECRET:?run make init}
       MEMBER_SYSTEM_RPC_SECRET: ${MEMBER_SYSTEM_RPC_SECRET:?run make init}
@@ -104,16 +126,20 @@ services:
       timeout: 4s
       retries: 10
   admin-api:
+    restart: unless-stopped
+    networks: [default, ingress]
     build:
       context: ../..
       dockerfile: deploy/docker/service.Dockerfile
       args: { SERVICE_PATH: apps/admin/api }
     command: ["-f", "apps/admin/api/etc/admin-api.yaml"]
     environment:
-      <<: *storage-env
+      GOSEED_MODE: ${GOSEED_MODE:-dev}
+      <<: [*timezone-env, *storage-env, *tls-env]
+      TRUSTED_PROXY_CIDRS: 172.30.86.2/32
       API_HOST: 0.0.0.0
       ADMIN_API_PORT: 8081
-      ADMIN_TOKEN_SECRET: ${ADMIN_TOKEN_SECRET:?run make init}
+      ADMIN_TOKEN_PUBLIC_KEY: ${ADMIN_TOKEN_PUBLIC_KEY:?run make init}
       ADMIN_RPC_SECRET: ${ADMIN_RPC_SECRET:?run make init}
       ADMIN_COOKIE_SECURE: ${ADMIN_COOKIE_SECURE:-false}
       ADMIN_ALLOWED_ORIGINS: ${ADMIN_ALLOWED_ORIGINS:?run make init}
@@ -133,15 +159,20 @@ services:
       timeout: 4s
       retries: 10
   app-api:
+    restart: unless-stopped
+    networks: [default, ingress]
     build:
       context: ../..
       dockerfile: deploy/docker/service.Dockerfile
       args: { SERVICE_PATH: apps/app/api }
     command: ["-f", "apps/app/api/etc/app-api.yaml"]
     environment:
-      MEMBER_TOKEN_SECRET: ${MEMBER_TOKEN_SECRET:?run make init}
+      <<: [*timezone-env, *tls-env]
+      GOSEED_MODE: ${GOSEED_MODE:-dev}
+      MEMBER_TOKEN_PUBLIC_KEY: ${MEMBER_TOKEN_PUBLIC_KEY:?run make init}
       MEMBER_COOKIE_SECURE: ${MEMBER_COOKIE_SECURE:-false}
       MEMBER_ALLOWED_ORIGINS: ${MEMBER_ALLOWED_ORIGINS:?run make init}
+      TRUSTED_PROXY_CIDRS: 172.30.86.2/32
       API_HOST: 0.0.0.0
       APP_API_PORT: 8080
       MEMBER_RPC_HOST: member-rpc
@@ -159,16 +190,19 @@ services:
       timeout: 4s
       retries: 10
   system-worker:
+    restart: unless-stopped
+    stop_grace_period: 30s
     build:
       context: ../..
       dockerfile: deploy/docker/service.Dockerfile
       args: { SERVICE_PATH: services/system/worker }
     command: ["-f", "services/system/worker/etc/system-worker.yaml"]
     environment:
-      <<: [*queue-env, *storage-env]
+      GOSEED_MODE: ${GOSEED_MODE:-dev}
+      <<: [*timezone-env, *queue-env, *storage-env]
       TASK_HOST: 0.0.0.0
+      AUDIT_RETENTION_DAYS: ${AUDIT_RETENTION_DAYS:-0}
       SYSTEM_WORKER_PORT: 19201
-      ADMIN_TOKEN_SECRET: ${ADMIN_TOKEN_SECRET:?run make init}
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
       MYSQL_DATABASE: ${MYSQL_DATABASE:?}
@@ -185,13 +219,16 @@ services:
       timeout: 4s
       retries: 10
   system-scheduler:
+    restart: unless-stopped
+    stop_grace_period: 30s
     build:
       context: ../..
       dockerfile: deploy/docker/service.Dockerfile
       args: { SERVICE_PATH: services/system/scheduler }
     command: ["-f", "services/system/scheduler/etc/system-scheduler.yaml"]
     environment:
-      <<: [*queue-env]
+      GOSEED_MODE: ${GOSEED_MODE:-dev}
+      <<: [*timezone-env, *queue-env]
       TASK_HOST: 0.0.0.0
       SYSTEM_SCHEDULER_PORT: 19202
     ports: ["127.0.0.1:${SYSTEM_SCHEDULER_PORT:-19202}:19202"]
@@ -203,6 +240,12 @@ services:
       timeout: 4s
       retries: 10
   gateway:
+    environment:
+      <<: *timezone-env
+    restart: unless-stopped
+    networks:
+      ingress:
+        ipv4_address: 172.30.86.2
     build:
       context: ../..
       dockerfile: deploy/docker/admin.Dockerfile
@@ -215,6 +258,10 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+networks:
+  ingress:
+    ipam:
+      config: [{ subnet: 172.30.86.0/28, ip_range: 172.30.86.8/29 }]
 volumes:
   mysql-data:
   redis-data:

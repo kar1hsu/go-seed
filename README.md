@@ -13,7 +13,7 @@ git clone --recurse-submodules git@github.com:kar1hsu/go-seed.git
 cd go-seed
 # 已有 checkout 时恢复固定版本的 AI 参考资料
 git submodule update --init --recursive
-make init                          # 创建 .env，并生成本地认证密钥和初始密码
+make init                          # 创建 .env，生成两套 Ed25519/刷新密钥与初始密码
 # 使用 nvm 的开发者先执行 nvm install && nvm use
 make tools                         # 固定 Go 生成工具安装到 .tools/bin；protoc 按需下载
 pnpm --dir web/admin install --frozen-lockfile
@@ -40,6 +40,8 @@ make dev                           # 编译并启动六个 Go 进程和 Vite；C
 
 端口和开发凭证在 `.env` 中配置；不要提交 `.env`。本地只监听回环地址。MySQL 与 Redis 使用独立容器和命名卷，不复用其他项目的实例。`make infra-down` 停止基础设施并保留数据。
 
+统一时区配置为 `.env` 中的 `TZ=Asia/Shanghai`，可改成 `UTC`、`America/New_York` 等 IANA 名称。Compose 的全部服务及 `make dev`、领域命令使用同一配置；显式导出的进程环境 `TZ` 可覆盖 `.env`。Go 服务和后台镜像包含时区数据，Go 进程启动时校验配置。文件目录使用该时区的 `YYYYMMDD/随机文件名`，导出文件名也使用同一时区；数据库连接和接口时间仍统一使用 UTC。修改后重启本地进程，或执行 `make compose-up` 重建镜像并更新容器使配置生效，已有文件路径保持不变。
+
 ```bash
 curl http://127.0.0.1:8081/admin-api/v1/system/ping
 curl http://127.0.0.1:8080/api/v1/system/ping
@@ -61,7 +63,9 @@ make smoke                         # 主机有 Python 时运行
 make compose-down                  # 停容器，保留命名卷
 ```
 
-容器模式与 `make dev` 使用相同的 API 端口，切换前先停止另一种运行方式。Compose 是开发/参考配置；生产交付需配置 TLS、Secure Cookie、准确的允许来源及密钥管理。管理员认证、逐方法 RPC 服务身份校验和角色权限已接入。RPC 端口不发布到容器宿主机，Nginx 提供同源入口。
+Go 运行镜像采用固定 digest 的 Distroless Debian 13 nonroot，包含 CA 和时区数据，健康检查与领域命令直接执行二进制。`make init` 优先使用本机 Go，无 Go 时使用固定版本构建容器生成密钥；已有密钥和密码保持不变。
+
+容器模式与 `make dev` 使用相同的 API 端口，切换前先停止另一种运行方式。Compose 是开发/参考配置；生产交付使用 `GOSEED_MODE=pro`，必须配置 TLS、Secure Cookie、准确的允许来源及密钥管理，见[生产配置](docs/production.md)。管理员认证、逐方法 RPC 服务身份校验和角色权限已接入。RPC 端口不发布到容器宿主机，Nginx 提供同源入口。
 
 ## 工程命令
 
@@ -73,7 +77,8 @@ make compose-down                  # 停容器，保留命名卷
 | `make sync-resources` | 同步权限目录，保留角色授权和成员关系 |
 | `make test-member` / `make member-smoke` | 会员并发/回滚测试 / 运行中双 API、双 RPC 会话与管理链路 |
 | `make test-storage` | 存储并发与 S3 协议检查；可选独立 S3 实服务测试 |
-| `make test-rbac` / `make rbac-smoke` | 独立临时库权限并发测试 / 运行中 HTTP 管理链路 |
+| `make test-runtime` | 构建并验证 Distroless 用户、CA、时区、文件卷与二进制执行；需要 Go 和 Docker |
+| `make test-rbac` / `make rbac-smoke` | 独立临时库权限并发与 worker 退出测试 / 运行中 HTTP 管理链路 |
 | `make gen` | 生成两份 API、两个 RPC、OpenAPI 3 与管理端 TypeScript 类型 |
 | `make gen-api APP=admin` | 从 `.api` 生成指定入口，保留手写骨架 |
 | `make gen-rpc DOMAIN=system` | 从 `.proto` 生成指定领域 RPC |
@@ -120,6 +125,7 @@ Go module 固定为 `github.com/kar1hsu/go-seed`。运行时使用 go-zero **1.1
 | [操作日志](docs/operation-audit.md) | 日志范围、事务一致性、查询与脱敏 |
 | [角色授权](docs/authorization.md) | 管理员、角色、菜单按钮、版本一致性与验证 |
 | [管理员认证](docs/authentication.md) | 初始化、会话、Cookie、接口和验收 |
+| [可靠性修复验证](docs/reliability-validation.md) | 本批缺陷修复、回归结果与运行边界 |
 | [文件与任务验证](docs/phase-three-validation.md) | 本批实际检查、故障恢复与浏览器验收 |
 | [权限阶段验证](docs/phase-two-validation.md) | 本批检查、权限边界与浏览器验收 |
 | [第一阶段验证](docs/phase-one-validation.md) | 已执行的检查与当前边界 |

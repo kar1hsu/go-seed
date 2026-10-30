@@ -48,10 +48,10 @@ func TestServiceMethodGrants(t *testing.T) {
 }
 func TestClientReplacesUntrustedMetadata(t *testing.T) {
 	interceptor, _ := Client(Credential{Name: "admin-api", Secret: strings.Repeat("s", 48)})
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs("x-user-token", "spoofed", "x-service-name", "spoofed"))
+	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs("x-user-token", "spoofed", "x-service-name", "spoofed", "x-client-ip", "1.2.3.4", "x-refresh-key", "spoofed"))
 	err := interceptor(ctx, "/System/Me", nil, nil, nil, func(ctx context.Context, _ string, _, _ any, _ *grpc.ClientConn, _ ...grpc.CallOption) error {
 		md, _ := metadata.FromOutgoingContext(ctx)
-		if len(md.Get("x-user-token")) != 0 || len(md.Get("x-service-name")) != 1 || md.Get("x-service-name")[0] != "admin-api" {
+		if len(md.Get("x-client-ip")) != 0 || len(md.Get("x-refresh-key")) != 0 || len(md.Get("x-user-token")) != 0 || len(md.Get("x-service-name")) != 1 || md.Get("x-service-name")[0] != "admin-api" {
 			t.Fatal("untrusted metadata survived")
 		}
 		return nil

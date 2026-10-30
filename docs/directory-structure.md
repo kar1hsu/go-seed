@@ -18,6 +18,7 @@ go-seed/
 │   ├── admin/api/                    # 管理端 API
 │   └── app/api/                      # 网站、App、小程序 API
 ├── cmd/probe/                        # 容器健康检查客户端
+├── cmd/keygen/                       # 本地初始化的 Ed25519 密钥生成与校验
 ├── services/                         # 按数据所有权划分的领域
 │   ├── system/                       # 管理基础能力
 │   └── member/                       # C 端会员业务样板

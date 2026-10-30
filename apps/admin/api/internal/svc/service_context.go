@@ -1,12 +1,14 @@
 package svc
 
 import (
+	"context"
 	"errors"
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/config"
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/middleware"
 	"github.com/kar1hsu/go-seed/pkg/identity"
 	"github.com/kar1hsu/go-seed/pkg/rpcx"
 	"github.com/kar1hsu/go-seed/pkg/storage"
+	"github.com/kar1hsu/go-seed/pkg/xhttp"
 	memberclient "github.com/kar1hsu/go-seed/services/member/rpc/member"
 	systemclient "github.com/kar1hsu/go-seed/services/system/rpc/system"
 	"github.com/zeromicro/go-zero/rest"
@@ -14,22 +16,34 @@ import (
 )
 
 type ServiceContext struct {
-	Member        memberclient.Member
-	memberClient  zrpc.Client
-	Objects       storage.Store
-	Config        config.Config
-	BrowserOrigin rest.Middleware
-	AdminAccess   rest.Middleware
-	System        systemclient.System
-	client        zrpc.Client
+	Member          memberclient.Member
+	memberClient    zrpc.Client
+	Objects         storage.Store
+	stopMaintenance context.CancelFunc
+	Config          config.Config
+	BrowserOrigin   rest.Middleware
+	AdminAccess     rest.Middleware
+	System          systemclient.System
+	client          zrpc.Client
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
+	if err := xhttp.ValidateProduction(c.Mode, c.CookieSecure, c.AllowedOrigins); err != nil {
+		return nil, err
+	}
+	systemOpts, err := c.SystemTLS.Options(c.Mode)
+	if err != nil {
+		return nil, err
+	}
+	memberOpts, err := c.MemberTLS.Options(c.Mode)
+	if err != nil {
+		return nil, err
+	}
 	objects, err := storage.New(c.Storage)
 	if err != nil {
 		return nil, err
 	}
-	tokens, err := identity.New(c.Tokens)
+	tokens, err := identity.NewVerifier(c.Tokens)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +57,7 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 	}
 	// go-zero's duration interceptor logs request/response content on errors and slow calls.
 	c.SystemRPC.Middlewares.Duration = false
-	client, err := zrpc.NewClient(c.SystemRPC, zrpc.WithUnaryClientInterceptor(interceptor))
+	client, err := zrpc.NewClient(c.SystemRPC, append(systemOpts, zrpc.WithUnaryClientInterceptor(interceptor))...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,13 +67,14 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		return nil, err
 	}
 	c.MemberRPC.Middlewares.Duration = false
-	memberClient, err := zrpc.NewClient(c.MemberRPC, zrpc.WithUnaryClientInterceptor(memberGuard))
+	memberClient, err := zrpc.NewClient(c.MemberRPC, append(memberOpts, zrpc.WithUnaryClientInterceptor(memberGuard))...)
 	if err != nil {
 		client.Conn().Close()
 		return nil, err
 	}
-	return &ServiceContext{Member: memberclient.NewMember(memberClient), memberClient: memberClient, Objects: objects, Config: c, System: systemclient.NewSystem(client), client: client, BrowserOrigin: origin.Handle, AdminAccess: middleware.NewAdminAccessMiddleware(tokens).Handle}, nil
+	return &ServiceContext{Member: memberclient.NewMember(memberClient), memberClient: memberClient, Objects: objects, stopMaintenance: storage.Maintain(objects), Config: c, System: systemclient.NewSystem(client), client: client, BrowserOrigin: origin.Handle, AdminAccess: middleware.NewAdminAccessMiddleware(tokens).Handle}, nil
 }
 func (s *ServiceContext) Close() error {
+	s.stopMaintenance()
 	return errors.Join(s.client.Conn().Close(), s.memberClient.Conn().Close())
 }

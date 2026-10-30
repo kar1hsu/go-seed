@@ -1,7 +1,7 @@
 Name: admin-api
 Host: ${API_HOST}
 Port: ${ADMIN_API_PORT}
-Mode: dev
+Mode: ${GOSEED_MODE}
 Timeout: 3000
 Log:
   ServiceName: admin-api
@@ -15,10 +15,9 @@ SystemRPC:
 
 MaxBytes: 16384
 Tokens:
-  Secret: "${ADMIN_TOKEN_SECRET}"
+  PublicKey: "${ADMIN_TOKEN_PUBLIC_KEY}"
   Issuer: go-seed-admin
   Audience: go-seed-admin-api
-  AccessTTL: 15m
 RPCCredential:
   Name: admin-api
   Secret: "${ADMIN_RPC_SECRET}"
@@ -42,3 +41,12 @@ MemberRPC:
 MemberCredential:
   Name: admin-api
   Secret: "${MEMBER_ADMIN_RPC_SECRET}"
+
+TrustedProxies: ${TRUSTED_PROXY_CIDRS}
+
+SystemTLS:
+  CAFile: "${RPC_TLS_CA}"
+  ServerName: "${SYSTEM_RPC_TLS_NAME}"
+MemberTLS:
+  CAFile: "${RPC_TLS_CA}"
+  ServerName: "${MEMBER_RPC_TLS_NAME}"

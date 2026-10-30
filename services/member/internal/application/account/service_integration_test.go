@@ -14,6 +14,7 @@ import (
 	"github.com/kar1hsu/go-seed/services/member/internal/repository"
 	"github.com/kar1hsu/go-seed/services/member/migrations"
 	"github.com/kar1hsu/go-seed/services/member/resources"
+	testidentity "github.com/kar1hsu/go-seed/tests/fixtures/identity"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -72,7 +73,7 @@ func setup(t *testing.T) *fixture {
 			t.Fatal(err)
 		}
 	}
-	tokens, err := identity.New(identity.Config{Kind: "member", Secret: strings.Repeat("m", 48), Issuer: "test-member", Audience: "test-app", AccessTTL: 15 * time.Minute})
+	tokens, err := identity.NewSigner(testidentity.Config(4, "member", "test-member", "test-app", 15*time.Minute))
 	if err != nil {
 		t.Fatal(err)
 	}

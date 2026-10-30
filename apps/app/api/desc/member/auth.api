@@ -1,5 +1,8 @@
 syntax = "v1"
 type (
+ MemberRefreshRequest {
+ RetryKey string `header:"X-GoSeed-Refresh-Key,optional"`
+ }
  RegisterMemberRequest {
   Username string `json:"username"`
   Password string `json:"password"`
@@ -63,7 +66,7 @@ service app-api {
  @handler MemberLogin
  post /login (MemberLoginRequest) returns (MemberAuthResponse)
  @handler MemberRefresh
- post /refresh returns (MemberAuthResponse)
+ post /refresh (MemberRefreshRequest) returns (MemberAuthResponse)
  @handler MemberLogout
  post /logout returns (MemberActionResponse)
 }

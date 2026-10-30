@@ -32,13 +32,18 @@ type Access struct {
 	Policy      *Policy
 }
 type Authorizer struct {
-	tokens *identity.Tokens
+	tokens *identity.Verifier
 	policy atomic.Pointer[Policy]
 	mu     sync.Mutex
 }
 
-func New(tokens *identity.Tokens) *Authorizer { return &Authorizer{tokens: tokens} }
+// NewDeferred authorizes durable jobs from current database policy without a signing key.
+func NewDeferred() *Authorizer                  { return &Authorizer{} }
+func New(tokens *identity.Verifier) *Authorizer { return &Authorizer{tokens: tokens} }
 func (a *Authorizer) Current(ctx context.Context, tx *repository.RBAC, raw string) (*Access, error) {
+	if a.tokens == nil {
+		return nil, xerr.New(codes.Unauthenticated)
+	}
 	claims, err := a.tokens.Parse(raw)
 	if err != nil {
 		return nil, xerr.New(codes.Unauthenticated)

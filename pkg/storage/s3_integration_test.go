@@ -31,7 +31,7 @@ func TestS3RoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer client.RemoveBucket(ctx, bucket)
-	s, err := New(Config{Driver: "s3", Endpoint: endpoint, Bucket: bucket, AccessKey: access, SecretKey: secret, Region: "us-east-1"})
+	s, err := New(Config{Driver: "s3", Root: t.TempDir(), Endpoint: endpoint, Bucket: bucket, AccessKey: access, SecretKey: secret, Region: "us-east-1"})
 	if err != nil {
 		t.Fatal(err)
 	}

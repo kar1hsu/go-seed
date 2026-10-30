@@ -55,3 +55,8 @@ func (r *Audit) List(ctx context.Context, f AuditFilter) ([]model.AuditLog, int6
 	err := q.Omit("changes").Order("created_at DESC, id DESC").Offset(int((f.Page - 1) * f.PageSize)).Limit(int(f.PageSize)).Find(&items).Error
 	return items, total, err
 }
+
+// Prune deletes a bounded oldest batch; a zero retention policy never calls it.
+func (r *Audit) Prune(ctx context.Context, before time.Time) error {
+	return r.db.WithContext(ctx).Exec("DELETE FROM audit_logs WHERE created_at < ? ORDER BY created_at, id LIMIT 1000", before).Error
+}

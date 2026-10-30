@@ -4,12 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/kar1hsu/go-seed/pkg/timezone"
 	"log"
 	"os"
 	"time"
 
 	"github.com/kar1hsu/go-seed/pkg/dbx"
-	"github.com/kar1hsu/go-seed/pkg/identity"
 	"github.com/kar1hsu/go-seed/services/system/internal/application/auth"
 	"github.com/kar1hsu/go-seed/services/system/internal/application/management"
 	"github.com/kar1hsu/go-seed/services/system/internal/authorization"
@@ -19,6 +19,9 @@ import (
 )
 
 func main() {
+	if err := timezone.Configure(); err != nil {
+		log.Fatal(err)
+	}
 	configFile := flag.String("f", "services/system/rpc/etc/system.yaml", "configuration file")
 	username := flag.String("username", "admin", "initial administrator username")
 	displayName := flag.String("name", "管理员", "initial display name")
@@ -26,13 +29,13 @@ func main() {
 	if flag.NArg() != 1 || (flag.Arg(0) != "migrate" && flag.Arg(0) != "bootstrap" && flag.Arg(0) != "disable" && flag.Arg(0) != "sync-resources") {
 		log.Fatal("usage: system [-f config] [-username admin] [-name display] migrate|bootstrap|disable|sync-resources")
 	}
-	var c struct {
-		MySQL      dbx.MySQLConfig
-		Tokens     identity.Config
-		RefreshTTL time.Duration `json:",default=168h"`
-	}
+	var c struct{ MySQL dbx.MySQLConfig }
 	conf.MustLoad(*configFile, &c, conf.UseEnv())
-	db, err := dbx.OpenMySQL(c.MySQL)
+	open := dbx.OpenMySQL
+	if flag.Arg(0) == "migrate" {
+		open = dbx.OpenMigrationMySQL
+	}
+	db, err := open(c.MySQL)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,7 +44,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer pool.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 	if flag.Arg(0) == "migrate" {
 		if err = migrations.Up(ctx, pool); err != nil {
@@ -50,11 +53,7 @@ func main() {
 		fmt.Println("System migrations applied.")
 		return
 	}
-	tokens, err := identity.New(c.Tokens)
-	if err != nil {
-		log.Fatal(err)
-	}
-	manager, err := management.New(repository.NewRBAC(db), authorization.New(tokens), nil)
+	manager, err := management.New(repository.NewRBAC(db), authorization.NewDeferred(), nil, time.Local)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,10 +64,7 @@ func main() {
 		fmt.Println("Permission catalog synchronized; existing grants preserved.")
 		return
 	}
-	service, err := auth.New(repository.NewAuth(db), tokens, c.RefreshTTL, func(context.Context, string) error { return fmt.Errorf("login unavailable in bootstrap command") })
-	if err != nil {
-		log.Fatal(err)
-	}
+	service := auth.NewCommands(repository.NewAuth(db))
 	if flag.Arg(0) == "disable" {
 		if err = service.Disable(ctx, *username); err != nil {
 			log.Fatal(err)

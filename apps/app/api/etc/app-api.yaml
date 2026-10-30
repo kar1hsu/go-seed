@@ -1,7 +1,7 @@
 Name: app-api
 Host: ${API_HOST}
 Port: ${APP_API_PORT}
-Mode: dev
+Mode: ${GOSEED_MODE}
 Timeout: 3000
 Log:
   ServiceName: app-api
@@ -23,9 +23,17 @@ MemberCredential:
   Secret: "${MEMBER_APP_RPC_SECRET}"
 Tokens:
   Kind: member
-  Secret: "${MEMBER_TOKEN_SECRET}"
+  PublicKey: "${MEMBER_TOKEN_PUBLIC_KEY}"
   Issuer: go-seed-member
   Audience: go-seed-app-api
-  AccessTTL: 15m
 CookieSecure: ${MEMBER_COOKIE_SECURE}
 AllowedOrigins: "${MEMBER_ALLOWED_ORIGINS}"
+
+TrustedProxies: ${TRUSTED_PROXY_CIDRS}
+
+SystemTLS:
+  CAFile: "${RPC_TLS_CA}"
+  ServerName: "${SYSTEM_RPC_TLS_NAME}"
+MemberTLS:
+  CAFile: "${RPC_TLS_CA}"
+  ServerName: "${MEMBER_RPC_TLS_NAME}"

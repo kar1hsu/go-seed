@@ -1,5 +1,7 @@
 Name: system-worker
-Mode: dev
+Mode: ${GOSEED_MODE}
+Shutdown:
+  WaitTime: 20s
 ListenOn: ${TASK_HOST}:${SYSTEM_WORKER_PORT}
 Log:
   ServiceName: system-worker
@@ -16,11 +18,6 @@ MySQL:
   Database: ${MYSQL_DATABASE}
   User: ${MYSQL_USER}
   Password: "${MYSQL_PASSWORD}"
-Tokens:
-  Secret: "${ADMIN_TOKEN_SECRET}"
-  Issuer: go-seed-admin
-  Audience: go-seed-admin-api
-  AccessTTL: 15m
 Storage:
   Driver: ${STORAGE_DRIVER}
   Root: ${STORAGE_ROOT}
@@ -31,3 +28,5 @@ Storage:
   Secure: ${S3_SECURE}
   Region: "${S3_REGION}"
 Concurrency: 4
+
+AuditRetentionDays: ${AUDIT_RETENTION_DAYS}

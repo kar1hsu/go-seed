@@ -2,6 +2,9 @@
 package member
 
 import (
+	"github.com/kar1hsu/go-seed/apps/app/api/internal/types"
+	"github.com/kar1hsu/go-seed/pkg/identity"
+	"github.com/kar1hsu/go-seed/pkg/xerr"
 	"net/http"
 	"time"
 
@@ -15,6 +18,12 @@ import (
 
 func MemberRefreshHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var req types.MemberRefreshRequest
+		if err := httpx.ParseHeaders(r, &req); err != nil || !identity.ValidRefreshKey(req.RetryKey) {
+			httpx.ErrorCtx(r.Context(), w, xerr.New(codes.InvalidArgument))
+			return
+		}
+		r = r.WithContext(identity.WithRefreshKey(r.Context(), req.RetryKey))
 		raw, err := authhttp.ReadCookie(r)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)

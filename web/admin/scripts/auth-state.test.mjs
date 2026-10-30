@@ -91,7 +91,7 @@ try {
     const middleware = authMiddleware(auth, () => {
       expired++
     })
-    middleware.onResponse({
+    await middleware.onResponse({
       request: new Request('http://test/admin-api/v1/auth/me', {
         headers: { Authorization: `Bearer ${oldToken}` },
       }),
@@ -99,7 +99,9 @@ try {
     })
     assert.equal(auth.admin.id, '2')
     assert.equal(expired, 0)
-    middleware.onResponse({
+    const originalPost = api.POST
+    api.POST = async () => ({ response: new Response('',{status:401}) })
+    await middleware.onResponse({
       request: new Request('http://test/admin-api/v1/auth/me', {
         headers: { Authorization: `Bearer ${auth.accessToken}` },
       }),
@@ -107,6 +109,7 @@ try {
     })
     assert.equal(auth.admin, null)
     assert.equal(expired, 1)
+    api.POST = originalPost
   })
   await test('an older poll cannot restore revoked permissions after a newer snapshot', async () => {
     setActivePinia(createPinia())
@@ -121,6 +124,41 @@ try {
     assert.equal(auth.policyVersion, '21')
     assert.equal(auth.has('system.user.read'), false)
   })
+  await test('temporary route errors preserve the session and cancel navigation', async () => {
+    const { guard } = await server.ssrLoadModule('/src/router/guard.ts')
+    const { APIError } = await server.ssrLoadModule('/src/lib/http.ts')
+    setActivePinia(createPinia()); const auth = useAuthStore();await login(auth)
+    api.GET = async () => {throw new APIError('unavailable',100503)}
+    let notice=''; const to={name:'members',fullPath:'/member/users?page=2',meta:{requiresAuth:true}}
+    assert.equal(await guard(to,auth,(value)=>{notice=value}),false)
+    assert.ok(auth.admin);assert.ok(notice)
+    api.GET=async()=>{throw new APIError('expired',100401)}
+    assert.equal((await guard(to,auth,()=>{})).query.redirect,to.fullPath)
+    assert.equal(auth.admin,null)
+  })
+  await test('server Date controls expiry even when the client clock is slow', async () => {
+    const originalPost=api.POST
+    let refreshes=0;const now=Date.now()
+    api.POST=async(path)=>{if(path.endsWith('/refresh'))refreshes++;return {data:{data:{admin:profile('1'),accessToken:'clock-token',expiresAt:new Date(now+10_000).toISOString()}},response:new Response('',{headers:{Date:new Date(now).toUTCString()}})}}
+    const originalNow=Date.now;Date.now=()=>now-3600_000
+    try {setActivePinia(createPinia());const auth=useAuthStore();await login(auth);await auth.ensureAccess();assert.equal(refreshes,1)}finally{Date.now=originalNow;api.POST=originalPost}
+  })
+  await test('lost refresh response retries with the same random key and late refresh cannot restore logout', async () => {
+    const originalPost=api.POST;setActivePinia(createPinia());const auth=useAuthStore();const keys=[]
+    api.POST=async(path,req)=>{keys.push(req.params.header['X-GoSeed-Refresh-Key']);throw new TypeError('network lost')}
+    await assert.rejects(auth.ensureAccess());await assert.rejects(auth.ensureAccess());assert.equal(keys[0],keys[1]);assert.equal(keys[0].length,43)
+    const wait=deferred();api.POST=()=>wait.promise;const operation=auth.ensureAccess();await new Promise(resolve=>setImmediate(resolve));auth.clear();wait.resolve(ok({admin:profile('1'),accessToken:'late',expiresAt:new Date(Date.now()+900_000).toISOString()}));await assert.rejects(operation);assert.equal(auth.admin,null);api.POST=originalPost
+  })
+  await test('401 recovery retries reads once but never repeats writes',async()=>{
+    const originalPost=api.POST;const originalFetch=globalThis.fetch
+    setActivePinia(createPinia());const auth=useAuthStore();await login(auth)
+    api.POST=async()=>ok({admin:profile('1'),accessToken:'renewed',expiresAt:new Date(Date.now()+900_000).toISOString()})
+    let reads=0;globalThis.fetch=async(req)=>{reads++;assert.equal(req.headers.get('Authorization'),'Bearer renewed');return new Response('{}',{status:200})}
+    const middleware=authMiddleware(auth,()=>assert.fail('valid refresh must not sign out'))
+    const req=(method)=>new Request('http://test/admin-api/v1/system/users',{method,headers:{Authorization:`Bearer ${auth.accessToken}`}})
+    try{assert.equal((await middleware.onResponse({request:req('GET'),response:new Response('',{status:401})})).status,200);await middleware.onResponse({request:req('POST'),response:new Response('',{status:401})});assert.equal(reads,1)}finally{api.POST=originalPost;globalThis.fetch=originalFetch}
+  })
+
 } finally {
   await server.close()
 }

@@ -135,6 +135,9 @@
     },
     "/admin-api/v1/auth/refresh": {
       "post": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
         "produces": [
           "application/json"
         ],
@@ -146,6 +149,13 @@
         ],
         "summary": "Rotate HttpOnly refresh cookie and access token",
         "operationId": "authRefresh",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "X-GoSeed-Refresh-Key",
+            "in": "header"
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -486,11 +496,11 @@
         "tags": [
           "Operation audit"
         ],
-        "summary": "ListAuditLogs",
+        "summary": "Audit search; page offset must be below 10000 and time window at most 366 days",
         "operationId": "auditListAuditLogs",
         "parameters": [
           {
-            "maximum": 100000,
+            "maximum": 10000,
             "minimum": 1,
             "type": "integer",
             "default": 1,
@@ -535,14 +545,14 @@
           },
           {
             "type": "string",
-            "description": "Inclusive RFC3339 timestamp.",
+            "description": "Inclusive RFC3339 timestamp; defaults to 90 days before to.",
             "name": "from",
             "in": "query",
             "allowEmptyValue": true
           },
           {
             "type": "string",
-            "description": "Exclusive RFC3339 timestamp.",
+            "description": "Exclusive RFC3339 timestamp; defaults to now. Maximum window: 366 days.",
             "name": "to",
             "in": "query",
             "allowEmptyValue": true
@@ -3475,6 +3485,9 @@
           "type": "string"
         }
       }
+    },
+    "RefreshRequest": {
+      "type": "object"
     },
     "RoleListData": {
       "type": "object",

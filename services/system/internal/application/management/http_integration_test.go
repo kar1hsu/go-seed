@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -22,6 +21,7 @@ import (
 	"github.com/kar1hsu/go-seed/services/system/internal/model"
 	"github.com/kar1hsu/go-seed/services/system/internal/repository"
 	"github.com/kar1hsu/go-seed/services/system/resources"
+	testidentity "github.com/kar1hsu/go-seed/tests/fixtures/identity"
 	"gorm.io/gorm"
 )
 
@@ -36,7 +36,7 @@ func TestHTTPManagement(t *testing.T) {
 	require(t, err)
 	pool, _ := db.DB()
 	t.Cleanup(func() { pool.Close() })
-	tokens, err := identity.New(identity.Config{Secret: strings.Repeat("s", 48), Issuer: "fixture", Audience: "fixture", AccessTTL: time.Hour})
+	tokens, err := identity.NewSigner(testidentity.Config(3, "admin", "fixture", "fixture", time.Hour))
 	require(t, err)
 	as, err := auth.New(repository.NewAuth(db), tokens, time.Hour, func(_ context.Context, _ string) error { return nil })
 	require(t, err)

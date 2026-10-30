@@ -3,6 +3,8 @@ import type { paths } from './generated/app-schema'
 
 /** Independent C-end client. Keep its access token in memory, separate from admin state.
  * Refresh/login are explicit; serialize refresh requests because refresh tokens rotate.
+ * Use one X-GoSeed-Refresh-Key per rotation; retain it across unknown network results
+ * and reuse it within 60s to recover the same successor. Never replay writes automatically.
  * Use a same-origin reverse proxy for the HttpOnly member cookie.
  */
 export function createMemberClient(getAccessToken: () => string | undefined) {

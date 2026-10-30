@@ -6,6 +6,7 @@ import (
 	"github.com/kar1hsu/go-seed/apps/app/api/internal/middleware"
 	"github.com/kar1hsu/go-seed/pkg/identity"
 	"github.com/kar1hsu/go-seed/pkg/rpcx"
+	"github.com/kar1hsu/go-seed/pkg/xhttp"
 	memberclient "github.com/kar1hsu/go-seed/services/member/rpc/member"
 	systemclient "github.com/kar1hsu/go-seed/services/system/rpc/system"
 	"github.com/zeromicro/go-zero/rest"
@@ -23,7 +24,18 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
-	tokens, err := identity.New(c.Tokens)
+	if err := xhttp.ValidateProduction(c.Mode, c.CookieSecure, c.AllowedOrigins); err != nil {
+		return nil, err
+	}
+	systemOpts, err := c.SystemTLS.Options(c.Mode)
+	if err != nil {
+		return nil, err
+	}
+	memberOpts, err := c.MemberTLS.Options(c.Mode)
+	if err != nil {
+		return nil, err
+	}
+	tokens, err := identity.NewVerifier(c.Tokens)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +45,7 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 	}
 	// go-zero's duration interceptor logs request/response content on errors and slow calls.
 	c.SystemRPC.Middlewares.Duration = false
-	client, err := zrpc.NewClient(c.SystemRPC)
+	client, err := zrpc.NewClient(c.SystemRPC, systemOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +55,7 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		return nil, err
 	}
 	c.MemberRPC.Middlewares.Duration = false
-	memberClient, err := zrpc.NewClient(c.MemberRPC, zrpc.WithUnaryClientInterceptor(memberGuard))
+	memberClient, err := zrpc.NewClient(c.MemberRPC, append(memberOpts, zrpc.WithUnaryClientInterceptor(memberGuard))...)
 	if err != nil {
 		client.Conn().Close()
 		return nil, err

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/kar1hsu/go-seed/pkg/rpcx"
+	"github.com/kar1hsu/go-seed/pkg/timezone"
 	"github.com/kar1hsu/go-seed/services/member/rpc/internal/config"
 	"github.com/kar1hsu/go-seed/services/member/rpc/internal/server"
 	"github.com/kar1hsu/go-seed/services/member/rpc/internal/svc"
@@ -15,10 +16,17 @@ import (
 )
 
 func main() {
+	if err := timezone.Configure(); err != nil {
+		log.Fatal(err)
+	}
 	file := flag.String("f", "etc/member.yaml", "configuration file")
 	flag.Parse()
 	var c config.Config
 	conf.MustLoad(*file, &c, conf.UseEnv())
+	tlsOptions, err := c.TLS.Options(c.Mode)
+	if err != nil {
+		log.Fatal(err)
+	}
 	ctx, err := svc.NewServiceContext(c)
 	if err != nil {
 		log.Fatal(err)
@@ -32,6 +40,7 @@ func main() {
 	}
 	c.Middlewares.StatConf.IgnoreContentMethods = append(append(c.Middlewares.StatConf.IgnoreContentMethods, admin...), app...)
 	s := zrpc.MustNewServer(c.RpcServerConf, func(server *grpc.Server) { pb.RegisterMemberServer(server, serverAdapter(ctx)) })
+	s.AddOptions(tlsOptions...)
 	defer s.Stop()
 	s.AddUnaryInterceptors(guard)
 	fmt.Printf("Starting member RPC at %s...\n", c.ListenOn)

@@ -71,7 +71,7 @@ func (r *FilesTasks) SaveTask(ctx context.Context, t *model.Task) error {
 }
 func (r *FilesTasks) PutOutbox(ctx context.Context, t *model.Task) error {
 	o := model.TaskOutbox{TaskID: t.ID, Generation: t.Generation, AvailableAt: t.NextRunAt}
-	return r.db.WithContext(ctx).Clauses(clause.OnConflict{UpdateAll: true}).Create(&o).Error
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{DoUpdates: clause.AssignmentColumns([]string{"generation", "available_at"})}).Create(&o).Error
 }
 func (r *FilesTasks) DropOutbox(ctx context.Context, id uint64) error {
 	return r.db.WithContext(ctx).Where("task_id = ?", id).Delete(&model.TaskOutbox{}).Error
@@ -97,12 +97,19 @@ func (r *FilesTasks) PendingOutbox(ctx context.Context, now time.Time) ([]model.
 	err := r.db.WithContext(ctx).Where("available_at <= ?", now).Order("available_at ASC").Limit(50).Find(&items).Error
 	return items, err
 }
+
+// ReserveDelivery allocates a fresh transport ID before enqueueing. A crash or an
+// uncertain Redis result becomes eligible again after the short delivery lease.
+func (r *FilesTasks) ReserveDelivery(ctx context.Context, o model.TaskOutbox, now time.Time) (bool, error) {
+	result := r.db.WithContext(ctx).Model(&model.TaskOutbox{}).Where("task_id = ? AND generation = ? AND delivery = ? AND available_at = ?", o.TaskID, o.Generation, o.Delivery, o.AvailableAt).Updates(map[string]any{"delivery": o.Delivery + 1, "available_at": now.Add(30 * time.Second)})
+	return result.RowsAffected == 1, result.Error
+}
 func (r *FilesTasks) Delivered(ctx context.Context, o model.TaskOutbox, now time.Time) error {
-	return r.db.WithContext(ctx).Model(&model.TaskOutbox{}).Where("task_id = ? AND generation = ? AND available_at = ?", o.TaskID, o.Generation, o.AvailableAt).Updates(map[string]any{"delivered_at": now, "available_at": now.Add(30 * time.Second)}).Error
+	return r.db.WithContext(ctx).Model(&model.TaskOutbox{}).Where("task_id = ? AND generation = ? AND delivery = ?", o.TaskID, o.Generation, o.Delivery+1).Update("delivered_at", now).Error
 }
 func (r *FilesTasks) ExpiredUploads(ctx context.Context, cutoff time.Time) ([]model.File, error) {
 	items := []model.File{}
-	err := r.db.WithContext(ctx).Where("(status = 'pending' AND created_at < ? AND (source = 'upload' OR EXISTS (SELECT 1 FROM tasks WHERE tasks.file_id = files.id AND tasks.status = 'failed'))) OR status = 'deleting'", cutoff).Order("id ASC").Limit(200).Find(&items).Error
+	err := r.db.WithContext(ctx).Where("((status = 'pending' AND created_at < ? AND (source = 'upload' OR EXISTS (SELECT 1 FROM tasks WHERE tasks.file_id = files.id AND tasks.status = 'failed'))) OR status = 'deleting') AND (cleanup_after IS NULL OR cleanup_after <= ?)", cutoff, time.Now().UTC()).Order("id ASC").Limit(200).Find(&items).Error
 	return items, err
 }
 func (r *FilesTasks) MarkDeleting(ctx context.Context, id uint64, cutoff time.Time) error {
@@ -110,6 +117,9 @@ func (r *FilesTasks) MarkDeleting(ctx context.Context, id uint64, cutoff time.Ti
 }
 func (r *FilesTasks) MarkDeleted(ctx context.Context, id uint64) error {
 	return r.db.WithContext(ctx).Model(&model.File{}).Where("id = ? AND status = 'deleting'", id).Updates(map[string]any{"status": "deleted", "updated_at": time.Now().UTC()}).Error
+}
+func (r *FilesTasks) DeferCleanup(ctx context.Context, id uint64, until time.Time) error {
+	return r.db.WithContext(ctx).Model(&model.File{}).Where("id = ? AND status = 'deleting'", id).Update("cleanup_after", until).Error
 }
 
 // A bounded, consistent export snapshot. Oversize exports fail rather than silently truncate.

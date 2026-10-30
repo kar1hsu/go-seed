@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-type AdminAccessMiddleware struct{ tokens *identity.Tokens }
+type AdminAccessMiddleware struct{ tokens *identity.Verifier }
 
-func NewAdminAccessMiddleware(tokens *identity.Tokens) *AdminAccessMiddleware {
+func NewAdminAccessMiddleware(tokens *identity.Verifier) *AdminAccessMiddleware {
 	return &AdminAccessMiddleware{tokens: tokens}
 }
 func (m *AdminAccessMiddleware) Handle(next http.HandlerFunc) http.HandlerFunc {

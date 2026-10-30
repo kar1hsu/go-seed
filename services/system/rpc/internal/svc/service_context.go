@@ -2,24 +2,21 @@ package svc
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
+	"github.com/kar1hsu/go-seed/pkg/authlimit"
 	"github.com/kar1hsu/go-seed/pkg/storage"
 	"regexp"
+	"time"
 
 	"github.com/kar1hsu/go-seed/pkg/dbx"
 	"github.com/kar1hsu/go-seed/pkg/identity"
-	"github.com/kar1hsu/go-seed/pkg/xerr"
 	"github.com/kar1hsu/go-seed/services/system/internal/application/auth"
 	"github.com/kar1hsu/go-seed/services/system/internal/application/health"
 	"github.com/kar1hsu/go-seed/services/system/internal/application/management"
 	"github.com/kar1hsu/go-seed/services/system/internal/authorization"
 	"github.com/kar1hsu/go-seed/services/system/internal/repository"
 	"github.com/kar1hsu/go-seed/services/system/rpc/internal/config"
-	"github.com/zeromicro/go-zero/core/limit"
 	"github.com/zeromicro/go-zero/core/stores/redis"
-	"google.golang.org/grpc/codes"
 	"gorm.io/gorm"
 )
 
@@ -42,7 +39,7 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	tokens, err := identity.New(c.Tokens)
+	tokens, err := identity.NewSigner(c.Tokens)
 	if err != nil {
 		return nil, err
 	}
@@ -68,23 +65,13 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		}
 		return nil
 	})
-	loginLimit := limit.NewPeriodLimit(60, 10, cache, "goseed:"+c.Mode+":system:auth:login:")
-	authSvc, err := auth.New(repository.NewAuth(db), tokens, c.RefreshTTL, func(ctx context.Context, username string) error {
-		key := sha256.Sum256([]byte(username))
-		result, err := loginLimit.TakeCtx(ctx, hex.EncodeToString(key[:]))
-		if err != nil {
-			return xerr.New(codes.Unavailable)
-		}
-		if result == limit.OverQuota {
-			return xerr.New(codes.ResourceExhausted)
-		}
-		return nil
-	})
+	limiter := authlimit.New(cache, "goseed:"+c.Mode+":system:auth:", 60, 10)
+	authSvc, err := auth.New(repository.NewAuth(db), tokens, c.RefreshTTL, limiter.Allow)
 	if err != nil {
 		_ = pool.Close()
 		return nil, err
 	}
-	managementSvc, err := management.New(repository.NewRBAC(db), authorization.New(tokens), objects)
+	managementSvc, err := management.New(repository.NewRBAC(db), authorization.New(tokens.Verifier), objects, time.Local)
 	if err != nil {
 		_ = pool.Close()
 		return nil, err

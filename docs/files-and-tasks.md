@@ -10,11 +10,17 @@ GoSeed 使用私有文件存储和 Asynq 0.26.0 队列。admin-api 流式收发�
 4. `GET /admin-api/v1/system/files/{id}/content` 校验当前登录和归属后返回 attachment；成功响应是二进制，不套 JSON envelope。内容强制 `application/octet-stream`、`nosniff` 与 `private, no-store`。
 5. `DELETE /admin-api/v1/system/files/{id}` 返回 202。在同一事务标记不可下载、创建删除任务、写 outbox 与审计。物理对象由 worker 幂等删除。
 
-文件单个上限 **10 MiB**，不允许空文件。支持 PNG、JPEG、PDF、纯文本、CSV、JSON、ZIP；JSON 还验证语法。文件名最长 180 字符，不接受路径分隔符或控制字符。声明类型和实际内容不匹配时拒绝完成上传；这不是恶意文件扫描服务。
+文件单个上限 **10 MiB**，不允许空文件。支持 PNG、JPEG、PDF、纯文本、CSV、JSON、ZIP；JSON 还验证语法。文件名和审计目标名称均最长 180 字符，不接受路径分隔符或控制字符。声明类型和实际内容不匹配时拒绝完成上传；这不是恶意文件扫描服务。
 
 上传记录有效期一小时。失败后原页面的“重试上传”复用文件 ID；若对象已成功写入但完成回执丢失，会验证并完成已有对象，不替换内容。刷新页面后重新选择文件会创建新记录。超过 24 小时的未完成上传、失败导出的残留文件及临时上传文件由定时清理回收，每次最多处理 200 个元数据对象。
 
 所有文件按管理员本人隔离，超级管理员也不能下载其他管理员的文件。`system.file.read/upload/delete` 是独立权限；上传和删除依赖读取权限。导出文件下载还要求当前 `system.task.export` 权限。对象键只在内部 RPC 中流转，不返回前端；不把存储目录作为静态站点公开。
+
+后台文件列表提供预览抽屉：PNG/JPEG 支持查看、缩放和旋转，PDF 使用固定版本 [PDF.js](https://mozilla.github.io/pdf.js/) 6.4.299 在页面内渲染，支持翻页和缩放，TXT/CSV/JSON 以纯文本展示（最多前 256 KiB，超出时提示下载完整文件）。ZIP 显示下载提示；加密或无法解析的 PDF 提示下载后查看。预览通过同一个带 Bearer 的内容接口读取，不生成公开地址；关闭抽屉、离开页面或权限失效时取消请求、清空内容并释放 Blob URL。文本按文字转义显示，不执行 HTML 或脚本。PDF 仅绘制页面，不激活文档脚本、表单或外部链接；渲染器按需加载，worker、字体和字符映射资源由本站提供，不使用第三方在线预览服务。`pnpm dev/build` 自动从锁定依赖准备被 Git 忽略的 `public/pdfjs/` 资源，关闭预览会销毁文档与 worker。
+
+原始文件名保留在元数据中，用于列表、预览标题和下载文件名；实际存储键按 **`YYYYMMDD/随机文件名`** 生成，例如 `20261030/7c8f91b2d3e44a56b7c8d9e0f1a2b3c4`。日期由记录创建时间转换到统一 `TZ` 配置的时区后生成，默认 `Asia/Shanghai`；导出文件名中的日期和时间也使用该时区。数据库时间和接口时间仍为 UTC；文件名由服务端 `crypto/rand` 生成 16 字节随机数并编码为 32 位十六进制字符串，不带原始名称或扩展名。上传与任务导出都使用该规则，本地磁盘自动创建单层日期目录，S3 使用同样的对象前缀。上传同名文件会产生独立记录和对象，不覆盖已有文件。
+
+新环境和已有环境都须执行迁移 `00008_file_date_paths.sql`，将 `files.object_key` 扩展至 `VARCHAR(64)`。已有的 32 位平铺键继续支持上传重试、读取和删除，时区改变后也按已保存的键读取，无需移动旧文件；不自动回滚缩短字段，以免截断日期路径。
 
 ## 存储配置
 
@@ -70,3 +76,15 @@ scheduler 每 10 秒尝试投递当前 UTC 小时的清理触发消息；同一�
 - `make rbac-smoke`：运行中的上传、私有下载、HTTP 状态、导出、worker 处理、删除及现有管理链路。
 
 官方依据：[Asynq](https://github.com/hibiken/asynq)、[Asynq API](https://pkg.go.dev/github.com/hibiken/asynq@v0.26.0)、[S3 条件写](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html)。
+
+## 故障恢复约定
+
+outbox 在入队前以数据库 CAS 分配递增 delivery 序号和 30 秒投递租约；TaskID 为 `job-<id>-<generation>-delivery-<delivery>`。Redis 结果未知或旧消息已归档时，租约到期使用新 ID；数据库内业务领取、generation 和租约继续保证幂等。投递次数不消耗业务 attempts。
+
+清理某个对象失败时将该文件推迟一小时，继续处理本批其余对象；后续批次按 cleanup_after 过滤，避免失败对象长期占满前 200 条。未来小时的调度消息正常重试，不当作坏消息立即归档。
+
+下载路由单独关闭 go-zero 响应缓冲，按 32 KiB 流式输出；存储上下文和 HTTP 写期限均为 60 秒。上传仍有原超时保护。Nginx 关闭代理响应缓冲。管理 API 在最外层收尾上传请求体，拒绝上传后最多丢弃 10 MiB + 1 字节、最多等待 5 秒，避免未读请求体触发 TCP reset，导致网关把 401/403 替换为 502。
+
+worker 的 Asynq ShutdownTimeout 为 8 秒，go-zero WaitTime 为 20 秒，Compose stop_grace_period 为 30 秒。健康端口监听失败以非零状态退出；服务配置自动重启。worker 不持有 JWT 签名密钥，只按数据库当前身份和权限执行持久化任务。
+
+S3 上传缓存在 `STORAGE_ROOT/.spool`，admin-api 启动及每小时清理自身目录内超过 24 小时的残留；worker 同样清理自身存储目录。进程分布在不同主机时不依赖 worker 访问 API 的临时目录。

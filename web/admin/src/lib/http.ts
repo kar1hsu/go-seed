@@ -10,7 +10,9 @@ export const api = createClient<paths>({
         AbortSignal.timeout(
           /\/system\/files\/\d+\/content$/.test(new URL(request.url).pathname)
             ? 60000
-            : 5000,
+            : new URL(request.url).pathname.endsWith('/auth/refresh')
+              ? 15000
+              : 5000,
         ),
       ]),
       credentials: 'same-origin',

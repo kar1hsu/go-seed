@@ -37,6 +37,29 @@ func TestFilesPrivacyVerificationAndDelete(t *testing.T) {
 	_, other := f.user(t, "file_other")
 	record, err := f.a.CreateFile(ctx, f.root, "readme.txt", "text/plain", 5)
 	require(t, err)
+	if !strings.HasPrefix(record.ObjectKey, record.CreatedAt.UTC().Format("20060102/")) || len(record.ObjectKey) != 41 {
+		t.Fatalf("upload key does not use its creation date: %q", record.ObjectKey)
+	}
+	sameName, err := f.a.CreateFile(ctx, f.root, "readme.txt", "text/plain", 5)
+	require(t, err)
+	if sameName.ObjectKey == record.ObjectKey {
+		t.Fatal("same original filename reused an object key")
+	}
+	// Existing flat keys keep working after the column is widened.
+	sameName.ObjectKey = strings.Repeat("c", 32)
+	require(t, f.db.Model(sameName).Update("object_key", sameName.ObjectKey).Error)
+	require(t, objects.Put(ctx, sameName.ObjectKey, strings.NewReader("older"), 5))
+	_, err = f.a.CompleteFileUpload(ctx, f.root, sameName.ID)
+	require(t, err)
+	_, err = f.a.DownloadFile(ctx, f.root, sameName.ID)
+	require(t, err)
+	require(t, f.a.DeleteFile(ctx, f.root, sameName.ID))
+	var legacyDelete model.Task
+	require(t, f.db.Where("file_id = ?", sameName.ID).First(&legacyDelete).Error)
+	require(t, worker.Process(ctx, task.Payload{ID: legacyDelete.ID, Generation: legacyDelete.Generation}))
+	if _, err = objects.Open(ctx, sameName.ObjectKey); !os.IsNotExist(err) {
+		t.Fatal("legacy object was not deleted", err)
+	}
 	_, err = f.a.AuthorizeFileUpload(ctx, other, record.ID)
 	code(t, err, codes.PermissionDenied)
 	require(t, objects.Put(ctx, record.ObjectKey, strings.NewReader("hello"), 5))
@@ -133,6 +156,9 @@ func TestExportOutboxIdempotencyCrashAndPermissions(t *testing.T) {
 	}
 	file, err := f.a.DownloadFile(ctx, f.root, job.FileID)
 	require(t, err)
+	if !strings.HasPrefix(file.ObjectKey, file.CreatedAt.UTC().Format("20060102/")) || len(file.ObjectKey) != 41 {
+		t.Fatalf("export key does not use its creation date: %q", file.ObjectKey)
+	}
 	r, err := objects.Open(ctx, file.ObjectKey)
 	require(t, err)
 	data, err := io.ReadAll(r)
@@ -168,6 +194,9 @@ func TestExportOutboxIdempotencyCrashAndPermissions(t *testing.T) {
 	require(t, f.db.First(&failedFile, denied.FileID).Error)
 	if failedFile.Status != "pending" || failedFile.ObjectKey == oldKey {
 		t.Fatal("retry did not replace cleaned artifact key")
+	}
+	if !strings.HasPrefix(failedFile.ObjectKey, failedFile.CreatedAt.UTC().Format("20060102/")) {
+		t.Fatal("retried export key does not use its new creation date")
 	}
 
 	require(t, worker.Process(ctx, task.Payload{ID: denied.ID, Generation: 1}))

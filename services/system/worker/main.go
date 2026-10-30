@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"github.com/kar1hsu/go-seed/pkg/taskx"
+	"github.com/kar1hsu/go-seed/pkg/timezone"
 	"github.com/kar1hsu/go-seed/services/system/worker/internal/config"
 	"github.com/kar1hsu/go-seed/services/system/worker/internal/handler"
 	"github.com/kar1hsu/go-seed/services/system/worker/internal/svc"
@@ -17,22 +18,31 @@ import (
 )
 
 func main() {
+	if err := timezone.Configure(); err != nil {
+		log.Fatal(err)
+	}
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	path := flag.String("f", "services/system/worker/etc/system-worker.yaml", "configuration")
 	flag.Parse()
 	var c config.Config
 	conf.MustLoad(*path, &c, conf.UseEnv())
 	if err := c.SetUp(); err != nil {
-		log.Fatal(err)
+		return err
 	}
 	s, err := svc.New(c)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer s.Close()
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 	if err = s.Server.Start(handler.New(s.Jobs)); err != nil {
-		log.Fatal(err)
+		return err
 	}
 	done := make(chan struct{})
 	go func() {
@@ -54,13 +64,14 @@ func main() {
 		}
 	}()
 	health := taskx.HealthServer(c.ListenOn, s.Ready)
+	var listenerError error
 	failed := make(chan error, 1)
 	go func() { failed <- health.ListenAndServe() }()
 	select {
 	case <-ctx.Done():
 	case err = <-failed:
 		if err != http.ErrServerClosed {
-			logx.Errorf("worker health listener failed: %v", err)
+			listenerError = err
 		}
 	}
 	cancel()
@@ -69,4 +80,5 @@ func main() {
 	stopCtx, stop := context.WithTimeout(context.Background(), 3*time.Second)
 	defer stop()
 	_ = health.Shutdown(stopCtx)
+	return listenerError
 }

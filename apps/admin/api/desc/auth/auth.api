@@ -1,6 +1,9 @@
 syntax = "v1"
 
 type (
+ RefreshRequest {
+ RetryKey string `header:"X-GoSeed-Refresh-Key,optional"`
+ }
 	LoginRequest {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -62,7 +65,7 @@ service admin-api {
 
 	@doc "Rotate HttpOnly refresh cookie and access token"
 	@handler Refresh
-	post /refresh returns (AuthResponse)
+	post /refresh (RefreshRequest) returns (AuthResponse)
 
 	@doc "Revoke current session and clear refresh cookie"
 	@handler Logout

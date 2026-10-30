@@ -19,7 +19,7 @@
 | 创建与删除 | `POST /member/users`、`DELETE /member/users/:id` |
 | 业务动作 | `PUT /member/users/:id/status`，明确动作语义 |
 | ID | HTTP 与 RPC 中统一传十进制字符串，避免 JavaScript 大整数精度损失 |
-| 时间 | HTTP 使用 UTC RFC3339，数据库统一 UTC；内部 RPC 使用明确的时间类型 |
+| 时间 | 服务本地时区由统一的 `TZ` 配置，默认 `Asia/Shanghai`；HTTP 使用 UTC RFC3339，数据库会话及存储统一 UTC；内部 RPC 使用明确的时间类型 |
 | 金额 | 整数最小单位或十进制定点字符串，契约注明币种和单位 |
 | 列表结果 | `items`、`total`、`page`、`pageSize`，空列表是 `[]` |
 

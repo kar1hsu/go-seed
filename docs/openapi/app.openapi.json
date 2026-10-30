@@ -305,6 +305,27 @@
         ],
         "summary": "MemberRefresh",
         "operationId": "memberMemberRefresh",
+        "parameters": [
+          {
+            "name": "X-GoSeed-Refresh-Key",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-GoSeed-CSRF",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            },
+            "description": "Required for same-origin write requests, including CLI clients."
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -428,20 +449,6 @@
         "security": [
           {
             "MemberRefresh": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "header",
-            "name": "X-GoSeed-CSRF",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            },
-            "description": "Required for same-origin write requests, including CLI clients."
           }
         ]
       }
@@ -1303,6 +1310,9 @@
             "type": "string"
           }
         }
+      },
+      "MemberRefreshRequest": {
+        "type": "object"
       },
       "PingData": {
         "type": "object",

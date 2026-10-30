@@ -21,8 +21,10 @@ import {
 } from './api'
 import { useResourceList } from './use-resource-list'
 import ResourceFilters from './ResourceFilters.vue'
+import FilePreview from './FilePreview.vue'
 import { authMessage, useAuthStore } from '../../auth/store'
 const auth = useAuthStore()
+const previewRecord = ref<FileRecord | null>(null)
 const { query, filters, items, total, loading, error, load, search, reset } =
   useResourceList(files.list, true)
 const input = ref<HTMLInputElement>(),
@@ -199,8 +201,17 @@ async function remove(row: FileRecord) {
             timeLabel(row.createdAt)
           }}</template></ElTableColumn
         >
-        <ElTableColumn label="操作" fixed="right" width="140"
+        <ElTableColumn label="操作" fixed="right" width="190"
           ><template #default="{ row }"
+            ><ElButton
+              link
+              type="primary"
+              :disabled="
+                row.status !== 'ready' ||
+                (row.source === 'export' && !auth.has('system.task.export'))
+              "
+              @click="previewRecord = row as FileRecord"
+              >预览</ElButton
             ><ElButton
               link
               type="primary"
@@ -239,4 +250,5 @@ async function remove(row: FileRecord) {
     未完成的上传会在 24
     小时后由定时任务清理。下载链接需登录授权，不提供公开访问地址。
   </p>
+  <FilePreview v-model="previewRecord" />
 </template>

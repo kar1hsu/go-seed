@@ -5,9 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	mysql "github.com/go-sql-driver/mysql"
 	"github.com/kar1hsu/go-seed/pkg/storage"
@@ -25,7 +28,10 @@ import (
 	"gorm.io/gorm"
 )
 
+var errNoChange = errors.New("no business change")
+
 type Service struct {
+	location   *time.Location
 	objects    storage.Store
 	store      *repository.RBAC
 	authorizer *authorization.Authorizer
@@ -47,12 +53,15 @@ type Role struct {
 	Manageable, Assignable bool
 }
 
-func New(store *repository.RBAC, authorizer *authorization.Authorizer, objects storage.Store) (*Service, error) {
+func New(store *repository.RBAC, authorizer *authorization.Authorizer, objects storage.Store, location *time.Location) (*Service, error) {
+	if location == nil {
+		return nil, errors.New("management timezone is required")
+	}
 	catalog, err := resources.Catalog()
 	if err != nil {
 		return nil, err
 	}
-	return &Service{store: store, authorizer: authorizer, catalog: catalog, objects: objects}, nil
+	return &Service{store: store, authorizer: authorizer, catalog: catalog, objects: objects, location: location}, nil
 }
 func publicError(ctx context.Context, err error) error {
 	if err == nil {
@@ -93,7 +102,9 @@ func (s *Service) runTransaction(ctx context.Context, raw, permission string, wr
 				return err
 			}
 		}
-		if err = fn(tx, access); err != nil {
+		if err = fn(tx, access); errors.Is(err, errNoChange) {
+			return nil
+		} else if err != nil {
 			return err
 		}
 		if policyChanged {
@@ -127,7 +138,9 @@ func revisionMatches(raw string, t time.Time) error {
 	}
 	return nil
 }
-func validName(value string) bool { return strings.TrimSpace(value) != "" && len([]rune(value)) <= 64 }
+func validName(value string) bool {
+	return utf8.ValidString(value) && strings.TrimSpace(value) != "" && len([]rune(value)) <= 64 && !strings.ContainsFunc(value, func(r rune) bool { return unicode.IsControl(r) || unicode.Is(unicode.Cf, r) })
+}
 func nextTime(previous time.Time) time.Time {
 	now := time.Now().UTC().Truncate(time.Microsecond)
 	if !now.After(previous) {
@@ -194,6 +207,9 @@ func (s *Service) UpdateAdministrator(ctx context.Context, raw string, id uint64
 		if !enabled && id == a.Admin.ID {
 			return xerr.New(codes.FailedPrecondition)
 		}
+		if target.DisplayName == strings.TrimSpace(name) && target.Enabled == enabled {
+			return errNoChange
+		}
 		if err = tx.UpdateAdmin(ctx, id, strings.TrimSpace(name), enabled, nextTime(target.UpdatedAt)); err != nil {
 			return err
 		}
@@ -218,6 +234,10 @@ func (s *Service) AssignRoles(ctx context.Context, raw string, id uint64, ids []
 			return err
 		}
 		seen := map[uint64]bool{}
+		existing := map[uint64]bool{}
+		for _, role := range a.Policy.RolesFor(id) {
+			existing[role.ID] = true
+		}
 		roles := []model.Role{}
 		hasSuper := false
 		for _, roleID := range ids {
@@ -229,7 +249,7 @@ func (s *Service) AssignRoles(ctx context.Context, raw string, id uint64, ids []
 			if err != nil {
 				return err
 			}
-			if !a.CanAssignRole(*role) {
+			if !a.CanAssignRole(*role) && !(existing[roleID] && a.CanManageRole(*role)) {
 				return xerr.New(codes.PermissionDenied)
 			}
 			hasSuper = hasSuper || role.BuiltIn
@@ -246,6 +266,15 @@ func (s *Service) AssignRoles(ctx context.Context, raw string, id uint64, ids []
 			}
 			if count <= 1 {
 				return xerr.New(codes.FailedPrecondition)
+			}
+		}
+		if len(existing) == len(seen) {
+			same := true
+			for roleID := range existing {
+				same = same && seen[roleID]
+			}
+			if same {
+				return errNoChange
 			}
 		}
 		if err = tx.SetRoles(ctx, id, ids, nextTime(target.UpdatedAt)); err != nil {
@@ -311,6 +340,9 @@ func (s *Service) UpdateRole(ctx context.Context, raw string, id uint64, name, d
 		if err = revisionMatches(revision, role.UpdatedAt); err != nil {
 			return err
 		}
+		if role.Name == strings.TrimSpace(name) && role.Description == description && role.Enabled == enabled {
+			return errNoChange
+		}
 		before := audit.Role(*role)
 		role.Name, role.Description, role.Enabled, role.UpdatedAt = strings.TrimSpace(name), description, enabled, nextTime(role.UpdatedAt)
 		if err = tx.UpdateRole(ctx, role); err != nil {
@@ -354,6 +386,13 @@ func (s *Service) GrantRole(ctx context.Context, raw string, id uint64, permissi
 					return xerr.New(codes.InvalidArgument)
 				}
 			}
+		}
+		old := assignedPermissions(a.Policy, id)
+		want := append([]string{}, permissions...)
+		slices.Sort(old)
+		slices.Sort(want)
+		if slices.Equal(old, want) {
+			return errNoChange
 		}
 		if err = tx.SetGrants(ctx, id, permissions, nextTime(role.UpdatedAt)); err != nil {
 			return err

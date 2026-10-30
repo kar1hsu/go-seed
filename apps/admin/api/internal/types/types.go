@@ -295,14 +295,14 @@ type GrantRoleRequest struct {
 }
 
 type ListAuditLogsRequest struct {
-	Page     int64  `form:"page,default=1,range=[1:100000]"`
+	Page     int64  `form:"page,default=1,range=[1:10000]"`
 	PageSize int64  `form:"pageSize,default=20,range=[1:100]"`
 	Keyword  string `form:"keyword,optional"`
 	Action   string `form:"action,optional"`
 	ActorId  string `form:"actorId,optional"`
 	TraceId  string `form:"traceId,optional"`
-	From     string `form:"from,optional"` // Inclusive RFC3339 timestamp.
-	To       string `form:"to,optional"`   // Exclusive RFC3339 timestamp.
+	From     string `form:"from,optional"` // Inclusive RFC3339 timestamp; defaults to 90 days before to.
+	To       string `form:"to,optional"`   // Exclusive RFC3339 timestamp; defaults to now. Maximum window: 366 days.
 }
 
 type ListFilesTasksRequest struct {
@@ -404,6 +404,10 @@ type PingResponse struct {
 	Message string   `json:"message"`
 	Data    PingData `json:"data"`
 	TraceId string   `json:"traceId"`
+}
+
+type RefreshRequest struct {
+	RetryKey string `header:"X-GoSeed-Refresh-Key,optional"`
 }
 
 type RoleListData struct {

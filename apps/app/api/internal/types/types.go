@@ -52,6 +52,10 @@ type MemberProfileResponse struct {
 	TraceId string        `json:"traceId"`
 }
 
+type MemberRefreshRequest struct {
+	RetryKey string `header:"X-GoSeed-Refresh-Key,optional"`
+}
+
 type PingData struct {
 	Service string `json:"service"`
 	Version string `json:"version"`

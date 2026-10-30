@@ -97,8 +97,8 @@ function tabOptions(path: string) {
 }
 async function tabAction(path: string, command: string) {
   if (command === 'refresh') {
-    if (route.path !== path) await router.push(path)
     if (route.path === path) pageVersion.value++
+    else await router.push(path)
     return
   }
   if (!['close', 'others', 'right', 'all'].includes(command)) return
@@ -288,7 +288,9 @@ onBeforeUnmount(() => media.removeEventListener('change', updateMedia))
       </div>
       <main id="main-content" class="page-content">
         <RouterView v-slot="{ Component }"
-          ><component :is="Component" :key="`${route.fullPath}:${pageVersion}`"
+          ><component
+            :is="Component"
+            :key="`${route.path}:${JSON.stringify(route.query)}:${pageVersion}`"
         /></RouterView>
       </main>
       <footer class="app-footer">

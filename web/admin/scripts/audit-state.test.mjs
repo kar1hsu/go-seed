@@ -30,8 +30,9 @@ try {
     const state = createAuditState({
       list: () => (++calls === 1 ? a.promise : b.promise),
     })
-    const first = state.load(),
-      second = state.load()
+    const first = state.load()
+    state.query.keyword='new query'
+    const second = state.load()
     b.resolve(response('new'))
     await second
     a.resolve(response('old'))

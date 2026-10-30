@@ -13,16 +13,17 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 	"unicode"
 	"unicode/utf8"
 )
 
-func Key() string {
+func Key(createdAt time.Time, location *time.Location) string {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
 		panic(err)
 	}
-	return hex.EncodeToString(b)
+	return createdAt.In(location).Format("20060102") + "/" + hex.EncodeToString(b)
 }
 func Valid(name, kind string, size int64) bool {
 	if !utf8.ValidString(name) || len([]rune(name)) > 180 || strings.TrimSpace(name) == "" || strings.ContainsAny(name, "/\\") || strings.ContainsFunc(name, unicode.IsControl) || size < 1 || size > storage.MaxSize {

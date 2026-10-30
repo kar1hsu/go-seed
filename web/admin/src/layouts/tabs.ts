@@ -28,10 +28,11 @@ export function closeTabs(
     .find((path) => next.includes(path))
   return {
     paths: next,
-    active: next.includes(active)
-      ? active
-      : action === 'others'
-        ? target
-        : adjacent || next[0]!,
+    active:
+      !paths.includes(active) || next.includes(active)
+        ? active
+        : action === 'others'
+          ? target
+          : adjacent || next[0]!,
   }
 }

@@ -16,12 +16,13 @@ type DomainCaller struct {
 	PermissionPrefix string
 }
 type Config struct {
+	TLS           rpcx.ServerTLS `json:",optional"`
 	DomainCallers []DomainCaller `json:",optional"`
 	Storage       storage.Config
 	zrpc.RpcServerConf
 	MySQL          dbx.MySQLConfig
 	Cache          redis.RedisConf
-	Tokens         identity.Config
+	Tokens         identity.SignerConfig
 	RefreshTTL     time.Duration `json:",default=168h"`
 	AdminAPISecret string
 	Version        string `json:",default=0.1.0"`

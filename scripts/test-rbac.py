@@ -10,4 +10,4 @@ args = ['go', 'test', '-race', '-count=1', '-tags=integration']
 if '--http' in sys.argv:
     env['RBAC_SMOKE_URL'] = env.get('RBAC_SMOKE_URL', f"http://127.0.0.1:{env['ADMIN_API_PORT']}")
     args += ['-run', '^TestHTTPManagement$']
-subprocess.run(args + ['./services/system/internal/application/management'], cwd=root, env=env, check=True)
+subprocess.run(args + ['./services/system/internal/application/management'] + ([] if '--http' in sys.argv else ['./services/system/worker']), cwd=root, env=env, check=True)

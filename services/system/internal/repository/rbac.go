@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/kar1hsu/go-seed/services/system/internal/model"
@@ -61,7 +62,7 @@ func (r *RBAC) Snapshot(ctx context.Context) (*PolicySnapshot, error) {
 }
 func filtered(db *gorm.DB, keyword, enabled string) *gorm.DB {
 	if keyword != "" {
-		db = db.Where("name LIKE ? OR code LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
+		db = db.Where("name LIKE ? ESCAPE '!' OR code LIKE ? ESCAPE '!'", literalLike(keyword), literalLike(keyword))
 	}
 	if enabled != "all" {
 		db = db.Where("enabled = ?", enabled == "enabled")
@@ -71,7 +72,7 @@ func filtered(db *gorm.DB, keyword, enabled string) *gorm.DB {
 func (r *RBAC) ListAdmins(ctx context.Context, page, size int64, keyword, enabled string) ([]model.Administrator, int64, error) {
 	q := r.db.WithContext(ctx).Model(&model.Administrator{})
 	if keyword != "" {
-		q = q.Where("username LIKE ? OR display_name LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
+		q = q.Where("username LIKE ? ESCAPE '!' OR display_name LIKE ? ESCAPE '!'", literalLike(keyword), literalLike(keyword))
 	}
 	if enabled != "all" {
 		q = q.Where("enabled = ?", enabled == "enabled")
@@ -167,4 +168,8 @@ func (r *RBAC) Admin(ctx context.Context, id uint64) (*model.Administrator, erro
 	var a model.Administrator
 	err := r.db.WithContext(ctx).First(&a, id).Error
 	return &a, err
+}
+
+func literalLike(s string) string {
+	return "%" + strings.NewReplacer("!", "!!", "%", "!%", "_", "!_").Replace(s) + "%"
 }

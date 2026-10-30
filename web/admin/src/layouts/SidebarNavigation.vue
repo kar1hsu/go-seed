@@ -6,6 +6,7 @@ import {
   ElSubMenu,
   ElMenuItem,
   ElIcon,
+  ElScrollbar,
   type MenuInstance,
 } from 'element-plus'
 import { useAuthStore } from '../features/auth/store'
@@ -70,37 +71,39 @@ watch(
 
 <template>
   <nav class="side-menu" aria-label="主导航">
-    <ElMenu
-      ref="menu"
-      :default-active="route.path"
-      :default-openeds="opened"
-      :collapse="collapsed"
-      :collapse-transition="false"
-      @open="(group) => change(group, true)"
-      @close="(group) => change(group, false)"
-      @select="(path) => router.push(path)"
-    >
-      <ElSubMenu
-        v-for="group in groups"
-        :key="group.name"
-        :index="group.name"
-        :title="collapsed ? group.name : undefined"
-        popper-class="sidebar-submenu"
+    <ElScrollbar wrap-class="side-menu-scroll" view-class="side-menu-content">
+      <ElMenu
+        ref="menu"
+        :default-active="route.path"
+        :default-openeds="opened"
+        :collapse="collapsed"
+        :collapse-transition="false"
+        @open="(group) => change(group, true)"
+        @close="(group) => change(group, false)"
+        @select="(path) => router.push(path)"
       >
-        <template #title
-          ><ElIcon><component :is="group.items[0]!.icon" /></ElIcon
-          ><span>{{ group.name }}</span></template
+        <ElSubMenu
+          v-for="group in groups"
+          :key="group.name"
+          :index="group.name"
+          :title="collapsed ? group.name : undefined"
+          popper-class="sidebar-submenu"
         >
-        <ElMenuItem
-          v-for="item in group.items"
-          :key="item.path"
-          :index="item.path"
-          :aria-current="route.path === item.path ? 'page' : undefined"
-        >
-          <ElIcon><component :is="item.icon" /></ElIcon
-          ><span>{{ item.title }}</span>
-        </ElMenuItem>
-      </ElSubMenu>
-    </ElMenu>
+          <template #title
+            ><ElIcon><component :is="group.items[0]!.icon" /></ElIcon
+            ><span>{{ group.name }}</span></template
+          >
+          <ElMenuItem
+            v-for="item in group.items"
+            :key="item.path"
+            :index="item.path"
+            :aria-current="route.path === item.path ? 'page' : undefined"
+          >
+            <ElIcon><component :is="item.icon" /></ElIcon
+            ><span>{{ item.title }}</span>
+          </ElMenuItem>
+        </ElSubMenu>
+      </ElMenu>
+    </ElScrollbar>
   </nav>
 </template>

@@ -11,3 +11,4 @@ bin
 **/*.log
 
 .data
+web/admin/public/pdfjs

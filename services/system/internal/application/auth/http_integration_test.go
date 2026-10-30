@@ -4,6 +4,8 @@ package auth
 
 import (
 	"bytes"
+	"crypto/ed25519"
+	"encoding/base64"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -35,6 +37,7 @@ func TestHTTPAuthLifecycle(t *testing.T) {
 	}
 	f := setup(t)
 	client := &http.Client{Timeout: 10 * time.Second}
+	retryKey := ""
 	request := func(method, path string, body any, cookie, access, origin string, csrf bool, want int) (httpEnvelope, string) {
 		t.Helper()
 		payload, _ := json.Marshal(body)
@@ -43,6 +46,9 @@ func TestHTTPAuthLifecycle(t *testing.T) {
 			t.Fatal(err)
 		}
 		req.Header.Set("Content-Type", "application/json")
+		if retryKey != "" {
+			req.Header.Set("X-GoSeed-Refresh-Key", retryKey)
+		}
 		req.Header.Set("X-User-ID", "1") // Untrusted identity headers must not grant access.
 		if csrf {
 			req.Header.Set("X-GoSeed-CSRF", "1")
@@ -101,18 +107,38 @@ func TestHTTPAuthLifecycle(t *testing.T) {
 		t.Fatal("missing login result")
 	}
 	request("GET", "/me", nil, "", logged.Data.AccessToken, "", false, 200)
+	public, err := base64.RawURLEncoding.DecodeString(os.Getenv("ADMIN_TOKEN_PUBLIC_KEY"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	private, err := base64.RawURLEncoding.DecodeString(os.Getenv("ADMIN_TOKEN_PRIVATE_KEY"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	var claims identity.Claims
-	_, err := jwt.ParseWithClaims(logged.Data.AccessToken, &claims, func(*jwt.Token) (any, error) { return []byte(os.Getenv("ADMIN_TOKEN_SECRET")), nil })
+	_, err = jwt.NewParser(jwt.WithValidMethods([]string{"EdDSA"})).ParseWithClaims(logged.Data.AccessToken, &claims, func(*jwt.Token) (any, error) { return ed25519.PublicKey(public), nil })
 	if err != nil {
 		t.Fatal("cannot inspect issued claims", err)
 	}
 	claims.Kind = "member"
-	memberToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(os.Getenv("ADMIN_TOKEN_SECRET")))
+	memberToken, err := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims).SignedString(ed25519.PrivateKey(private))
 	if err != nil {
 		t.Fatal(err)
 	}
 	request("GET", "/me", nil, "", memberToken, "", false, 401)
 
+	retryKey, err = identity.Random()
+	if err != nil {
+		t.Fatal(err)
+	}
+	recovered, once := request("POST", "/refresh", nil, cookie, "", base, true, 200)
+	_, twice := request("POST", "/refresh", nil, cookie, "", base, true, 200)
+	if once == "" || twice != once {
+		t.Fatal("HTTP/RPC lost-response retry did not recover identical cookie")
+	}
+	request("GET", "/me", nil, "", recovered.Data.AccessToken, "", false, 200)
+	cookie = once
+	retryKey = ""
 	refreshed, next := request("POST", "/refresh", nil, cookie, "", base, true, 200)
 	if next == cookie || next == "" {
 		t.Fatal("cookie not rotated")

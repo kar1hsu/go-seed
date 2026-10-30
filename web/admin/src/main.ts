@@ -15,7 +15,13 @@ const auth = useAuthStore(pinia)
 api.use(
   authMiddleware(auth, () => {
     if (router.currentRoute.value.meta.requiresAuth)
-      void router.replace('/login?reason=expired')
+      void router.replace({
+        path: '/login',
+        query: {
+          reason: 'expired',
+          redirect: router.currentRoute.value.fullPath,
+        },
+      })
   }),
 )
 const stopSync = auth.sync(() => {

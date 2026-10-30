@@ -7,5 +7,7 @@ COPY web/admin/ ./
 RUN pnpm build
 
 FROM nginx:1.28.0-alpine
+ENV TZ=Asia/Shanghai
+RUN apk add --no-cache tzdata
 COPY deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /src/dist /usr/share/nginx/html

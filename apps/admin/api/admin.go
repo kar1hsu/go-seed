@@ -7,10 +7,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/kar1hsu/go-seed/pkg/clientip"
+	"github.com/kar1hsu/go-seed/pkg/timezone"
 	"log"
 
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/config"
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/handler"
+	"github.com/kar1hsu/go-seed/apps/admin/api/internal/middleware"
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/svc"
 	"github.com/kar1hsu/go-seed/pkg/xhttp"
 	memberpb "github.com/kar1hsu/go-seed/services/member/rpc/pb"
@@ -18,11 +21,15 @@ import (
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/rest/httpx"
+	"net/http"
 )
 
 var configFile = flag.String("f", "etc/admin-api.yaml", "the config file")
 
 func main() {
+	if err := timezone.Configure(); err != nil {
+		log.Fatal(err)
+	}
 	flag.Parse()
 
 	var c config.Config
@@ -39,14 +46,24 @@ func main() {
 	}
 	defer ctx.Close()
 	xhttp.RegisterHealth(server, func(callCtx context.Context) error {
+		if err := ctx.Objects.Check(callCtx); err != nil {
+			return err
+		}
 		if _, err := ctx.System.CheckReady(callCtx, &pb.CheckReadyRequest{}); err != nil {
 			return err
 		}
 		_, err := ctx.Member.CheckReady(callCtx, &memberpb.Empty{})
 		return err
 	})
+	ipMiddleware, err := clientip.Middleware(c.TrustedProxies)
+	if err != nil {
+		log.Fatal(err)
+	}
+	server.Use(ipMiddleware)
 	handler.RegisterHandlers(server, ctx)
 
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
-	server.Start()
+	server.StartWithOpts(func(server *http.Server) {
+		server.Handler = middleware.FinishUploadBody(server.Handler)
+	})
 }

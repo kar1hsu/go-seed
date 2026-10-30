@@ -1,6 +1,6 @@
 Name: system-rpc
 ListenOn: ${SYSTEM_RPC_HOST}:${SYSTEM_RPC_PORT}
-Mode: dev
+Mode: ${GOSEED_MODE}
 Timeout: 2000
 Health: true
 Log:
@@ -19,7 +19,9 @@ Cache:
   NonBlock: true
 
 Tokens:
-  Secret: "${ADMIN_TOKEN_SECRET}"
+  PublicKey: "${ADMIN_TOKEN_PUBLIC_KEY}"
+  PrivateKey: "${ADMIN_TOKEN_PRIVATE_KEY}"
+  RefreshKey: "${ADMIN_REFRESH_KEY}"
   Issuer: go-seed-admin
   Audience: go-seed-admin-api
   AccessTTL: 15m
@@ -43,3 +45,7 @@ DomainCallers:
   - Name: member-rpc
     Secret: "${MEMBER_SYSTEM_RPC_SECRET}"
     PermissionPrefix: member.
+
+TLS:
+  CertFile: "${SYSTEM_RPC_TLS_CERT}"
+  KeyFile: "${SYSTEM_RPC_TLS_KEY}"

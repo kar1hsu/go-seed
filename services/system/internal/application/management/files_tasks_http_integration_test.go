@@ -6,12 +6,14 @@ import (
 	"bytes"
 	"crypto/rand"
 	"fmt"
+	"github.com/kar1hsu/go-seed/pkg/timezone"
 	"github.com/kar1hsu/go-seed/services/system/internal/model"
 	"gorm.io/gorm"
 	"io"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -20,6 +22,21 @@ func verifyFilesTasksHTTP(t *testing.T, call func(string, string, string, any, b
 	t.Helper()
 	base := os.Getenv("RBAC_SMOKE_URL") + "/admin-api/v1"
 	client := &http.Client{Timeout: 40 * time.Second}
+	zone, configured := os.LookupEnv("TZ")
+	if !configured {
+		zone = timezone.Default
+	}
+	location, err := timezone.Load(zone)
+	require(t, err)
+	checkFileDate := func(id string) model.File {
+		t.Helper()
+		var file model.File
+		require(t, db.First(&file, id).Error)
+		if !strings.HasPrefix(file.ObjectKey, file.CreatedAt.In(location).Format("20060102/")) {
+			t.Fatalf("live service ignored TZ=%s: key=%s created=%s", zone, file.ObjectKey, file.CreatedAt)
+		}
+		return file
+	}
 	transfer := func(method, path, token string, data []byte, csrf bool, want int) []byte {
 		t.Helper()
 		req, err := http.NewRequest(method, base+path, bytes.NewReader(data))
@@ -48,11 +65,12 @@ func verifyFilesTasksHTTP(t *testing.T, call func(string, string, string, any, b
 	call("GET", "/system/tasks", reader, nil, false, 403)
 	call("POST", "/system/files", root, map[string]any{"name": "unsafe.svg", "size": 10, "contentType": "image/svg+xml"}, true, 400)
 	payload := bytes.Repeat([]byte("GoSeed streaming upload smoke test\n"), 16000)
-	body := map[string]any{"name": prefix + ".txt", "size": len(payload), "contentType": "text/plain"}
+	body := map[string]any{"name": prefix + strings.Repeat("长", 176-len(prefix)) + ".txt", "size": len(payload), "contentType": "text/plain"}
 	call("POST", "/system/files", reader, body, true, 403)
 	call("POST", "/system/files", root, body, false, 403)
 	record := call("POST", "/system/files", root, body, true, 201)["record"].(map[string]any)
 	id := record["id"].(string)
+	checkFileDate(id)
 	path := "/system/files/" + id + "/content"
 	transfer("PUT", path, root, payload, false, 403)
 	transfer("PUT", path, reader, payload, true, 403)
@@ -74,7 +92,7 @@ func verifyFilesTasksHTTP(t *testing.T, call func(string, string, string, any, b
 		t.Fatal("private object key exposed")
 	}
 	var uuid [16]byte
-	_, err := rand.Read(uuid[:])
+	_, err = rand.Read(uuid[:])
 	require(t, err)
 	uuid[6] = (uuid[6] & 15) | 64
 	uuid[8] = (uuid[8] & 63) | 128
@@ -83,6 +101,10 @@ func verifyFilesTasksHTTP(t *testing.T, call func(string, string, string, any, b
 	call("POST", "/system/tasks/dictionary-export", reader, export, true, 403)
 	call("POST", "/system/tasks/dictionary-export", root, export, false, 403)
 	job := call("POST", "/system/tasks/dictionary-export", root, export, true, 202)["record"].(map[string]any)
+	file := checkFileDate(job["fileId"].(string))
+	if file.Name != "dictionaries-"+file.CreatedAt.In(location).Format("20060102-150405")+".csv" {
+		t.Fatal("live export filename uses a different timezone", file.Name)
+	}
 	again := call("POST", "/system/tasks/dictionary-export", root, export, true, 202)["record"].(map[string]any)
 	if job["id"] != again["id"] {
 		t.Fatal("duplicate HTTP export")

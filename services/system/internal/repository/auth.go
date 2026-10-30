@@ -46,9 +46,10 @@ func (s *Auth) Token(ctx context.Context, digest, sid string) (*model.AdminRefre
 func (s *Auth) CreateToken(ctx context.Context, t *model.AdminRefreshToken) error {
 	return s.db.WithContext(ctx).Create(t).Error
 }
-func (s *Auth) ConsumeToken(ctx context.Context, digest string, now time.Time) error {
-	return s.db.WithContext(ctx).Model(&model.AdminRefreshToken{}).Where("digest = ?", digest).Update("consumed_at", now).Error
+func (s *Auth) ConsumeToken(ctx context.Context, digest string, now time.Time, retryKey, successor string) error {
+	return s.db.WithContext(ctx).Model(&model.AdminRefreshToken{}).Where("digest = ?", digest).Updates(map[string]any{"consumed_at": now, "retry_key": retryKey, "successor_digest": successor}).Error
 }
+
 func (s *Auth) Revoke(ctx context.Context, id string, now time.Time) error {
 	return s.db.WithContext(ctx).Model(&model.AdminSession{}).Where("id = ? AND revoked_at IS NULL", id).Update("revoked_at", now).Error
 }

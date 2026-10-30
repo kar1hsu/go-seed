@@ -5,18 +5,24 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/kar1hsu/go-seed/pkg/timezone"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/kar1hsu/go-seed/pkg/rpcx"
 	memberpb "github.com/kar1hsu/go-seed/services/member/rpc/pb"
 	"github.com/kar1hsu/go-seed/services/system/rpc/pb"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"strings"
 )
 
 func main() {
+	if err := timezone.Configure(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	target := flag.String("rpc", "", "RPC target")
 	url := flag.String("http", "", "HTTP health endpoint")
 	domain := flag.String("domain", "system", "RPC domain: system or member")
@@ -48,10 +54,15 @@ func check(target, url string, ready bool, domain string) error {
 	if target == "" {
 		return fmt.Errorf("pass -rpc or -http")
 	}
-	conn, err := grpc.NewClient(target, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tlsOptions, err := (rpcx.ClientTLS{CAFile: os.Getenv("RPC_TLS_CA"), ServerName: os.Getenv(strings.ToUpper(domain) + "_RPC_TLS_NAME")}).Options(os.Getenv("GOSEED_MODE"))
 	if err != nil {
 		return err
 	}
+	client, err := zrpc.NewClient(zrpc.RpcClientConf{Endpoints: []string{target}, NonBlock: true}, tlsOptions...)
+	if err != nil {
+		return err
+	}
+	conn := client.Conn()
 	defer conn.Close()
 	result, err := grpc_health_v1.NewHealthClient(conn).Check(ctx, &grpc_health_v1.HealthCheckRequest{})
 	if err != nil {

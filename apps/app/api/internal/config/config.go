@@ -8,6 +8,9 @@ import (
 )
 
 type Config struct {
+	SystemTLS        rpcx.ClientTLS `json:",optional"`
+	MemberTLS        rpcx.ClientTLS `json:",optional"`
+	TrustedProxies   string         `json:",optional"`
 	MemberRPC        zrpc.RpcClientConf
 	MemberCredential rpcx.Credential
 	rest.RestConf

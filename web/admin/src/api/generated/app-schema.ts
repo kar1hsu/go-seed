@@ -165,6 +165,7 @@ export interface components {
             message: string;
             traceId: string;
         };
+        MemberRefreshRequest: Record<string, never>;
         PingData: {
             service: string;
             time: string;
@@ -435,6 +436,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
+                "X-GoSeed-Refresh-Key"?: string;
                 /** @description Required for same-origin write requests, including CLI clients. */
                 "X-GoSeed-CSRF": "1";
             };

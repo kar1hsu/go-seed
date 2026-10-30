@@ -12,3 +12,4 @@ coverage/
 __pycache__/
 *.pyc
 .data/
+web/admin/public/pdfjs/

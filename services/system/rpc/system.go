@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/kar1hsu/go-seed/pkg/timezone"
 	"log"
 
 	"github.com/kar1hsu/go-seed/pkg/rpcx"
@@ -20,10 +21,17 @@ import (
 var configFile = flag.String("f", "etc/system.yaml", "the config file")
 
 func main() {
+	if err := timezone.Configure(); err != nil {
+		log.Fatal(err)
+	}
 	flag.Parse()
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c, conf.UseEnv())
+	tlsOptions, err := c.TLS.Options(c.Mode)
+	if err != nil {
+		log.Fatal(err)
+	}
 	ctx, err := svc.NewServiceContext(c)
 	if err != nil {
 		log.Fatal(err)
@@ -92,6 +100,7 @@ func main() {
 			reflection.Register(grpcServer)
 		}
 	})
+	s.AddOptions(tlsOptions...)
 	defer s.Stop()
 	s.AddUnaryInterceptors(guard)
 
