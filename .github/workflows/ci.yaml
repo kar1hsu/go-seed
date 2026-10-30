@@ -13,11 +13,14 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: 1.25.11
-          cache: true
+          # This job builds dependencies inside Docker; do not populate the
+          # shared host Go cache with only the small runtime verifier.
+          cache: false
       - run: make test-runtime
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # A cold runner needs about 20 minutes before reaching HTTP smoke tests.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -33,7 +36,12 @@ jobs:
       - run: make check test build
       - run: go test -race ./pkg/... ./apps/... ./services/...
       - run: make init infra-up migrate bootstrap
-      - run: make test-auth test-rbac test-member
+      - name: Administrator session integration tests
+        run: make test-auth
+      - name: Authorization and worker integration tests
+        run: make test-rbac
+      - name: Member session integration tests
+        run: make test-member
       - name: Real service smoke test
         run: |
           python3 scripts/dev.py > /tmp/goseed-dev.log 2>&1 &
