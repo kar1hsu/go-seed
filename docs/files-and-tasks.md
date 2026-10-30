@@ -62,7 +62,7 @@ scheduler 每 10 秒尝试投递当前 UTC 小时的清理触发消息；同一�
 
 部署默认运行一份 scheduler，更新时先停旧实例。调度与业务均有去重保护；短暂队列故障恢复后补当前小时，长时间停机不会回放全部历史小时。任务清理以当前数据为准，无需逐小时补跑。本批提供代码声明的清理计划，未提供后台编辑任意 cron 或执行命令的能力。
 
-`QUEUE_HOST/PORT/PASSWORD/DB/NAME` 配置 Asynq，默认开发 Redis DB 1、队列 `goseed_dev_system`。其他环境使用不同名称与凭证；生产队列使用独立 Redis、持久化和 `noeviction`。`make dev` 启动五个 Go 进程和 Vite；`make compose-up` 启动包含 worker/scheduler 的完整环境。worker 与 scheduler 的健康端口默认 19201 / 19202，Compose 只发布到回环地址。停止时先退出投递循环、关闭接收与在途任务，再关闭连接；超时工作由持久化租约恢复。
+`QUEUE_HOST/PORT/PASSWORD/DB/NAME` 配置 Asynq，默认开发 Redis DB 1、队列 `goseed_dev_system`。其他环境使用不同名称与凭证；生产队列使用独立 Redis、持久化和 `noeviction`。`make dev` 启动六个 Go 进程和 Vite；`make compose-up` 启动包含 worker/scheduler 的完整环境。worker 与 scheduler 的健康端口默认 19201 / 19202，Compose 只发布到回环地址。停止时先退出投递循环、关闭接收与在途任务，再关闭连接；超时工作由持久化租约恢复。
 
 新增环境先执行 `make init`，再迁移、同步权限目录。新增权限不会自动授予普通角色。迁移文件为 `00005_files_tasks.sql`，不在服务启动时自动执行。
 

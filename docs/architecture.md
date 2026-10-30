@@ -16,7 +16,7 @@ GoSeed 面向需要业务 API 和管理后台的 Go 项目，采用单仓库、�
 | 数据库 | 第一版以 MySQL 为验收基线 | PostgreSQL 在补齐迁移和集成测试后再宣布支持 |
 | 权限 | system 内集中使用 Casbin | 外部服务通过授权接口查询，避免每个 API 都维护一份策略 |
 | 任务 | Asynq，按业务域划分 worker | 任务业务与同步业务共用所属领域的 application 层 |
-| 前端 | Vue 3、TypeScript、Element Plus | 默认延续 Backplane 主线的 UI 体系；首版维护一套组件库 |
+| 前端 | Vue 3、TypeScript、Element Plus | 按 feature 组织页面与逻辑，统一使用 Element Plus 组件库 |
 | 服务发现 | 配置直连 | 开发用 localhost，Compose 用服务名；扩容后再选择动态发现 |
 | 部署 | Compose，前端静态部署 | 先完成小规模交付；单二进制与 Kubernetes 模板后续按需增加 |
 
@@ -180,6 +180,6 @@ RPC 初期使用 `Endpoints`；go-zero 也提供 `Target` 与 etcd 配置，后�
 
 ## 后续扩展边界
 
-多租户、会员体系、支付、Kafka、分布式事务协调器、服务网格及 Kubernetes 均按真实业务引入。没有 tenant ID 贯穿身份、存储和授权之前，不声称支持多租户；通用后台不会自动具备业务数据隔离能力。
+多租户、支付、Kafka、分布式事务协调器、服务网格及 Kubernetes 均按真实业务引入。没有 tenant ID 贯穿身份、存储和授权之前，不声称支持多租户；通用后台不会自动具备业务数据隔离能力。
 
 架构变化优先调整领域边界与契约。仅当团队、依赖或发布节奏要求独立版本时，才把服务移成单独 Go module，并将公开 RPC 契约抽成版本化模块。

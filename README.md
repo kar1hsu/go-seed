@@ -1,134 +1,180 @@
 # GoSeed
 
-GoSeed 是基于 go-zero 的项目开发底座：单仓库、单 Go module，管理端 API、业务端 API 与领域 RPC 独立运行，管理后台采用 Vue 3。
+[![CI](https://github.com/kar1hsu/go-seed/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/kar1hsu/go-seed/actions/workflows/ci.yaml)
 
-**当前已完成工程骨架、管理员认证、角色授权、操作日志、字典配置、文件与异步任务、C 端会员样板。** 提供管理员列表/新增/编辑/启停/角色分配，角色管理与菜单按钮授权，版本化 SQL 迁移，API → RPC 探测，GORM/MySQL 与 Redis 就绪检查。管理员/角色变更与审计日志在同一事务提交，可按操作人、对象、类型、日期和 Trace ID 查询。字典支持分类与字典项维护，系统配置支持文本、整数、布尔及 JSON 参数。私有文件支持本地/S3 存储，Asynq worker/scheduler 提供字典 CSV 导出、可靠删除、定时清理和失败重试；member 会员样板已接入账号密码注册登录、个人资料、后台查询与启停，使用独立 RPC、数据库账号和会话。
+GoSeed 是基于 **go-zero** 的 Go 项目开发脚手架，提供管理端 API、C 端 API、领域 RPC 和 Vue 3 管理后台。采用单仓库、单 Go module，API、RPC、队列消费者和定时调度独立运行，方便在已有基础能力上开发新业务。
+
+后端使用 **GORM + MySQL、Redis、Casbin、Asynq**，管理后台使用 **Vue 3 + TypeScript + Element Plus**。项目包含可运行的会员业务样板、契约生成脚本、Docker Compose 和 CI。
+
+[快速启动](#快速启动) · [本地开发](#本地开发) · [架构与目录](#架构与目录) · [开发新模块](docs/new-module-guide.md) · [文档导航](#文档导航)
+
+## 已实现功能
+
+| 功能 | 内容 |
+| --- | --- |
+| 管理员认证 | Ed25519 JWT、刷新 Cookie 轮换、退出登录、修改密码与会话撤销 |
+| 权限管理 | 管理员增改、启停与角色分配；Casbin RBAC、菜单与按钮授权、服务端权限校验 |
+| 操作日志 | 管理员、角色、字典、配置等变更的事务审计；按操作人、对象、日期和 Trace ID 查询 |
+| 字典与配置 | 字典分类和子项；文本、整数、布尔、JSON 配置；编辑冲突检测 |
+| 私有文件 | 本地或 S3 兼容存储；上传、下载、图片/PDF/文本预览；按配置时区生成日期目录与随机文件名 |
+| 队列与定时任务 | Asynq worker/scheduler、事务 outbox、字典 CSV 导出、文件删除、定时清理和失败重试 |
+| C 端会员 | 账号密码注册登录、个人资料、改密与会话；后台查询和启停；独立 RPC、数据库账号、密钥与 Cookie |
+| 管理后台 | 按权限显示菜单和按钮、可折叠菜单分组、多页签与右键操作 |
+| 工程支持 | 显式 SQL 迁移、健康与就绪检查、OpenAPI 和 TypeScript 类型生成、集成测试及容器运行检查 |
+
+会员模块可作为新业务的开发参考。当前提供 C 端 API 和后台会员管理页面，尚未提供 C 端前台页面、短信/邮件登录或模块自动生成器；后续规划见[实施路线](docs/roadmap.md)。
+
+## 快速启动
+
+使用完整容器环境体验项目，需要 Git、make、Python **3.10+**、Docker 和 Compose **v2+**，无需在主机安装 Go 或 Node。
+
+```bash
+git clone --recurse-submodules https://github.com/kar1hsu/go-seed.git
+cd go-seed
+make init                          # 创建 .env，生成独立认证密钥与随机初始密码
+make compose-up                    # 构建并启动全部服务及 MySQL / Redis
+make compose-migrate               # 执行 system 和 member 数据库迁移
+make compose-bootstrap             # 初始化管理员与超级管理员角色
+```
+
+打开 [管理后台](http://127.0.0.1:8088)。初始账号为 `admin`，初始密码保存在本地 `.env` 的 `ADMIN_BOOTSTRAP_PASSWORD`，登录后可在账户菜单修改密码。项目没有固定的默认密码。
+
+`make init` 保留已有配置、密钥和密码；没有本机 Go 时会使用固定版本的构建容器生成密钥。已有 checkout 可执行 `git submodule update --init --recursive` 恢复 AI 参考资料。
+
+```bash
+make smoke                         # 验证正在运行的 API / RPC / 数据库 / 缓存链路
+make compose-down                  # 停止并移除容器，保留命名卷中的数据
+```
+
+Compose 提供同源入口，RPC 端口不发布到宿主机。它用于开发和部署参考；生产环境需要按[生产配置](docs/production.md)设置 `GOSEED_MODE=pro`、TLS、Secure Cookie、允许来源和密钥管理。
 
 ## 本地开发
 
-准备 Go **1.25.11**、Node **24.19.0**（见 `.nvmrc`）、pnpm **11.15.1**、Python **3.10+**、Docker 和 Compose v2+，以及 curl、unzip、make。首次安装 pnpm 可使用 Corepack，或按 [pnpm 安装文档](https://pnpm.io/installation) 安装指定版本。
+先克隆仓库，再准备以下工具。版本以 [tools/versions.env](tools/versions.env)、[.nvmrc](.nvmrc) 和 [package.json](web/admin/package.json) 为准。
+
+| 工具 | 版本 |
+| --- | --- |
+| Go | 1.25.11 |
+| Node.js | 24.19.0 |
+| pnpm | 11.15.1 |
+| Python | 3.10+ |
+| Docker Compose | v2+ |
+
+还需要 Git、curl、unzip 和 make。使用 nvm 时先执行 `nvm install`、`nvm use`；pnpm 按[官方安装说明](https://pnpm.io/installation)安装指定版本。
+
+本地开发与完整容器环境使用相同的 API 端口。如果已启动完整容器环境，先执行 `make compose-down`。
 
 ```bash
-git clone --recurse-submodules git@github.com:kar1hsu/go-seed.git
-cd go-seed
-# 已有 checkout 时恢复固定版本的 AI 参考资料
-git submodule update --init --recursive
-make init                          # 创建 .env，生成两套 Ed25519/刷新密钥与初始密码
-# 使用 nvm 的开发者先执行 nvm install && nvm use
-make tools                         # 固定 Go 生成工具安装到 .tools/bin；protoc 按需下载
+make init
+make tools                         # 固定生成工具安装到项目 .tools/bin
 pnpm --dir web/admin install --frozen-lockfile
 make doctor
-make infra-up                      # 仅启动 GoSeed 自己的 MySQL / Redis
-make migrate                       # 显式执行 system SQL 迁移
-make bootstrap                     # 初始化 admin 与超级管理员角色；已有密码保持不变
-make dev                           # 编译并启动六个 Go 进程和 Vite；Ctrl+C 统一退出
+make infra-up                      # 启动项目独立的 MySQL / Redis，准备 member 数据库账号
+make migrate                       # 执行 system 和 member 数据库迁移
+make bootstrap                     # 幂等初始化管理员，已有密码保持不变
+make dev                           # 启动六个 Go 进程和 Vite，Ctrl+C 统一退出
 ```
 
-访问 [管理工作台](http://127.0.0.1:5173)。初始账号为 `admin`，初始密码由 `make init` 随机生成，保存在本地 `.env` 的 `ADMIN_BOOTSTRAP_PASSWORD`。登录后可在账户菜单中修改密码。另一个终端执行 `make smoke`，验证两个 API 的健康检查、RPC 调用、响应结构和 Trace ID。
+打开 [本地管理后台](http://127.0.0.1:5173)，登录凭证与容器模式相同。另一个终端可执行 `make smoke` 检查完整链路。
 
 | 服务 | 本地默认地址 |
 | --- | --- |
 | 管理后台 | `http://127.0.0.1:5173` |
-| admin-api | `http://127.0.0.1:8081` |
-| app-api | `http://127.0.0.1:8080` |
-| member-rpc | `127.0.0.1:19002`（Compose 内部为 `9002`） |
-| system-rpc | `127.0.0.1:19001`（Compose 内部为 `9001`） |
-| system-worker 健康接口 | `http://127.0.0.1:19201/readyz` |
-| system-scheduler 健康接口 | `http://127.0.0.1:19202/readyz` |
-| MySQL | `127.0.0.1:13306` |
-| Redis | `127.0.0.1:16379` |
+| admin-api / app-api | `http://127.0.0.1:8081` / `http://127.0.0.1:8080` |
+| system-rpc / member-rpc | `127.0.0.1:19001` / `127.0.0.1:19002` |
+| worker / scheduler 就绪检查 | `http://127.0.0.1:19201/readyz` / `http://127.0.0.1:19202/readyz` |
+| MySQL / Redis | `127.0.0.1:13306` / `127.0.0.1:16379` |
 
-端口和开发凭证在 `.env` 中配置；不要提交 `.env`。本地只监听回环地址。MySQL 与 Redis 使用独立容器和命名卷，不复用其他项目的实例。`make infra-down` 停止基础设施并保留数据。
+端口和开发凭证在 `.env` 中配置，不要提交该文件。本地服务默认只监听回环地址；`make infra-down` 停止 MySQL 和 Redis，保留数据。
 
-统一时区配置为 `.env` 中的 `TZ=Asia/Shanghai`，可改成 `UTC`、`America/New_York` 等 IANA 名称。Compose 的全部服务及 `make dev`、领域命令使用同一配置；显式导出的进程环境 `TZ` 可覆盖 `.env`。Go 服务和后台镜像包含时区数据，Go 进程启动时校验配置。文件目录使用该时区的 `YYYYMMDD/随机文件名`，导出文件名也使用同一时区；数据库连接和接口时间仍统一使用 UTC。修改后重启本地进程，或执行 `make compose-up` 重建镜像并更新容器使配置生效，已有文件路径保持不变。
+## 架构与目录
 
-```bash
-curl http://127.0.0.1:8081/admin-api/v1/system/ping
-curl http://127.0.0.1:8080/api/v1/system/ping
-curl http://127.0.0.1:8081/healthz     # 进程存活
-curl http://127.0.0.1:8081/readyz      # RPC + MySQL + Redis 就绪
-```
-
-## 完整容器运行
-
-需要 Docker/Compose 与 Python 3，无需主机 Go/Node 工具链：
-
-```bash
-make init                          # 保留已有配置及凭证
-make compose-up
-make compose-migrate               # 使用容器内的领域命令执行迁移
-make compose-bootstrap             # 从本地私有配置初始化管理员
-# 打开 http://127.0.0.1:8088
-make smoke                         # 主机有 Python 时运行
-make compose-down                  # 停容器，保留命名卷
-```
-
-Go 运行镜像采用固定 digest 的 Distroless Debian 13 nonroot，包含 CA 和时区数据，健康检查与领域命令直接执行二进制。`make init` 优先使用本机 Go，无 Go 时使用固定版本构建容器生成密钥；已有密钥和密码保持不变。
-
-容器模式与 `make dev` 使用相同的 API 端口，切换前先停止另一种运行方式。Compose 是开发/参考配置；生产交付使用 `GOSEED_MODE=pro`，必须配置 TLS、Secure Cookie、准确的允许来源及密钥管理，见[生产配置](docs/production.md)。管理员认证、逐方法 RPC 服务身份校验和角色权限已接入。RPC 端口不发布到容器宿主机，Nginx 提供同源入口。
-
-## 工程命令
-
-| 命令 | 当前行为 |
-| --- | --- |
-| `make init` | 创建本地配置和随机认证凭证，保留已有值 |
-| `make migrate` / `make bootstrap` | 迁移 system/member 数据库 / 幂等创建初始管理员 |
-| `make test-auth` / `make auth-smoke` | MySQL 认证并发测试 / 运行中 HTTP 登录链路 |
-| `make sync-resources` | 同步权限目录，保留角色授权和成员关系 |
-| `make test-member` / `make member-smoke` | 会员并发/回滚测试 / 运行中双 API、双 RPC 会话与管理链路 |
-| `make test-storage` | 存储并发与 S3 协议检查；可选独立 S3 实服务测试 |
-| `make test-runtime` | 构建并验证 Distroless 用户、CA、时区、文件卷与二进制执行；需要 Go 和 Docker |
-| `make test-rbac` / `make rbac-smoke` | 独立临时库权限并发与 worker 退出测试 / 运行中 HTTP 管理链路 |
-| `make gen` | 生成两份 API、两个 RPC、OpenAPI 3 与管理端 TypeScript 类型 |
-| `make gen-api APP=admin` | 从 `.api` 生成指定入口，保留手写骨架 |
-| `make gen-rpc DOMAIN=system` | 从 `.proto` 生成指定领域 RPC |
-| `make gen-web` | 校验权限/菜单声明，更新 OpenAPI、前端类型及菜单资源 |
-| `make verify-gen` | 在临时副本验证重复生成一致、新增契约保留手写实现且可编译 |
-| `make check` | 格式、依赖边界、文档链接、vet、前端类型/格式及生成一致性 |
-| `make test` | 不依赖外部服务的 Go 测试（包含内存 gRPC）及前端会话/权限竞态测试 |
-| `make build` | 分别构建六个服务、probe 与管理端静态资源 |
-| `make smoke` | 验证已经运行的真实 API/RPC/MySQL/Redis 链路 |
-
-二进制输出到 `bin/`，前端输出到 `web/admin/dist/`。契约、生成文件与 lockfile 进入版本控制。CI 执行检查、构建、race 测试及真实依赖 smoke；AI 参考库不是运行时构建依赖。
-
-## 目录与技术决策
+请求按 `HTTP API → 领域 RPC → application → repository` 流转。API 负责协议、身份和入口校验，通过 RPC 调用业务；领域内部封装用例、持久化与事务，跨领域通过公开契约协作。
 
 ```text
-apps/admin/api/          管理端 HTTP 入口，调用 RPC
-apps/app/api/            业务客户端 HTTP 入口，调用 RPC
-services/system/rpc/    系统领域契约、客户端与服务
-services/member/         C 端账号、会话与会员管理业务样板
-services/system/worker/  Asynq 消费与 outbox 投递
-services/system/scheduler/  小时清理计划投递
-services/system/internal/application/  领域用例，由 RPC 与 worker 共享
-pkg/                    通用错误、HTTP 与数据库连接技术代码
-cmd/probe/              容器健康检查客户端
-web/admin/              Vue 3 + TypeScript + Element Plus，按 feature 组织
-scripts/                生成、检查、进程监督与 smoke
+apps/
+  admin/api/                  管理端 HTTP 入口
+  app/api/                    C 端 HTTP 入口
+services/
+  system/
+    rpc/                      系统领域 RPC、契约与客户端
+    internal/                 系统用例、仓储与模型，供 RPC / worker / 命令共享
+    worker/                   Asynq 消费、outbox 投递
+    scheduler/                定时清理任务投递
+    migrations/               系统数据库迁移
+  member/
+    rpc/                      会员领域 RPC、契约与客户端
+    internal/                 会员账号、会话与管理用例
+    migrations/               会员数据库迁移
+web/admin/                    Vue 管理端，按 feature 组织
+pkg/                          公共技术包，不放业务实体
+cmd/probe/                    容器健康检查客户端
+deploy/                       Dockerfile、Compose 与 Nginx 配置
+scripts/                      生成、检查、进程管理与集成验证
+docs/                         架构、开发、部署与业务文档
 ```
 
-Go module 固定为 `github.com/kar1hsu/go-seed`。运行时使用 go-zero **1.10.2**、GORM **1.31.1**，工具版本见 [versions.env](tools/versions.env)。API 不连接业务数据库，GORM 由 system 的 ServiceContext 装配，不在启动时 AutoMigrate。队列和定时任务使用 **Asynq 0.26.0**，任务通过事务 outbox 投递，由数据库状态与租约保证幂等恢复。文件和队列配置见[文件与任务](docs/files-and-tasks.md)。
+- **单 Go module**：`github.com/kar1hsu/go-seed`，六个服务独立构建和运行；子目录不另建 `go.mod`。
+- **领域隔离**：system 与 member 使用独立数据库和账号，各进程通过 ServiceContext 显式装配依赖；API 不直接访问业务表。数据库结构通过 SQL 迁移维护，不在启动时执行 AutoMigrate。
+- **身份隔离**：管理员与会员使用独立的 JWT 标识、Ed25519 密钥、刷新密钥和 Cookie；领域 RPC 持有签名私钥，API 只持有验签公钥。
+- **异步可靠性**：任务经事务 outbox 投递，按至少一次执行设计，通过数据库状态与租约处理幂等和恢复。
 
-[ai-context](.ai-context/go-zero/00-instructions.md) 与 [zero-skills](.agents/skills/zero-skills/SKILL.md) 已按固定提交接入项目，入口为 [AGENTS.md](AGENTS.md)，不需要 mcp-zero。
+更多边界和生成文件归属见[整体架构](docs/architecture.md)与[目录规范](docs/directory-structure.md)。
 
-| 文档 | 内容 |
+## 存储与时区
+
+文件默认存放在本地 `.data/files`；Compose 使用 `files-data` 命名卷，也可切换为 S3 兼容存储。文件保持私有，通过鉴权接口访问；对象路径为 `YYYYMMDD/随机文件名`，原始名称保留在元数据中。详见[文件与任务](docs/files-and-tasks.md)。
+
+统一时区由 `.env` 的 `TZ` 配置，默认 `Asia/Shanghai`，支持 IANA 时区名称。日期目录和导出文件名按该时区生成，数据库连接与接口时间仍使用 UTC。修改后重启本地进程，或执行 `make compose-up` 更新容器；已有文件路径不变。
+
+Go 运行镜像采用固定 digest 的 **Distroless Debian 13 nonroot**，包含 CA 和时区数据；健康检查与领域命令直接执行二进制。
+
+## 常用命令
+
+| 命令 | 用途 |
 | --- | --- |
-| [整体架构](docs/architecture.md) | 服务、数据、权限与异步任务的目标设计 |
-| [目录规范](docs/directory-structure.md) | 依赖边界与生成文件所有权 |
-| [开发约定](docs/development-guide.md) | 契约、错误、开发与检查流程 |
-| [实施路线](docs/roadmap.md) | 当前进度与后续阶段 |
-| [会员业务样板](docs/member-module.md) | 账号密码、身份隔离、个人资料、后台启停与调用示例 |
-| [会员样板验证](docs/member-validation.md) | 本批并发、身份隔离、HTTP 与浏览器检查 |
-| [新增模块教程](docs/new-module-guide.md) | 从契约到迁移、权限、前端、测试与部署的文件对照 |
-| [文件与任务](docs/files-and-tasks.md) | 私有上传下载、S3、本地存储、Asynq、调度与恢复 |
-| [字典与系统配置](docs/system-settings.md) | 参数类型、字典项、权限、审计与编辑冲突 |
-| [操作日志](docs/operation-audit.md) | 日志范围、事务一致性、查询与脱敏 |
-| [角色授权](docs/authorization.md) | 管理员、角色、菜单按钮、版本一致性与验证 |
-| [管理员认证](docs/authentication.md) | 初始化、会话、Cookie、接口和验收 |
-| [可靠性修复验证](docs/reliability-validation.md) | 本批缺陷修复、回归结果与运行边界 |
-| [文件与任务验证](docs/phase-three-validation.md) | 本批实际检查、故障恢复与浏览器验收 |
-| [权限阶段验证](docs/phase-two-validation.md) | 本批检查、权限边界与浏览器验收 |
-| [第一阶段验证](docs/phase-one-validation.md) | 已执行的检查与当前边界 |
-| [AI 开发配置](docs/ai-development.md) | 官方资料版本、发现与升级方式 |
-| [管理 API](apps/admin/api/README.md) / [业务 API](apps/app/api/README.md) / [系统服务](services/system/README.md) | 运行和接口说明 |
-| [管理端](web/admin/README.md) | 页面组织和前端命令 |
+| `make check` | 格式、依赖边界、文档链接、vet、前端类型/格式和生成一致性检查 |
+| `make test` / `make build` | 无外部服务依赖的测试 / 六个服务、probe 与管理端构建 |
+| `make smoke` | 检查已运行服务的 API、RPC、MySQL、Redis 链路 |
+| `make test-auth` / `make auth-smoke` | MySQL 认证并发测试 / HTTP 会话链路 |
+| `make test-rbac` / `make rbac-smoke` | 权限并发与 worker 退出测试 / HTTP 管理链路 |
+| `make test-member` / `make member-smoke` | 会员并发、回滚测试 / 双 API、双 RPC 会话与管理链路 |
+| `make test-storage` | 本地存储与 S3 协议检查，可选独立 S3 实服务测试 |
+| `make test-runtime` | Distroless 用户、CA、时区、文件卷和二进制执行检查；需要 Go 和 Docker |
+| `make sync-resources` | 同步权限目录，保留角色授权和成员关系 |
+| `make gen` | 生成 API、RPC、OpenAPI 3、管理端类型和菜单资源 |
+| `make gen-api APP=admin` | 从 `.api` 生成指定入口，保留手写实现 |
+| `make gen-rpc DOMAIN=system` | 从 `.proto` 生成指定领域 RPC |
+| `make gen-web` | 校验权限和菜单声明，更新 OpenAPI、前端类型与菜单资源 |
+| `make verify-gen` | 在临时副本检查重复生成一致性，以及新增契约对手写实现的保留 |
+
+数据库集成测试需要本项目的 MySQL，HTTP smoke 需要对应服务已经启动；具体准备步骤见[开发约定](docs/development-guide.md)。构建产物位于 `bin/` 和 `web/admin/dist/`，契约、生成文件及 lockfile 进入版本控制。CI 执行检查、构建、race、数据库集成测试、HTTP smoke 和运行镜像验证。
+
+## AI 开发
+
+官方 [ai-context](.ai-context/go-zero/00-instructions.md) 与 [zero-skills](.agents/skills/zero-skills/SKILL.md) 已通过固定提交的 Git 子模块接入。AI 助手先读 [AGENTS.md](AGENTS.md)，再按任务查阅工作流与实现参考；支持终端的助手直接运行项目固定版本的 goctl，无需启用 mcp-zero。
+
+这些资料不是运行时依赖。版本、加载方式和更新流程见 [AI 开发配置](docs/ai-development.md)。
+
+## 文档导航
+
+| 主题 | 文档 |
+| --- | --- |
+| 架构与开发 | [整体架构](docs/architecture.md) · [目录规范](docs/directory-structure.md) · [开发约定](docs/development-guide.md) · [实施路线](docs/roadmap.md) |
+| 开发新业务 | [新增模块教程](docs/new-module-guide.md) · [会员业务样板](docs/member-module.md) |
+| 身份与权限 | [管理员认证](docs/authentication.md) · [角色授权](docs/authorization.md) · [操作日志](docs/operation-audit.md) |
+| 配置与任务 | [字典与系统配置](docs/system-settings.md) · [文件与任务](docs/files-and-tasks.md) |
+| 部署与工具 | [生产配置](docs/production.md) · [AI 开发配置](docs/ai-development.md) |
+| HTTP 接口 | [管理 API](apps/admin/api/README.md) · [业务 API](apps/app/api/README.md) · [管理端 OpenAPI](docs/openapi/admin.openapi.json) · [C 端 OpenAPI](docs/openapi/app.openapi.json) |
+| 服务与前端 | [系统服务](services/system/README.md) · [会员服务](services/member/README.md) · [管理端](web/admin/README.md) |
+
+<details>
+<summary>阶段验证记录</summary>
+
+- [可靠性修复验证](docs/reliability-validation.md)
+- [会员样板验证](docs/member-validation.md)
+- [文件与任务验证](docs/phase-three-validation.md)
+- [权限阶段验证](docs/phase-two-validation.md)
+- [第一阶段验证](docs/phase-one-validation.md)
+
+</details>

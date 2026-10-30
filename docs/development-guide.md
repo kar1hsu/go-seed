@@ -121,7 +121,7 @@ API client 统一处理基础 URL、超时、错误码、request ID 和 refresh 
 | --- | --- |
 | `make doctor` | 检查 Go、goctl、protoc、插件、Node、pnpm 及固定版本 |
 | `make infra-up` | 启动本地 MySQL 与 Redis |
-| `make migrate` | 运行 system 领域 SQL 迁移 |
+| `make migrate` | 运行 system 和 member 领域 SQL 迁移 |
 | `make bootstrap` | 幂等创建初始管理员，不覆盖已有账号 |
 | `make dev` | 启动 API、RPC、管理端开发服务并统一处理退出 |
 | `make gen-api APP=admin` | 校验并生成选定 API |
