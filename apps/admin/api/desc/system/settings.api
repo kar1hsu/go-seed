@@ -150,4 +150,3 @@ service admin-api {
 	@handler DeleteSetting
 	delete /settings/:id (DeleteSettingResourceRequest) returns (ActionResponse)
 }
-
