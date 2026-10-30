@@ -275,17 +275,17 @@ func TestResourceSyncPreservesGrantsAndFailsClosed(t *testing.T) {
 	f.assign(t, userID, roleID)
 	before, err := f.b.Current(ctx, user)
 	require(t, err)
-	f.a.catalog = append(f.a.catalog, resources.Permission{Code: "system.audit.read", Name: "Audit", Group: "Audit", Kind: "menu"})
+	f.a.catalog = append(f.a.catalog, resources.Permission{Code: "system.fixture.read", Name: "Audit", Group: "Audit", Kind: "menu"})
 	require(t, f.a.SyncResources(ctx))
 	require(t, f.a.SyncResources(ctx))
 	after, err := f.b.Current(ctx, user)
 	require(t, err)
-	if !after.Has(resources.UserRead) || after.Has("system.audit.read") || after.Policy.Snapshot.Version <= before.Policy.Snapshot.Version {
+	if !after.Has(resources.UserRead) || after.Has("system.fixture.read") || after.Policy.Snapshot.Version <= before.Policy.Snapshot.Version {
 		t.Fatal("sync changed grants or failed to version")
 	}
 	root, err := f.b.Current(ctx, f.root)
 	require(t, err)
-	if !root.Has("system.audit.read") {
+	if !root.Has("system.fixture.read") {
 		t.Fatal("super role not complete")
 	}
 	// Removing a catalog entry deactivates it while preserving grant records for reviewed reintroduction.

@@ -59,6 +59,61 @@ type AssignAdministratorRolesRequest struct {
 	Revision string   `json:"revision"`
 }
 
+type AuditAction struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
+type AuditChange struct {
+	Field  string   `json:"field"`
+	Label  string   `json:"label"`
+	Before []string `json:"before"`
+	After  []string `json:"after"`
+}
+
+type AuditLogDetailData struct {
+	Record  AuditLogRecord `json:"record"`
+	Changes []AuditChange  `json:"changes"`
+}
+
+type AuditLogDetailResponse struct {
+	Code    int                `json:"code"`
+	Message string             `json:"message"`
+	Data    AuditLogDetailData `json:"data"`
+	TraceId string             `json:"traceId"`
+}
+
+type AuditLogListData struct {
+	Items    []AuditLogRecord `json:"items"`
+	Actions  []AuditAction    `json:"actions"`
+	Total    int64            `json:"total"`
+	Page     int64            `json:"page"`
+	PageSize int64            `json:"pageSize"`
+}
+
+type AuditLogListResponse struct {
+	Code    int              `json:"code"`
+	Message string           `json:"message"`
+	Data    AuditLogListData `json:"data"`
+	TraceId string           `json:"traceId"`
+}
+
+type AuditLogRecord struct {
+	Id            string `json:"id"`
+	Action        string `json:"action"`
+	ActionName    string `json:"actionName"`
+	ActorId       string `json:"actorId"`
+	ActorUsername string `json:"actorUsername"`
+	ActorName     string `json:"actorName"`
+	Source        string `json:"source"`
+	TargetType    string `json:"targetType"`
+	TargetId      string `json:"targetId"`
+	TargetKey     string `json:"targetKey"`
+	TargetName    string `json:"targetName"`
+	TraceId       string `json:"traceId"`
+	CreatedAt     string `json:"createdAt"`
+}
+
 type AuthData struct {
 	AccessToken string       `json:"accessToken"`
 	ExpiresAt   string       `json:"expiresAt"`
@@ -109,10 +164,25 @@ type DeleteRoleRequest struct {
 	Revision string `form:"revision"`
 }
 
+type GetAuditLogRequest struct {
+	Id string `path:"id"`
+}
+
 type GrantRoleRequest struct {
 	Id          string   `path:"id"`
 	Permissions []string `json:"permissions"`
 	Revision    string   `json:"revision"`
+}
+
+type ListAuditLogsRequest struct {
+	Page     int64  `form:"page,default=1,range=[1:100000]"`
+	PageSize int64  `form:"pageSize,default=20,range=[1:100]"`
+	Keyword  string `form:"keyword,optional"`
+	Action   string `form:"action,optional"`
+	ActorId  string `form:"actorId,optional"`
+	TraceId  string `form:"traceId,optional"`
+	From     string `form:"from,optional"` // Inclusive RFC3339 timestamp.
+	To       string `form:"to,optional"`   // Exclusive RFC3339 timestamp.
 }
 
 type ListManagementRequest struct {

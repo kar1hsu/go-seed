@@ -12,6 +12,7 @@ import (
 	mysql "github.com/go-sql-driver/mysql"
 	"github.com/kar1hsu/go-seed/pkg/xerr"
 	"github.com/kar1hsu/go-seed/services/system/internal/application/auth"
+	"github.com/kar1hsu/go-seed/services/system/internal/audit"
 	"github.com/kar1hsu/go-seed/services/system/internal/authorization"
 	"github.com/kar1hsu/go-seed/services/system/internal/model"
 	"github.com/kar1hsu/go-seed/services/system/internal/repository"
@@ -157,7 +158,12 @@ func (s *Service) CreateAdministrator(ctx context.Context, raw, username, name, 
 	}
 	now := nextTime(time.Time{})
 	item := model.Administrator{Username: username, DisplayName: strings.TrimSpace(name), PasswordHash: string(hash), Enabled: true, TokenVersion: 1, CreatedAt: now, UpdatedAt: now}
-	err = s.run(ctx, raw, resources.UserCreate, true, func(tx *repository.RBAC, _ *authorization.Access) error { return tx.Auth().CreateAdmin(ctx, &item) })
+	err = s.run(ctx, raw, resources.UserCreate, true, func(tx *repository.RBAC, a *authorization.Access) error {
+		if err := tx.Auth().CreateAdmin(ctx, &item); err != nil {
+			return err
+		}
+		return appendAudit(ctx, tx, a, resources.UserCreate, "administrator", item.ID, item.Username, item.DisplayName, nil, audit.Administrator(item))
+	})
 	return &Administrator{Administrator: item, Roles: []model.Role{}, Manageable: true}, err
 }
 func (s *Service) UpdateAdministrator(ctx context.Context, raw string, id uint64, name string, enabled bool, revision string) error {
@@ -178,7 +184,12 @@ func (s *Service) UpdateAdministrator(ctx context.Context, raw string, id uint64
 		if !enabled && id == a.Admin.ID {
 			return xerr.New(codes.FailedPrecondition)
 		}
-		return tx.UpdateAdmin(ctx, id, strings.TrimSpace(name), enabled, nextTime(target.UpdatedAt))
+		if err = tx.UpdateAdmin(ctx, id, strings.TrimSpace(name), enabled, nextTime(target.UpdatedAt)); err != nil {
+			return err
+		}
+		before := audit.Administrator(*target)
+		target.DisplayName, target.Enabled = strings.TrimSpace(name), enabled
+		return appendAudit(ctx, tx, a, resources.UserUpdate, "administrator", id, target.Username, target.DisplayName, before, audit.Administrator(*target))
 	})
 }
 func (s *Service) AssignRoles(ctx context.Context, raw string, id uint64, ids []uint64, revision string) error {
@@ -197,6 +208,7 @@ func (s *Service) AssignRoles(ctx context.Context, raw string, id uint64, ids []
 			return err
 		}
 		seen := map[uint64]bool{}
+		roles := []model.Role{}
 		hasSuper := false
 		for _, roleID := range ids {
 			if roleID == 0 || seen[roleID] {
@@ -211,6 +223,7 @@ func (s *Service) AssignRoles(ctx context.Context, raw string, id uint64, ids []
 				return xerr.New(codes.PermissionDenied)
 			}
 			hasSuper = hasSuper || role.BuiltIn
+			roles = append(roles, *role)
 		}
 		wasSuper := false
 		for _, role := range a.Policy.RolesFor(id) {
@@ -225,7 +238,10 @@ func (s *Service) AssignRoles(ctx context.Context, raw string, id uint64, ids []
 				return xerr.New(codes.FailedPrecondition)
 			}
 		}
-		return tx.SetRoles(ctx, id, ids, nextTime(target.UpdatedAt))
+		if err = tx.SetRoles(ctx, id, ids, nextTime(target.UpdatedAt)); err != nil {
+			return err
+		}
+		return appendAudit(ctx, tx, a, resources.UserAssignRole, "administrator", id, target.Username, target.DisplayName, audit.Roles(a.Policy.RolesFor(id)), audit.Roles(roles))
 	})
 }
 func roleView(role model.Role, a *authorization.Access) Role {
@@ -262,7 +278,12 @@ func (s *Service) CreateRole(ctx context.Context, raw, code, name, description s
 	}
 	now := nextTime(time.Time{})
 	item := model.Role{Code: code, Name: strings.TrimSpace(name), Description: description, Enabled: true, CreatedAt: now, UpdatedAt: now}
-	err := s.run(ctx, raw, resources.RoleCreate, true, func(tx *repository.RBAC, _ *authorization.Access) error { return tx.CreateRole(ctx, &item) })
+	err := s.run(ctx, raw, resources.RoleCreate, true, func(tx *repository.RBAC, a *authorization.Access) error {
+		if err := tx.CreateRole(ctx, &item); err != nil {
+			return err
+		}
+		return appendAudit(ctx, tx, a, resources.RoleCreate, "role", item.ID, item.Code, item.Name, nil, audit.Role(item))
+	})
 	return &Role{Role: item, Permissions: []string{}, Manageable: true, Assignable: true}, err
 }
 func (s *Service) UpdateRole(ctx context.Context, raw string, id uint64, name, description string, enabled bool, revision string) error {
@@ -280,8 +301,12 @@ func (s *Service) UpdateRole(ctx context.Context, raw string, id uint64, name, d
 		if err = revisionMatches(revision, role.UpdatedAt); err != nil {
 			return err
 		}
+		before := audit.Role(*role)
 		role.Name, role.Description, role.Enabled, role.UpdatedAt = strings.TrimSpace(name), description, enabled, nextTime(role.UpdatedAt)
-		return tx.UpdateRole(ctx, role)
+		if err = tx.UpdateRole(ctx, role); err != nil {
+			return err
+		}
+		return appendAudit(ctx, tx, a, resources.RoleUpdate, "role", id, role.Code, role.Name, before, audit.Role(*role))
 	})
 }
 func (s *Service) GrantRole(ctx context.Context, raw string, id uint64, permissions []string, revision string) error {
@@ -320,7 +345,10 @@ func (s *Service) GrantRole(ctx context.Context, raw string, id uint64, permissi
 				}
 			}
 		}
-		return tx.SetGrants(ctx, id, permissions, nextTime(role.UpdatedAt))
+		if err = tx.SetGrants(ctx, id, permissions, nextTime(role.UpdatedAt)); err != nil {
+			return err
+		}
+		return appendAudit(ctx, tx, a, resources.RoleGrant, "role", id, role.Code, role.Name, audit.Permissions(assignedPermissions(a.Policy, id)), audit.Permissions(permissions))
 	})
 }
 func (s *Service) DeleteRole(ctx context.Context, raw string, id uint64, revision string) error {
@@ -343,7 +371,11 @@ func (s *Service) DeleteRole(ctx context.Context, raw string, id uint64, revisio
 				return xerr.New(codes.FailedPrecondition)
 			}
 		}
-		return tx.DeleteRole(ctx, id)
+		if err = tx.DeleteRole(ctx, id); err != nil {
+			return err
+		}
+		before := append(audit.Role(*role), audit.Permissions(assignedPermissions(a.Policy, id))...)
+		return appendAudit(ctx, tx, a, resources.RoleDelete, "role", id, role.Code, role.Name, before, nil)
 	})
 }
 func (s *Service) Permissions(ctx context.Context, raw string) ([]resources.Permission, error) {

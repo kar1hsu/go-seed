@@ -58,6 +58,9 @@ func TestHTTPManagement(t *testing.T) {
 			if _, err := tx.LockPolicy(ctx); err != nil {
 				return err
 			}
+			if err := cleanup.Where("actor_id = ? AND actor_username = ?", root.ID, prefix+"_root").Delete(&model.AuditLog{}).Error; err != nil {
+				return err
+			}
 			if err := cleanup.Where("username IN ?", []string{prefix + "_root", prefix + "_reader"}).Delete(&model.Administrator{}).Error; err != nil {
 				return err
 			}
@@ -77,6 +80,7 @@ func TestHTTPManagement(t *testing.T) {
 		return tx.Bump(ctx)
 	}))
 	client := &http.Client{Timeout: 10 * time.Second}
+	var lastTrace string
 	call := func(method, path, token string, body any, csrf bool, want int) map[string]any {
 		t.Helper()
 		var payload []byte
@@ -110,6 +114,7 @@ func TestHTTPManagement(t *testing.T) {
 		if envelope.TraceID == "" {
 			t.Fatal("missing trace ID")
 		}
+		lastTrace = envelope.TraceID
 		return envelope.Data
 	}
 	login := func(username string) string {
@@ -123,6 +128,7 @@ func TestHTTPManagement(t *testing.T) {
 		t.Fatal("root catalog incomplete")
 	}
 	created := call("POST", "/system/administrators", rootToken, map[string]string{"username": prefix + "_reader", "displayName": "HTTP reader", "password": password}, true, 201)
+	creationTrace := lastTrace
 	userID, revision := created["id"].(string), created["revision"].(string)
 	if _, ok := created["passwordHash"]; ok {
 		t.Fatal("password hash exposed")
@@ -154,4 +160,26 @@ func TestHTTPManagement(t *testing.T) {
 	call("GET", "/system/administrators", reader, nil, false, 403)
 	call("DELETE", rolePath+"?revision="+url.QueryEscape(Revision(currentRole.UpdatedAt)), rootToken, nil, true, 200)
 	call("DELETE", rolePath+"?revision="+url.QueryEscape(Revision(currentRole.UpdatedAt)), rootToken, nil, true, 404)
+	// Audit reads require their own permission, even if caller-supplied identity headers claim root.
+	call("GET", "/system/audit-logs", "", nil, false, 401)
+	call("GET", "/system/audit-logs", reader, nil, false, 403)
+	logs := call("GET", "/system/audit-logs?actorId="+strconv.FormatUint(root.ID, 10), rootToken, nil, false, 200)
+	if logs["total"].(float64) != 6 || logs["page"].(float64) != 1 || logs["pageSize"].(float64) != 20 {
+		t.Fatal("audit count/default pagination mismatch")
+	}
+	logID := logs["items"].([]any)[0].(map[string]any)["id"].(string)
+	call("GET", "/system/audit-logs/"+logID, reader, nil, false, 403)
+	detail := call("GET", "/system/audit-logs/"+logID, rootToken, nil, false, 200)
+	if detail["record"].(map[string]any)["action"] != resources.RoleDelete || len(detail["changes"].([]any)) == 0 {
+		t.Fatal("deleted role audit missing")
+	}
+	filtered := call("GET", "/system/audit-logs?action="+resources.UserCreate+"&traceId="+creationTrace, rootToken, nil, false, 200)
+	if filtered["total"].(float64) != 1 {
+		t.Fatal("HTTP-to-RPC audit trace not propagated")
+	}
+	for _, query := range []string{"page=0", "pageSize=101", "action=forged", "actorId=01", "traceId=bad", "from=bad"} {
+		call("GET", "/system/audit-logs?"+query, rootToken, nil, false, 400)
+	}
+	call("GET", "/system/audit-logs/0", rootToken, nil, false, 400)
+	call("GET", "/system/audit-logs/18446744073709551615", rootToken, nil, false, 404)
 }

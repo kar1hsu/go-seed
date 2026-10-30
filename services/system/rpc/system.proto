@@ -141,7 +141,52 @@ message ListPermissionsResponse {
   repeated PermissionRecord items = 1;
 }
 
+message ListAuditLogsRequest {
+  int64 page = 1;
+  int64 page_size = 2;
+  string keyword = 3;
+  string action = 4;
+  string actor_id = 5;
+  string trace_id = 6;
+  string from = 7;
+  string to = 8;
+}
+message GetAuditLogRequest { string id = 1; }
+message AuditAction { string code = 1; string name = 2; }
+message AuditLogRecord {
+  string id = 1;
+  string action = 2;
+  string action_name = 3;
+  string actor_id = 4;
+  string actor_username = 5;
+  string actor_name = 6;
+  string source = 7;
+  string target_type = 8;
+  string target_id = 9;
+  string target_key = 10;
+  string target_name = 11;
+  string trace_id = 12;
+  string created_at = 13;
+}
+message AuditChange {
+  string field = 1;
+  string label = 2;
+  repeated string before = 3;
+  repeated string after = 4;
+}
+message ListAuditLogsResponse {
+  repeated AuditLogRecord items = 1;
+  repeated AuditAction actions = 2;
+  int64 total = 3;
+}
+message GetAuditLogResponse {
+  AuditLogRecord record = 1;
+  repeated AuditChange changes = 2;
+}
+
 service System {
+  rpc ListAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse);
+  rpc GetAuditLog(GetAuditLogRequest) returns (GetAuditLogResponse);
   rpc ListAdministrators(ListManagementRequest) returns (ListAdministratorsResponse);
   rpc CreateAdministrator(CreateAdministratorRequest) returns (AdministratorResponse);
   rpc UpdateAdministrator(UpdateAdministratorRequest) returns (AdminActionResponse);

@@ -6,6 +6,7 @@ package handler
 import (
 	"net/http"
 
+	audit "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/audit"
 	auth "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/auth"
 	management "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/management"
 	system "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/system"
@@ -15,6 +16,25 @@ import (
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					Method:  http.MethodGet,
+					Path:    "/audit-logs",
+					Handler: audit.ListAuditLogsHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/audit-logs/:id",
+					Handler: audit.GetAuditLogHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/system"),
+	)
+
 	server.AddRoutes(
 		rest.WithMiddlewares(
 			[]rest.Middleware{serverCtx.BrowserOrigin},

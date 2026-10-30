@@ -338,6 +338,120 @@
         }
       }
     },
+    "/admin-api/v1/system/audit-logs": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Operation audit"
+        ],
+        "summary": "ListAuditLogs",
+        "operationId": "auditListAuditLogs",
+        "parameters": [
+          {
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "integer",
+            "default": 1,
+            "example": 1,
+            "name": "page",
+            "in": "query",
+            "required": true
+          },
+          {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "default": 20,
+            "example": 20,
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "keyword",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "action",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "actorId",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "traceId",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "Inclusive RFC3339 timestamp.",
+            "name": "from",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "Exclusive RFC3339 timestamp.",
+            "name": "to",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AuditLogListResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/system/audit-logs/{id}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Operation audit"
+        ],
+        "summary": "GetAuditLog",
+        "operationId": "auditGetAuditLog",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AuditLogDetailResponse"
+            }
+          }
+        }
+      }
+    },
     "/admin-api/v1/system/permissions": {
       "get": {
         "produces": [
@@ -875,6 +989,367 @@
         }
       }
     },
+    "AuditAction": {
+      "type": "object",
+      "required": [
+        "code",
+        "name"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "AuditChange": {
+      "type": "object",
+      "required": [
+        "field",
+        "label",
+        "before",
+        "after"
+      ],
+      "properties": {
+        "after": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "before": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "field": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "AuditLogDetailData": {
+      "type": "object",
+      "required": [
+        "record",
+        "changes"
+      ],
+      "properties": {
+        "changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AuditChange"
+          }
+        },
+        "record": {
+          "type": "object",
+          "required": [
+            "id",
+            "action",
+            "actionName",
+            "actorId",
+            "actorUsername",
+            "actorName",
+            "source",
+            "targetType",
+            "targetId",
+            "targetKey",
+            "targetName",
+            "traceId",
+            "createdAt"
+          ],
+          "properties": {
+            "action": {
+              "type": "string"
+            },
+            "actionName": {
+              "type": "string"
+            },
+            "actorId": {
+              "type": "string"
+            },
+            "actorName": {
+              "type": "string"
+            },
+            "actorUsername": {
+              "type": "string"
+            },
+            "createdAt": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            },
+            "targetId": {
+              "type": "string"
+            },
+            "targetKey": {
+              "type": "string"
+            },
+            "targetName": {
+              "type": "string"
+            },
+            "targetType": {
+              "type": "string"
+            },
+            "traceId": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/AuditLogRecord"
+        }
+      }
+    },
+    "AuditLogDetailResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "record",
+            "changes"
+          ],
+          "properties": {
+            "changes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AuditChange"
+              }
+            },
+            "record": {
+              "type": "object",
+              "required": [
+                "id",
+                "action",
+                "actionName",
+                "actorId",
+                "actorUsername",
+                "actorName",
+                "source",
+                "targetType",
+                "targetId",
+                "targetKey",
+                "targetName",
+                "traceId",
+                "createdAt"
+              ],
+              "properties": {
+                "action": {
+                  "type": "string"
+                },
+                "actionName": {
+                  "type": "string"
+                },
+                "actorId": {
+                  "type": "string"
+                },
+                "actorName": {
+                  "type": "string"
+                },
+                "actorUsername": {
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "targetId": {
+                  "type": "string"
+                },
+                "targetKey": {
+                  "type": "string"
+                },
+                "targetName": {
+                  "type": "string"
+                },
+                "targetType": {
+                  "type": "string"
+                },
+                "traceId": {
+                  "type": "string"
+                }
+              },
+              "$ref": "#/definitions/AuditLogRecord"
+            }
+          },
+          "$ref": "#/definitions/AuditLogDetailData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "AuditLogListData": {
+      "type": "object",
+      "required": [
+        "items",
+        "actions",
+        "total",
+        "page",
+        "pageSize"
+      ],
+      "properties": {
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AuditAction"
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AuditLogRecord"
+          }
+        },
+        "page": {
+          "type": "integer"
+        },
+        "pageSize": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
+    },
+    "AuditLogListResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "items",
+            "actions",
+            "total",
+            "page",
+            "pageSize"
+          ],
+          "properties": {
+            "actions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AuditAction"
+              }
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AuditLogRecord"
+              }
+            },
+            "page": {
+              "type": "integer"
+            },
+            "pageSize": {
+              "type": "integer"
+            },
+            "total": {
+              "type": "integer"
+            }
+          },
+          "$ref": "#/definitions/AuditLogListData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "AuditLogRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "action",
+        "actionName",
+        "actorId",
+        "actorUsername",
+        "actorName",
+        "source",
+        "targetType",
+        "targetId",
+        "targetKey",
+        "targetName",
+        "traceId",
+        "createdAt"
+      ],
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "actionName": {
+          "type": "string"
+        },
+        "actorId": {
+          "type": "string"
+        },
+        "actorName": {
+          "type": "string"
+        },
+        "actorUsername": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "targetId": {
+          "type": "string"
+        },
+        "targetKey": {
+          "type": "string"
+        },
+        "targetName": {
+          "type": "string"
+        },
+        "targetType": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
     "AuthData": {
       "type": "object",
       "required": [
@@ -1145,6 +1620,9 @@
     "DeleteRoleRequest": {
       "type": "object"
     },
+    "GetAuditLogRequest": {
+      "type": "object"
+    },
     "GrantRoleRequest": {
       "type": "object",
       "required": [
@@ -1162,6 +1640,9 @@
           "type": "string"
         }
       }
+    },
+    "ListAuditLogsRequest": {
+      "type": "object"
     },
     "ListManagementRequest": {
       "type": "object"

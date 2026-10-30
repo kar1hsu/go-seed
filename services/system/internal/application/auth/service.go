@@ -14,6 +14,7 @@ import (
 	mysql "github.com/go-sql-driver/mysql"
 	"github.com/kar1hsu/go-seed/pkg/identity"
 	"github.com/kar1hsu/go-seed/pkg/xerr"
+	"github.com/kar1hsu/go-seed/services/system/internal/audit"
 	"github.com/kar1hsu/go-seed/services/system/internal/model"
 	"github.com/kar1hsu/go-seed/services/system/internal/repository"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -266,7 +267,15 @@ func (s *Service) ChangePassword(ctx context.Context, raw, currentPassword, newP
 		if _, err = tx.Current(ctx, a.ID, claims.SessionID, claims.Version, time.Now().UTC()); err != nil {
 			return err
 		}
-		return tx.Password(ctx, a.ID, string(hash), time.Now().UTC())
+		if err = tx.Password(ctx, a.ID, string(hash), time.Now().UTC()); err != nil {
+			return err
+		}
+		// Deliberately record only the action and session revocation, never either password or its hash.
+		item, err := audit.New(ctx, current, audit.PasswordChange, "administrator", current.ID, current.Username, current.DisplayName, nil, audit.Snapshot{{Key: "sessions", Label: "会话处理", Values: []string{"已撤销全部会话，需重新登录"}}})
+		if err != nil {
+			return err
+		}
+		return tx.Audit().Append(ctx, item)
 	})
 	return storageError(ctx, err)
 }
@@ -312,10 +321,20 @@ func (s *Service) Disable(ctx context.Context, username string) error {
 		if err := tx.LockPolicy(ctx); err != nil {
 			return err
 		}
-		if _, err := tx.LockAdmin(ctx, a.ID); err != nil {
+		current, err := tx.LockAdmin(ctx, a.ID)
+		if err != nil {
 			return err
 		}
-		return tx.Disable(ctx, a.ID, time.Now().UTC())
+		if err = tx.Disable(ctx, a.ID, time.Now().UTC()); err != nil {
+			return err
+		}
+		before := audit.Administrator(*current)
+		current.Enabled = false
+		item, err := audit.New(ctx, nil, audit.CommandDisable, "administrator", current.ID, current.Username, current.DisplayName, before, audit.Administrator(*current))
+		if err != nil {
+			return err
+		}
+		return tx.Audit().Append(ctx, item)
 	})
 	return storageError(ctx, err)
 }

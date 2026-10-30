@@ -16,7 +16,7 @@
     "generate:api": "node scripts/generate-api.mjs",
     "format": "prettier --write src vite.config.ts index.html",
     "format:check": "prettier --check src vite.config.ts index.html",
-    "test": "node --test scripts/auth-state.test.mjs"
+    "test": "node --test --test-concurrency=1 scripts/*.test.mjs"
   },
   "dependencies": {
     "@element-plus/icons-vue": "2.3.2",

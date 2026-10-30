@@ -10,6 +10,7 @@ const views = {
   administrators: () =>
     import('../features/system/pages/AdministratorsPage.vue'),
   roles: () => import('../features/system/pages/RolesPage.vue'),
+  auditLogs: () => import('../features/system/audit/AuditLogsPage.vue'),
   apiDocs: () => import('../features/api-docs/pages/ApiDocsPage.vue'),
   about: () => import('../features/about/pages/AboutPage.vue'),
   security: () => import('../features/auth/pages/SecurityPage.vue'),

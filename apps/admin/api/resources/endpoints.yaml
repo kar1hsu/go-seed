@@ -14,3 +14,5 @@
 - {method: put, path: '/admin-api/v1/system/roles/{id}/permissions', permission: system.role.grant}
 - {method: delete, path: '/admin-api/v1/system/roles/{id}', permission: system.role.delete}
 - {method: get, path: '/admin-api/v1/system/permissions', permission: system.role.read}
+- {method: get, path: '/admin-api/v1/system/audit-logs', permission: system.audit.read}
+- {method: get, path: '/admin-api/v1/system/audit-logs/{id}', permission: system.audit.read}

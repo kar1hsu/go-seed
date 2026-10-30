@@ -19,6 +19,7 @@ const (
 	RoleUpdate     = "system.role.update"
 	RoleGrant      = "system.role.grant"
 	RoleDelete     = "system.role.delete"
+	AuditRead      = "system.audit.read"
 	SuperRole      = "super_admin"
 )
 

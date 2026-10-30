@@ -58,7 +58,7 @@ ID 为十进制字符串；列表默认 `page=1&pageSize=20&enabled=all`，每�
 
 `GET /auth/me` 返回 permissions、roles、policyVersion、superAdmin。前端在导航、窗口重新激活、可见页面每 30 秒，以及本浏览器授权保存通知后更新菜单和按钮；403 后刷新权限。UI 更新间隔不影响后端即时拒绝请求。写操作失败后不自动重放。
 
-当前未接入 Redis watcher、远程跨领域 `CheckAccess`、可视化菜单编辑和业务审计表。watcher 可作为提前刷新优化，不能替代权威版本确认。字典、配置和审计按实施路线继续接入。
+当前已接入[事务审计与操作日志](operation-audit.md)。尚未接入 Redis watcher、远程跨领域 `CheckAccess`、可视化菜单编辑。watcher 可作为提前刷新优化，不能替代权威版本确认。字典和配置按实施路线继续接入。
 
 ## 验证
 

@@ -26,13 +26,20 @@ type (
 	AdministratorRecord             = pb.AdministratorRecord
 	AdministratorResponse           = pb.AdministratorResponse
 	AssignAdministratorRolesRequest = pb.AssignAdministratorRolesRequest
+	AuditAction                     = pb.AuditAction
+	AuditChange                     = pb.AuditChange
+	AuditLogRecord                  = pb.AuditLogRecord
 	CheckReadyRequest               = pb.CheckReadyRequest
 	CheckReadyResponse              = pb.CheckReadyResponse
 	CreateAdministratorRequest      = pb.CreateAdministratorRequest
 	CreateRoleRequest               = pb.CreateRoleRequest
 	DeleteRoleRequest               = pb.DeleteRoleRequest
+	GetAuditLogRequest              = pb.GetAuditLogRequest
+	GetAuditLogResponse             = pb.GetAuditLogResponse
 	GrantRoleRequest                = pb.GrantRoleRequest
 	ListAdministratorsResponse      = pb.ListAdministratorsResponse
+	ListAuditLogsRequest            = pb.ListAuditLogsRequest
+	ListAuditLogsResponse           = pb.ListAuditLogsResponse
 	ListManagementRequest           = pb.ListManagementRequest
 	ListPermissionsRequest          = pb.ListPermissionsRequest
 	ListPermissionsResponse         = pb.ListPermissionsResponse
@@ -46,6 +53,8 @@ type (
 	UpdateRoleRequest               = pb.UpdateRoleRequest
 
 	System interface {
+		ListAuditLogs(ctx context.Context, in *ListAuditLogsRequest, opts ...grpc.CallOption) (*ListAuditLogsResponse, error)
+		GetAuditLog(ctx context.Context, in *GetAuditLogRequest, opts ...grpc.CallOption) (*GetAuditLogResponse, error)
 		ListAdministrators(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListAdministratorsResponse, error)
 		CreateAdministrator(ctx context.Context, in *CreateAdministratorRequest, opts ...grpc.CallOption) (*AdministratorResponse, error)
 		UpdateAdministrator(ctx context.Context, in *UpdateAdministratorRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
@@ -76,6 +85,16 @@ func NewSystem(cli zrpc.Client) System {
 	return &defaultSystem{
 		cli: cli,
 	}
+}
+
+func (m *defaultSystem) ListAuditLogs(ctx context.Context, in *ListAuditLogsRequest, opts ...grpc.CallOption) (*ListAuditLogsResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.ListAuditLogs(ctx, in, opts...)
+}
+
+func (m *defaultSystem) GetAuditLog(ctx context.Context, in *GetAuditLogRequest, opts ...grpc.CallOption) (*GetAuditLogResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.GetAuditLog(ctx, in, opts...)
 }
 
 func (m *defaultSystem) ListAdministrators(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListAdministratorsResponse, error) {

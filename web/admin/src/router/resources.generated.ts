@@ -31,6 +31,14 @@ export const menuResources = [
     permission: 'system.role.read',
   },
   {
+    path: '/system/audit-logs',
+    title: '操作日志',
+    group: '系统管理',
+    icon: 'Document',
+    component: 'auditLogs',
+    permission: 'system.audit.read',
+  },
+  {
     path: '/api-docs',
     title: '接口文档',
     group: '开发工具',

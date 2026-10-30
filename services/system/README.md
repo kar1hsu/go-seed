@@ -19,4 +19,4 @@ bin/probe -rpc 127.0.0.1:19001 -ready   # 加上 MySQL/Redis 检查
 
 ## 管理员认证与领域命令
 
-system 领域拥有管理员、会话、refresh token 摘要三张表。`make migrate` 显式运行 goose SQL 迁移；`make bootstrap` 幂等创建初始管理员。进程启动不执行 AutoMigrate。生命周期、配置和命令见 [管理员认证](../../docs/authentication.md) 与 [角色授权](../../docs/authorization.md)。
+system 领域拥有管理员、会话、refresh token 摘要三张表。`make migrate` 显式运行 goose SQL 迁移；`make bootstrap` 幂等创建初始管理员。进程启动不执行 AutoMigrate。生命周期、配置和命令见 [管理员认证](../../docs/authentication.md) 、[角色授权](../../docs/authorization.md)与[操作日志](../../docs/operation-audit.md)。

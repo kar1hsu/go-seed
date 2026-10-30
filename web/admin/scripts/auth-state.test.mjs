@@ -8,6 +8,7 @@ import { createPinia, setActivePinia } from 'pinia'
 const server = await createServer({
   root: fileURLToPath(new URL('../', import.meta.url)),
   configFile: false,
+  optimizeDeps: { noDiscovery: true, include: [] },
   server: { middlewareMode: true, hmr: false },
   appType: 'custom',
 })

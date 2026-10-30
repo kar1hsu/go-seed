@@ -1,12 +1,13 @@
 # GoSeed 管理工作台
 
-Vue 3 + TypeScript + Vite + Pinia + Vue Router + Element Plus。布局参考 [Vben Admin](https://github.com/vbenjs/vue-vben-admin) 浅色主题：白色可折叠侧栏、面包屑、可关闭页签、浅灰内容区和蓝色主色。保留项目自己的 feature 结构，未引入 Vben 框架。提供管理员登录、刷新恢复、退出、修改密码和真实 API/RPC 状态。已接入管理员列表、角色管理、菜单按钮授权及 403 页面。
+Vue 3 + TypeScript + Vite + Pinia + Vue Router + Element Plus。布局参考 [Vben Admin](https://github.com/vbenjs/vue-vben-admin) 浅色主题：白色可折叠侧栏、面包屑、可关闭页签、浅灰内容区和蓝色主色。保留项目自己的 feature 结构，未引入 Vben 框架。提供管理员登录、刷新恢复、退出、修改密码和真实 API/RPC 状态。已接入管理员列表、角色管理、菜单按钮授权、操作日志及 403 页面。
 
 | 路由 | 页面与行为 |
 | --- | --- |
 | `/login` | 管理员登录，安全地恢复站内跳转目标 |
 | `/system/administrators` | 筛选分页、新增/编辑/启停、分配角色 |
 | `/system/roles` | 角色编辑、权限选择、删除未使用角色 |
+| `/system/audit-logs` | 操作类型/日期/操作人/Trace 筛选、分页、历史变更详情 |
 | `/forbidden` | 未获授权时的页面提示 |
 | `/account/security` | 修改密码，成功后重新登录 |
 | `/` | 工作台：链路状态、响应耗时、RPC 版本、最近五次检查和快捷入口 |
@@ -14,7 +15,7 @@ Vue 3 + TypeScript + Vite + Pinia + Vue Router + Element Plus。布局参考 [Vb
 | `/api-docs` | 接口文档：Ping 契约说明、同源 curl 示例、实际请求和响应 |
 | `/about` | 项目信息：项目版本、依赖版本、仓库与当前实现范围 |
 
-检查记录只存于 Pinia 内存，保留最近 20 条真实请求，刷新页面后清空。页签跟踪本次打开的页面；工作台固定，关闭当前页签返回此前页签。窄屏使用抽屉式导航。
+服务状态页的检查记录只存于 Pinia 内存，保留最近 20 条真实请求，刷新页面后清空。页签跟踪本次打开的页面；工作台固定，关闭当前页签返回此前页签。窄屏使用抽屉式导航。
 
 推荐从仓库根目录执行 `make dev`，会统一加载 `.env` 中端口并启动所有进程。只运行前端时：
 
@@ -31,7 +32,7 @@ pnpm --dir web/admin build
 
 - `src/app` / `layouts` / `router`：入口、布局与路由。
 - `src/features/auth`：管理员会话、登录页、改密页、请求认证中间件。
-- `src/features/system`：管理员与角色页面、请求适配、共享筛选与列表加载。
+- `src/features/system`：管理员与角色页面、请求适配、共享筛选与列表加载；`audit` 包含持久化操作日志的查询和详情。
 - `src/router/menu.yaml`：菜单声明，使用编译时组件白名单和权限键。
 - `src/features/dashboard`：探测接口适配、Pinia 状态、页面。
 - `src/features/api-docs` / `features/about`：接口调试与项目信息页面。

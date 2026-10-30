@@ -23,6 +23,16 @@ func NewSystemServer(svcCtx *svc.ServiceContext) *SystemServer {
 	}
 }
 
+func (s *SystemServer) ListAuditLogs(ctx context.Context, in *pb.ListAuditLogsRequest) (*pb.ListAuditLogsResponse, error) {
+	l := logic.NewListAuditLogsLogic(ctx, s.svcCtx)
+	return l.ListAuditLogs(in)
+}
+
+func (s *SystemServer) GetAuditLog(ctx context.Context, in *pb.GetAuditLogRequest) (*pb.GetAuditLogResponse, error) {
+	l := logic.NewGetAuditLogLogic(ctx, s.svcCtx)
+	return l.GetAuditLog(in)
+}
+
 func (s *SystemServer) ListAdministrators(ctx context.Context, in *pb.ListManagementRequest) (*pb.ListAdministratorsResponse, error) {
 	l := logic.NewListAdministratorsLogic(ctx, s.svcCtx)
 	return l.ListAdministrators(in)

@@ -1,6 +1,6 @@
 # admin-api
 
-面向管理后台的 HTTP 入口，提供管理员登录、当前用户、刷新、退出、改密、管理员与角色管理，以及 `/system/ping`。只通过公开 RPC 客户端访问 system，不装配数据库和领域 repository。
+面向管理后台的 HTTP 入口，提供管理员登录、当前用户、刷新、退出、改密、管理员与角色管理、操作日志查询，以及 `/system/ping`。只通过公开 RPC 客户端访问 system，不装配数据库和领域 repository。
 
 从仓库根目录按 [README](../../../README.md) 配置 `.env`、启动依赖并执行 `make dev`。单独运行时先把 `.env` 中的变量注入进程环境，再执行：
 

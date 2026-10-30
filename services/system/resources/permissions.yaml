@@ -43,3 +43,8 @@
   group: 角色管理
   kind: button
   requires: [system.role.read]
+- code: system.audit.read
+  name: 查看操作日志
+  group: 操作日志
+  kind: menu
+  requires: []

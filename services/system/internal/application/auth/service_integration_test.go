@@ -72,6 +72,9 @@ func setup(t *testing.T) *fixture {
 	}
 	f.id = a.ID
 	t.Cleanup(func() {
+		if err := db.Where("target_type = ? AND target_id = ? AND target_key = ?", "administrator", f.id, username).Delete(&model.AuditLog{}).Error; err != nil {
+			t.Error(err)
+		}
 		if err := db.Where("id = ? AND username = ?", f.id, username).Delete(&model.Administrator{}).Error; err != nil {
 			t.Error(err)
 		}

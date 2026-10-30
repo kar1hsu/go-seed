@@ -39,3 +39,7 @@ Ping 成功只表示 API/RPC 可达，数据库状态请检查 `GET /readyz`。�
 | POST | `/password` | Bearer access token、currentPassword/newPassword；改密并撤销全部会话 |
 
 所有认证 POST 要求 `X-GoSeed-CSRF: 1`。浏览器 Origin 必须在配置白名单内。身份失败返回 HTTP 401/code 100401；字段或密码规则不符合要求返回 400/100400；来源拒绝返回 403/100403；登录频率超限返回 429/100429。认证响应使用 `Cache-Control: no-store`。
+
+## 系统管理与操作日志
+
+管理员与角色接口见[角色授权](../../../docs/authorization.md)。操作日志列表 `GET /admin-api/v1/system/audit-logs` 和详情 `GET /admin-api/v1/system/audit-logs/{id}` 需要 `system.audit.read`。日志查询参数、响应和记录范围见[操作日志](../../../docs/operation-audit.md)。这些接口均需要当前管理员 Bearer token，响应不缓存。

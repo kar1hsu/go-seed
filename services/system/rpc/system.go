@@ -31,6 +31,8 @@ func main() {
 	defer ctx.Close()
 
 	methods := []string{
+		pb.System_ListAuditLogs_FullMethodName,
+		pb.System_GetAuditLog_FullMethodName,
 		pb.System_ListAdministrators_FullMethodName,
 		pb.System_CreateAdministrator_FullMethodName,
 		pb.System_UpdateAdministrator_FullMethodName,
