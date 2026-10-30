@@ -21,6 +21,7 @@ type Action struct{ Code, Name string }
 
 func Actions() []Action {
 	return []Action{
+		{resources.FileUpload, "上传文件"}, {resources.FileDelete, "删除文件"}, {resources.TaskExport, "提交字典导出"}, {resources.TaskRetry, "重试任务"},
 		{resources.DictionaryCreate, "新增字典"}, {resources.DictionaryUpdate, "编辑与启停字典"}, {resources.DictionaryDelete, "删除字典"},
 		{resources.SettingCreate, "新增系统配置"}, {resources.SettingUpdate, "编辑与启停系统配置"}, {resources.SettingDelete, "删除系统配置"},
 		{resources.UserCreate, "新增管理员"}, {resources.UserUpdate, "编辑与启停管理员"},
@@ -130,4 +131,11 @@ func Dictionary(d model.Dictionary, items []model.DictionaryItem) Snapshot {
 // Only ordinary business parameters belong in settings; deployment credentials stay outside this store.
 func Setting(s model.Setting) Snapshot {
 	return Snapshot{{"code", "配置键", []string{s.Code}}, {"name", "配置名称", []string{s.Name}}, {"description", "说明", []string{s.Description}}, {"type", "值类型", []string{s.Type}}, {"value", "配置值", []string{s.Value}}, {"enabled", "状态", []string{state(s.Enabled)}}}
+}
+
+func File(f model.File) Snapshot {
+	return Snapshot{{"name", "文件名", []string{f.Name}}, {"size", "大小（字节）", []string{strconv.FormatInt(f.Size, 10)}}, {"status", "状态", []string{f.Status}}}
+}
+func Task(t model.Task) Snapshot {
+	return Snapshot{{"kind", "任务类型", []string{t.Kind}}, {"status", "状态", []string{t.Status}}, {"generation", "执行批次", []string{strconv.FormatInt(t.Generation, 10)}}}
 }

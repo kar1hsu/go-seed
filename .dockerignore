@@ -9,3 +9,5 @@
 .tmp
 bin
 **/*.log
+
+.data

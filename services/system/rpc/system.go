@@ -31,6 +31,16 @@ func main() {
 	defer ctx.Close()
 
 	methods := []string{
+		pb.System_ListFiles_FullMethodName,
+		pb.System_CreateFile_FullMethodName,
+		pb.System_AuthorizeFileUpload_FullMethodName,
+		pb.System_CompleteFileUpload_FullMethodName,
+		pb.System_DownloadFile_FullMethodName,
+		pb.System_DeleteFile_FullMethodName,
+		pb.System_ListTasks_FullMethodName,
+		pb.System_ExportDictionaries_FullMethodName,
+		pb.System_RetryTask_FullMethodName,
+
 		pb.System_GetDictionary_FullMethodName,
 		pb.System_ListDictionaries_FullMethodName,
 		pb.System_CreateDictionary_FullMethodName,

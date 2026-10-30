@@ -18,6 +18,8 @@ build-go:
 	go build -o bin/admin-api ./apps/admin/api
 	go build -o bin/app-api ./apps/app/api
 	go build -o bin/system-rpc ./services/system/rpc
+	go build -o bin/system-worker ./services/system/worker
+	go build -o bin/system-scheduler ./services/system/scheduler
 	go build -o bin/probe ./cmd/probe
 dev: build-go
 	python3 scripts/dev.py
@@ -77,3 +79,7 @@ test-rbac:
 	python3 scripts/test-rbac.py
 rbac-smoke:
 	python3 scripts/test-rbac.py --http
+
+.PHONY: test-storage
+test-storage:
+	python3 scripts/test-storage.py

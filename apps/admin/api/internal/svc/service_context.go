@@ -5,12 +5,14 @@ import (
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/middleware"
 	"github.com/kar1hsu/go-seed/pkg/identity"
 	"github.com/kar1hsu/go-seed/pkg/rpcx"
+	"github.com/kar1hsu/go-seed/pkg/storage"
 	systemclient "github.com/kar1hsu/go-seed/services/system/rpc/system"
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
 )
 
 type ServiceContext struct {
+	Objects       storage.Store
 	Config        config.Config
 	BrowserOrigin rest.Middleware
 	AdminAccess   rest.Middleware
@@ -19,6 +21,10 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
+	objects, err := storage.New(c.Storage)
+	if err != nil {
+		return nil, err
+	}
 	tokens, err := identity.New(c.Tokens)
 	if err != nil {
 		return nil, err
@@ -37,6 +43,6 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ServiceContext{Config: c, System: systemclient.NewSystem(client), client: client, BrowserOrigin: origin.Handle, AdminAccess: middleware.NewAdminAccessMiddleware(tokens).Handle}, nil
+	return &ServiceContext{Objects: objects, Config: c, System: systemclient.NewSystem(client), client: client, BrowserOrigin: origin.Handle, AdminAccess: middleware.NewAdminAccessMiddleware(tokens).Handle}, nil
 }
 func (s *ServiceContext) Close() error { return s.client.Conn().Close() }

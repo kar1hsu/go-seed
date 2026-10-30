@@ -2,7 +2,7 @@
 
 ## 项目状态
 
-当前已实现第一阶段工程骨架：两个 API、system-rpc、GORM/Redis 就绪检查、Vue 管理端、Compose、生成脚本和 CI。先读 README.md，并按任务查阅 docs/architecture.md、docs/directory-structure.md、docs/development-guide.md。管理员迁移、bootstrap、登录、刷新、退出和改密已实现；管理员管理、角色权限、菜单按钮授权和 Casbin 版本快照已实现；管理员/角色/改密/命令禁用的事务审计与日志查询已实现；字典分类与子项、普通业务配置、编辑冲突与事务审计已实现，菜单分组可折叠、页签支持右键操作；Asynq worker/scheduler 与业务样板尚未实现；目标目录不代表全部存在。
+当前已实现第一阶段工程骨架：两个 API、system-rpc、GORM/Redis 就绪检查、Vue 管理端、Compose、生成脚本和 CI。先读 README.md，并按任务查阅 docs/architecture.md、docs/directory-structure.md、docs/development-guide.md。管理员迁移、bootstrap、登录、刷新、退出和改密已实现；管理员管理、角色权限、菜单按钮授权和 Casbin 版本快照已实现；管理员/角色/改密/命令禁用的事务审计与日志查询已实现；字典分类与子项、普通业务配置、编辑冲突与事务审计已实现，菜单分组可折叠、页签支持右键操作；私有文件、本地/S3 存储、Asynq worker/scheduler、事务 outbox、字典 CSV 导出、定时清理和重试已实现；业务样板尚未实现；目标目录不代表全部存在。
 
 ## 工程边界
 
@@ -35,7 +35,7 @@
 ## 当前命令
 
 - `make check`：格式、边界、文档链接、vet、前端类型/格式、隔离的生成一致性检查。
-- `make test`：无外部依赖的 Go 测试；`make build`：三个服务和前端。
+- `make test`：无外部依赖的 Go 测试；`make build`：五个服务和前端。
 - `make init` + `make infra-up` + `make migrate` + `make bootstrap`：初次准备；`make dev`：本地联调；`make smoke` 验证运行中的依赖链路。
 - `make test-auth` / `make auth-smoke`：使用本项目 MySQL 的认证并发测试 / 运行中 HTTP 会话链路。
 - 修改工具、契约或模板后执行 `make verify-gen`；所有安装只写项目 `.tools`，不擅自升级全局工具。

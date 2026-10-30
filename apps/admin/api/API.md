@@ -43,3 +43,5 @@ Ping 成功只表示 API/RPC 可达，数据库状态请检查 `GET /readyz`。�
 ## 系统管理与操作日志
 
 管理员与角色接口见[角色授权](../../../docs/authorization.md)。操作日志列表 `GET /admin-api/v1/system/audit-logs` 和详情 `GET /admin-api/v1/system/audit-logs/{id}` 需要 `system.audit.read`。日志查询参数、响应和记录范围见[操作日志](../../../docs/operation-audit.md)。这些接口均需要当前管理员 Bearer token，响应不缓存。
+
+文件与任务接口、二进制上传下载例外、201/202 状态及权限说明见[文件与任务](../../../docs/files-and-tasks.md)，完整契约由[OpenAPI 3](../../../docs/openapi/admin.openapi.json)生成。

@@ -20,6 +20,8 @@ signal.signal(signal.SIGTERM, interrupted)
 signal.signal(signal.SIGINT, interrupted)
 try:
     commands = [
+        ['bin/system-worker', '-f', 'services/system/worker/etc/system-worker.yaml'],
+        ['bin/system-scheduler', '-f', 'services/system/scheduler/etc/system-scheduler.yaml'],
         ['bin/system-rpc', '-f', 'services/system/rpc/etc/system.yaml'],
         ['bin/admin-api', '-f', 'apps/admin/api/etc/admin-api.yaml'],
         ['bin/app-api', '-f', 'apps/app/api/etc/app-api.yaml'],

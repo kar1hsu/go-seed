@@ -28,6 +28,8 @@ export async function loadResources(root) {
     'auditLogs',
     'dictionaries',
     'settings',
+    'files',
+    'tasks',
     'apiDocs',
     'about',
     'security',

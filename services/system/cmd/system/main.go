@@ -54,7 +54,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	manager, err := management.New(repository.NewRBAC(db), authorization.New(tokens))
+	manager, err := management.New(repository.NewRBAC(db), authorization.New(tokens), nil)
 	if err != nil {
 		log.Fatal(err)
 	}

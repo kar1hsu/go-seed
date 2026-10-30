@@ -46,3 +46,5 @@ pnpm lockfile 固定依赖，workspace 仅允许 esbuild 构建脚本。Prettier
 ## 字典、配置与导航
 
 字典管理和普通业务配置已接入，支持独立读写权限、版本冲突与事务审计。使用与接口边界见[字典与系统配置](../../docs/system-settings.md)。后台侧栏按分组展开/收起，标签支持右键菜单、键盘 Shift+F10 和右上角操作入口。
+
+文件上传、任务中心和定时清理见[文件与任务](../../docs/files-and-tasks.md)。

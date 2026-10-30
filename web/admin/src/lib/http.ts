@@ -5,7 +5,14 @@ export const api = createClient<paths>({
   baseUrl: '',
   fetch: (request) =>
     fetch(request, {
-      signal: AbortSignal.any([request.signal, AbortSignal.timeout(5000)]),
+      signal: AbortSignal.any([
+        request.signal,
+        AbortSignal.timeout(
+          /\/system\/files\/\d+\/content$/.test(new URL(request.url).pathname)
+            ? 60000
+            : 5000,
+        ),
+      ]),
       credentials: 'same-origin',
     }),
 })

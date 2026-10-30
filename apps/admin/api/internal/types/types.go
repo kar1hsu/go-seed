@@ -146,6 +146,12 @@ type CreateDictionaryRequest struct {
 	Items       []DictionaryItem `json:"items"`
 }
 
+type CreateFileRequest struct {
+	Name        string `json:"name"`
+	Size        int64  `json:"size"`
+	ContentType string `json:"contentType"`
+}
+
 type CreateRoleRequest struct {
 	Code        string `json:"code"`
 	Name        string `json:"name"`
@@ -230,6 +236,50 @@ type DictionaryResponse struct {
 	TraceId string               `json:"traceId"`
 }
 
+type ExportDictionariesRequest struct {
+	RequestKey string `json:"requestKey"`
+}
+
+type FileData struct {
+	Record FileRecord `json:"record"`
+}
+
+type FileRecord struct {
+	Id          string `json:"id"`
+	Name        string `json:"name"`
+	Size        int64  `json:"size"`
+	ContentType string `json:"contentType"`
+	Status      string `json:"status"`
+	Source      string `json:"source"`
+	Sha256      string `json:"sha256"`
+	CreatedAt   string `json:"createdAt"`
+}
+
+type FileResponse struct {
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    FileData `json:"data"`
+	TraceId string   `json:"traceId"`
+}
+
+type FileTaskIDRequest struct {
+	Id string `path:"id"`
+}
+
+type FilesData struct {
+	Items    []FileRecord `json:"items"`
+	Total    int64        `json:"total"`
+	Page     int64        `json:"page"`
+	PageSize int64        `json:"pageSize"`
+}
+
+type FilesResponse struct {
+	Code    int       `json:"code"`
+	Message string    `json:"message"`
+	Data    FilesData `json:"data"`
+	TraceId string    `json:"traceId"`
+}
+
 type GetAuditLogRequest struct {
 	Id string `path:"id"`
 }
@@ -253,6 +303,13 @@ type ListAuditLogsRequest struct {
 	TraceId  string `form:"traceId,optional"`
 	From     string `form:"from,optional"` // Inclusive RFC3339 timestamp.
 	To       string `form:"to,optional"`   // Exclusive RFC3339 timestamp.
+}
+
+type ListFilesTasksRequest struct {
+	Page     int64  `form:"page,default=1,range=[1:100000]"`
+	PageSize int64  `form:"pageSize,default=20,range=[1:100]"`
+	Keyword  string `form:"keyword,optional"`
+	Status   string `form:"status,optional"`
 }
 
 type ListManagementRequest struct {
@@ -365,6 +422,46 @@ type SettingResponse struct {
 	Message string        `json:"message"`
 	Data    SettingRecord `json:"data"`
 	TraceId string        `json:"traceId"`
+}
+
+type TaskData struct {
+	Record TaskRecord `json:"record"`
+}
+
+type TaskRecord struct {
+	Id          string `json:"id"`
+	Kind        string `json:"kind"`
+	Status      string `json:"status"`
+	Attempts    int64  `json:"attempts"`
+	MaxAttempts int64  `json:"maxAttempts"`
+	Error       string `json:"error"`
+	FileId      string `json:"fileId"`
+	TraceId     string `json:"traceId"`
+	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updatedAt"`
+	NextRunAt   string `json:"nextRunAt"`
+	Retryable   bool   `json:"retryable"`
+}
+
+type TaskResponse struct {
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    TaskData `json:"data"`
+	TraceId string   `json:"traceId"`
+}
+
+type TasksData struct {
+	Items    []TaskRecord `json:"items"`
+	Total    int64        `json:"total"`
+	Page     int64        `json:"page"`
+	PageSize int64        `json:"pageSize"`
+}
+
+type TasksResponse struct {
+	Code    int       `json:"code"`
+	Message string    `json:"message"`
+	Data    TasksData `json:"data"`
+	TraceId string    `json:"traceId"`
 }
 
 type UpdateAdministratorRequest struct {

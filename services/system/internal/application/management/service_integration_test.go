@@ -81,7 +81,7 @@ func setup(t *testing.T) *fixture {
 	as, err := auth.New(repository.NewAuth(db), tokens, 24*time.Hour, func(context.Context, string) error { return nil })
 	require(t, err)
 	makeService := func() *Service {
-		s, err := New(repository.NewRBAC(db), authorization.New(tokens))
+		s, err := New(repository.NewRBAC(db), authorization.New(tokens), nil)
 		require(t, err)
 		return s
 	}

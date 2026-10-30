@@ -8,6 +8,8 @@ import {
   Key,
   Collection,
   Setting,
+  FolderOpened,
+  Timer,
 } from '@element-plus/icons-vue'
 import { menuResources } from './resources.generated'
 const icons = {
@@ -20,6 +22,8 @@ const icons = {
   Key,
   Collection,
   Setting,
+  FolderOpened,
+  Timer,
 }
 export const navigation = menuResources.map((item) => ({
   ...item,

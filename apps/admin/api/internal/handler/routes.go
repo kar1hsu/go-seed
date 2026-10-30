@@ -5,9 +5,11 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
 	audit "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/audit"
 	auth "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/auth"
+	files "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/files"
 	management "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/management"
 	settings "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/settings"
 	system "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/system"
@@ -91,6 +93,87 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/admin-api/v1/auth"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					Method:  http.MethodGet,
+					Path:    "/files",
+					Handler: files.ListFilesHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/tasks",
+					Handler: files.ListTasksHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/system"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					// Private attachment stream; application/octet-stream, no JSON envelope on success.
+					Method:  http.MethodGet,
+					Path:    "/files/:id/content",
+					Handler: files.DownloadFileHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/system"),
+		rest.WithTimeout(60000*time.Millisecond),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.BrowserOrigin, serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					Method:  http.MethodPost,
+					Path:    "/files",
+					Handler: files.CreateFileHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodDelete,
+					Path:    "/files/:id",
+					Handler: files.DeleteFileHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPost,
+					Path:    "/tasks/:id/retry",
+					Handler: files.RetryTaskHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPost,
+					Path:    "/tasks/dictionary-export",
+					Handler: files.ExportDictionariesHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/system"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.BrowserOrigin, serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					// Raw application/octet-stream upload, at most 10 MiB; metadata must be created first.
+					Method:  http.MethodPut,
+					Path:    "/files/:id/content",
+					Handler: files.UploadFileHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/system"),
+		rest.WithTimeout(60000*time.Millisecond),
+		rest.WithMaxBytes(10485760),
 	)
 
 	server.AddRoutes(

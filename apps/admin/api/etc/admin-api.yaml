@@ -24,3 +24,13 @@ RPCCredential:
   Secret: "${ADMIN_RPC_SECRET}"
 CookieSecure: ${ADMIN_COOKIE_SECURE}
 AllowedOrigins: "${ADMIN_ALLOWED_ORIGINS}"
+
+Storage:
+  Driver: ${STORAGE_DRIVER}
+  Root: ${STORAGE_ROOT}
+  Endpoint: "${S3_ENDPOINT}"
+  Bucket: "${S3_BUCKET}"
+  AccessKey: "${S3_ACCESS_KEY}"
+  SecretKey: "${S3_SECRET_KEY}"
+  Secure: ${S3_SECURE}
+  Region: "${S3_REGION}"

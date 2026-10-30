@@ -208,6 +208,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin-api/v1/system/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ListFiles */
+        get: operations["filesListFiles"];
+        put?: never;
+        /** CreateFile */
+        post: operations["filesCreateFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin-api/v1/system/files/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** DeleteFile */
+        delete: operations["filesDeleteFile"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin-api/v1/system/files/{id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Private attachment stream; application/octet-stream, no JSON envelope on success. */
+        get: operations["filesDownloadFile"];
+        /** Raw application/octet-stream upload, at most 10 MiB; metadata must be created first. */
+        put: operations["filesUploadFile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin-api/v1/system/permissions": {
         parameters: {
             query?: never;
@@ -326,6 +379,57 @@ export interface paths {
         post?: never;
         /** DeleteSetting */
         delete: operations["settingsDeleteSetting"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin-api/v1/system/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ListTasks */
+        get: operations["filesListTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin-api/v1/system/tasks/dictionary-export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** ExportDictionaries */
+        post: operations["filesExportDictionaries"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin-api/v1/system/tasks/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** RetryTask */
+        post: operations["filesRetryTask"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -457,6 +561,11 @@ export interface components {
             items: components["schemas"]["DictionaryItem"][];
             name: string;
         };
+        CreateFileRequest: {
+            contentType: string;
+            name: string;
+            size: number;
+        };
         CreateRoleRequest: {
             code: string;
             description: string;
@@ -523,6 +632,41 @@ export interface components {
             message: string;
             traceId: string;
         };
+        ExportDictionariesRequest: {
+            requestKey: string;
+        };
+        FileData: {
+            record: components["schemas"]["FileRecord"];
+        };
+        FileRecord: {
+            contentType: string;
+            createdAt: string;
+            id: string;
+            name: string;
+            sha256: string;
+            size: number;
+            source: string;
+            status: string;
+        };
+        FileResponse: {
+            code: number;
+            data: components["schemas"]["FileData"];
+            message: string;
+            traceId: string;
+        };
+        FileTaskIDRequest: Record<string, never>;
+        FilesData: {
+            items: components["schemas"]["FileRecord"][];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        FilesResponse: {
+            code: number;
+            data: components["schemas"]["FilesData"];
+            message: string;
+            traceId: string;
+        };
         GetAuditLogRequest: Record<string, never>;
         GetDictionaryRequest: Record<string, never>;
         GrantRoleRequest: {
@@ -530,6 +674,7 @@ export interface components {
             revision: string;
         };
         ListAuditLogsRequest: Record<string, never>;
+        ListFilesTasksRequest: Record<string, never>;
         ListManagementRequest: Record<string, never>;
         LoginRequest: {
             password: string;
@@ -619,6 +764,41 @@ export interface components {
         SettingResponse: {
             code: number;
             data: components["schemas"]["SettingRecord"];
+            message: string;
+            traceId: string;
+        };
+        TaskData: {
+            record: components["schemas"]["TaskRecord"];
+        };
+        TaskRecord: {
+            attempts: number;
+            createdAt: string;
+            error: string;
+            fileId: string;
+            id: string;
+            kind: string;
+            maxAttempts: number;
+            nextRunAt: string;
+            retryable: boolean;
+            status: string;
+            traceId: string;
+            updatedAt: string;
+        };
+        TaskResponse: {
+            code: number;
+            data: components["schemas"]["TaskData"];
+            message: string;
+            traceId: string;
+        };
+        TasksData: {
+            items: components["schemas"]["TaskRecord"][];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        TasksResponse: {
+            code: number;
+            data: components["schemas"]["TasksData"];
             message: string;
             traceId: string;
         };
@@ -2512,6 +2692,583 @@ export interface operations {
             };
         };
     };
+    filesListFiles: {
+        parameters: {
+            query: {
+                /** @example 1 */
+                page: number;
+                /** @example 20 */
+                pageSize: number;
+                keyword?: string;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FilesResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    filesCreateFile: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for same-origin write requests, including CLI clients. */
+                "X-GoSeed-CSRF": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFileRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    filesDeleteFile: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for same-origin write requests, including CLI clients. */
+                "X-GoSeed-CSRF": "1";
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    filesDownloadFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private attachment; no JSON envelope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    filesUploadFile: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for same-origin write requests, including CLI clients. */
+                "X-GoSeed-CSRF": "1";
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Raw file body, at most 10 MiB. Create metadata first. */
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     managementListPermissions: {
         parameters: {
             query?: never;
@@ -3683,6 +4440,352 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    filesListTasks: {
+        parameters: {
+            query: {
+                /** @example 1 */
+                page: number;
+                /** @example 20 */
+                pageSize: number;
+                keyword?: string;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TasksResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    filesExportDictionaries: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for same-origin write requests, including CLI clients. */
+                "X-GoSeed-CSRF": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportDictionariesRequest"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description GoSeed error envelope; code is stable, message is safe for clients. */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    filesRetryTask: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for same-origin write requests, including CLI clients. */
+                "X-GoSeed-CSRF": "1";
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };

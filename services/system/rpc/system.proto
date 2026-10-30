@@ -265,7 +265,60 @@ message UpdateSettingRequest {
   string revision = 6;
 }
 
+message FileRecord {
+ string id = 1;
+ string name = 2;
+ int64 size = 3;
+ string content_type = 4;
+ string status = 5;
+ string source = 6;
+ string sha256 = 7;
+ string created_at = 8;
+}
+message TaskRecord {
+ string id = 1;
+ string kind = 2;
+ string status = 3;
+ int64 attempts = 4;
+ int64 max_attempts = 5;
+ string error = 6;
+ string file_id = 7;
+ string trace_id = 8;
+ string created_at = 9;
+ string updated_at = 10;
+ string next_run_at = 11;
+ bool retryable = 12;
+}
+message ListFilesTasksRequest {
+ int64 page = 1;
+ int64 page_size = 2;
+ string keyword = 3;
+ string status = 4;
+}
+message FileTaskIDRequest { string id = 1; }
+message CreateFileRequest {
+ string name = 1;
+ int64 size = 2;
+ string content_type = 3;
+}
+message ExportDictionariesRequest { string request_key = 1; }
+message FileResponse { FileRecord record = 1; }
+message TaskResponse { TaskRecord record = 1; }
+message FilesResponse { repeated FileRecord items = 1; int64 total = 2; }
+message TasksResponse { repeated TaskRecord items = 1; int64 total = 2; }
+// Internal transfer reference, never returned in HTTP JSON or persisted in a browser.
+message FileTransferResponse { string key = 1; FileRecord record = 2; }
+
 service System {
+ rpc ListFiles(ListFilesTasksRequest) returns (FilesResponse);
+ rpc CreateFile(CreateFileRequest) returns (FileResponse);
+ rpc AuthorizeFileUpload(FileTaskIDRequest) returns (FileTransferResponse);
+ rpc CompleteFileUpload(FileTaskIDRequest) returns (FileResponse);
+ rpc DownloadFile(FileTaskIDRequest) returns (FileTransferResponse);
+ rpc DeleteFile(FileTaskIDRequest) returns (AdminActionResponse);
+ rpc ListTasks(ListFilesTasksRequest) returns (TasksResponse);
+ rpc ExportDictionaries(ExportDictionariesRequest) returns (TaskResponse);
+ rpc RetryTask(FileTaskIDRequest) returns (AdminActionResponse);
   rpc GetDictionary(GetDictionaryRequest) returns (DictionaryResponse);
   rpc ListDictionaries(ListManagementRequest) returns (ListDictionariesResponse);
   rpc CreateDictionary(CreateDictionaryRequest) returns (DictionaryResponse);

@@ -2,7 +2,7 @@
 
 GoSeed 是基于 go-zero 的项目开发底座：单仓库、单 Go module，管理端 API、业务端 API 与领域 RPC 独立运行，管理后台采用 Vue 3。
 
-**当前已完成工程骨架、管理员认证、角色授权、操作日志、字典与系统配置。** 提供管理员列表/新增/编辑/启停/角色分配，角色管理与菜单按钮授权，版本化 SQL 迁移，API → RPC 探测，GORM/MySQL 与 Redis 就绪检查。管理员/角色变更与审计日志在同一事务提交，可按操作人、对象、类型、日期和 Trace ID 查询。字典支持分类与字典项维护，系统配置支持文本、整数、布尔及 JSON 参数。业务样板及 Asynq worker/scheduler 按后续阶段接入。
+**当前已完成工程骨架、管理员认证、角色授权、操作日志、字典配置、文件与异步任务。** 提供管理员列表/新增/编辑/启停/角色分配，角色管理与菜单按钮授权，版本化 SQL 迁移，API → RPC 探测，GORM/MySQL 与 Redis 就绪检查。管理员/角色变更与审计日志在同一事务提交，可按操作人、对象、类型、日期和 Trace ID 查询。字典支持分类与字典项维护，系统配置支持文本、整数、布尔及 JSON 参数。私有文件支持本地/S3 存储，Asynq worker/scheduler 提供字典 CSV 导出、可靠删除、定时清理和失败重试；业务样板按下一阶段接入。
 
 ## 本地开发
 
@@ -21,7 +21,7 @@ make doctor
 make infra-up                      # 仅启动 GoSeed 自己的 MySQL / Redis
 make migrate                       # 显式执行 system SQL 迁移
 make bootstrap                     # 初始化 admin 与超级管理员角色；已有密码保持不变
-make dev                           # 编译并启动三个 Go 进程和 Vite；Ctrl+C 统一退出
+make dev                           # 编译并启动五个 Go 进程和 Vite；Ctrl+C 统一退出
 ```
 
 访问 [管理工作台](http://127.0.0.1:5173)。初始账号为 `admin`，初始密码由 `make init` 随机生成，保存在本地 `.env` 的 `ADMIN_BOOTSTRAP_PASSWORD`。登录后可在账户菜单中修改密码。另一个终端执行 `make smoke`，验证两个 API 的健康检查、RPC 调用、响应结构和 Trace ID。
@@ -32,6 +32,8 @@ make dev                           # 编译并启动三个 Go 进程和 Vite；C
 | admin-api | `http://127.0.0.1:8081` |
 | app-api | `http://127.0.0.1:8080` |
 | system-rpc | `127.0.0.1:19001`（Compose 内部为 `9001`） |
+| system-worker 健康接口 | `http://127.0.0.1:19201/readyz` |
+| system-scheduler 健康接口 | `http://127.0.0.1:19202/readyz` |
 | MySQL | `127.0.0.1:13306` |
 | Redis | `127.0.0.1:16379` |
 
@@ -68,6 +70,7 @@ make compose-down                  # 停容器，保留命名卷
 | `make migrate` / `make bootstrap` | 迁移 system 数据库 / 幂等创建初始管理员 |
 | `make test-auth` / `make auth-smoke` | MySQL 认证并发测试 / 运行中 HTTP 登录链路 |
 | `make sync-resources` | 同步权限目录，保留角色授权和成员关系 |
+| `make test-storage` | 存储并发与 S3 协议检查；可选独立 S3 实服务测试 |
 | `make test-rbac` / `make rbac-smoke` | 独立临时库权限并发测试 / 运行中 HTTP 管理链路 |
 | `make gen` | 生成两份 API、RPC、OpenAPI 3 与管理端 TypeScript 类型 |
 | `make gen-api APP=admin` | 从 `.api` 生成指定入口，保留手写骨架 |
@@ -76,7 +79,7 @@ make compose-down                  # 停容器，保留命名卷
 | `make verify-gen` | 在临时副本验证重复生成一致、新增契约保留手写实现且可编译 |
 | `make check` | 格式、依赖边界、文档链接、vet、前端类型/格式及生成一致性 |
 | `make test` | 不依赖外部服务的 Go 测试（包含内存 gRPC）及前端会话/权限竞态测试 |
-| `make build` | 分别构建三个服务、probe 与管理端静态资源 |
+| `make build` | 分别构建五个服务、probe 与管理端静态资源 |
 | `make smoke` | 验证已经运行的真实 API/RPC/MySQL/Redis 链路 |
 
 二进制输出到 `bin/`，前端输出到 `web/admin/dist/`。契约、生成文件与 lockfile 进入版本控制。CI 执行检查、构建、race 测试及真实依赖 smoke；AI 参考库不是运行时构建依赖。
@@ -87,14 +90,16 @@ make compose-down                  # 停容器，保留命名卷
 apps/admin/api/          管理端 HTTP 入口，调用 RPC
 apps/app/api/            业务客户端 HTTP 入口，调用 RPC
 services/system/rpc/    系统领域契约、客户端与服务
-services/system/internal/application/  领域用例，后续与 worker 共享
+services/system/worker/  Asynq 消费与 outbox 投递
+services/system/scheduler/  小时清理计划投递
+services/system/internal/application/  领域用例，由 RPC 与 worker 共享
 pkg/                    通用错误、HTTP 与数据库连接技术代码
 cmd/probe/              容器健康检查客户端
 web/admin/              Vue 3 + TypeScript + Element Plus，按 feature 组织
 scripts/                生成、检查、进程监督与 smoke
 ```
 
-Go module 固定为 `github.com/kar1hsu/go-seed`。运行时使用 go-zero **1.10.2**、GORM **1.31.1**，工具版本见 [versions.env](tools/versions.env)。API 不连接业务数据库，GORM 由 system 的 ServiceContext 装配，不在启动时 AutoMigrate。队列和定时任务保留 **Asynq** 方案，第三阶段按真实任务接入，不预先引入空 worker 或未使用的运行时依赖。
+Go module 固定为 `github.com/kar1hsu/go-seed`。运行时使用 go-zero **1.10.2**、GORM **1.31.1**，工具版本见 [versions.env](tools/versions.env)。API 不连接业务数据库，GORM 由 system 的 ServiceContext 装配，不在启动时 AutoMigrate。队列和定时任务使用 **Asynq 0.26.0**，任务通过事务 outbox 投递，由数据库状态与租约保证幂等恢复。文件和队列配置见[文件与任务](docs/files-and-tasks.md)。
 
 [ai-context](.ai-context/go-zero/00-instructions.md) 与 [zero-skills](.agents/skills/zero-skills/SKILL.md) 已按固定提交接入项目，入口为 [AGENTS.md](AGENTS.md)，不需要 mcp-zero。
 
@@ -104,10 +109,12 @@ Go module 固定为 `github.com/kar1hsu/go-seed`。运行时使用 go-zero **1.1
 | [目录规范](docs/directory-structure.md) | 依赖边界与生成文件所有权 |
 | [开发约定](docs/development-guide.md) | 契约、错误、开发与检查流程 |
 | [实施路线](docs/roadmap.md) | 当前进度与后续阶段 |
+| [文件与任务](docs/files-and-tasks.md) | 私有上传下载、S3、本地存储、Asynq、调度与恢复 |
 | [字典与系统配置](docs/system-settings.md) | 参数类型、字典项、权限、审计与编辑冲突 |
 | [操作日志](docs/operation-audit.md) | 日志范围、事务一致性、查询与脱敏 |
 | [角色授权](docs/authorization.md) | 管理员、角色、菜单按钮、版本一致性与验证 |
 | [管理员认证](docs/authentication.md) | 初始化、会话、Cookie、接口和验收 |
+| [文件与任务验证](docs/phase-three-validation.md) | 本批实际检查、故障恢复与浏览器验收 |
 | [权限阶段验证](docs/phase-two-validation.md) | 本批检查、权限边界与浏览器验收 |
 | [第一阶段验证](docs/phase-one-validation.md) | 已执行的检查与当前边界 |
 | [AI 开发配置](docs/ai-development.md) | 官方资料版本、发现与升级方式 |

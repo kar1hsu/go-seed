@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"github.com/kar1hsu/go-seed/pkg/storage"
 
 	"github.com/kar1hsu/go-seed/pkg/dbx"
 	"github.com/kar1hsu/go-seed/pkg/identity"
@@ -31,6 +32,10 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
+	objects, err := storage.New(c.Storage)
+	if err != nil {
+		return nil, err
+	}
 	tokens, err := identity.New(c.Tokens)
 	if err != nil {
 		return nil, err
@@ -49,6 +54,9 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		return nil, err
 	}
 	healthSvc := health.New(pool.PingContext, func(ctx context.Context) error {
+		if err := objects.Check(ctx); err != nil {
+			return err
+		}
 		if !cache.PingCtx(ctx) {
 			return errors.New("redis ping failed")
 		}
@@ -70,7 +78,7 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		_ = pool.Close()
 		return nil, err
 	}
-	managementSvc, err := management.New(repository.NewRBAC(db), authorization.New(tokens))
+	managementSvc, err := management.New(repository.NewRBAC(db), authorization.New(tokens), objects)
 	if err != nil {
 		_ = pool.Close()
 		return nil, err

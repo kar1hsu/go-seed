@@ -16,5 +16,8 @@ COPY --from=build /out/ /app/
 COPY apps/admin/api/etc /app/apps/admin/api/etc
 COPY apps/app/api/etc /app/apps/app/api/etc
 COPY services/system/rpc/etc /app/services/system/rpc/etc
+COPY services/system/worker/etc /app/services/system/worker/etc
+COPY services/system/scheduler/etc /app/services/system/scheduler/etc
+RUN mkdir -p /app/data/files && chown -R 65532:65532 /app/data
 USER 65532:65532
 ENTRYPOINT ["/app/server"]

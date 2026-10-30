@@ -33,6 +33,7 @@ type (
 	CheckReadyResponse              = pb.CheckReadyResponse
 	CreateAdministratorRequest      = pb.CreateAdministratorRequest
 	CreateDictionaryRequest         = pb.CreateDictionaryRequest
+	CreateFileRequest               = pb.CreateFileRequest
 	CreateRoleRequest               = pb.CreateRoleRequest
 	CreateSettingRequest            = pb.CreateSettingRequest
 	DeleteRoleRequest               = pb.DeleteRoleRequest
@@ -40,6 +41,12 @@ type (
 	DictionaryItem                  = pb.DictionaryItem
 	DictionaryRecord                = pb.DictionaryRecord
 	DictionaryResponse              = pb.DictionaryResponse
+	ExportDictionariesRequest       = pb.ExportDictionariesRequest
+	FileRecord                      = pb.FileRecord
+	FileResponse                    = pb.FileResponse
+	FileTaskIDRequest               = pb.FileTaskIDRequest
+	FileTransferResponse            = pb.FileTransferResponse
+	FilesResponse                   = pb.FilesResponse
 	GetAuditLogRequest              = pb.GetAuditLogRequest
 	GetAuditLogResponse             = pb.GetAuditLogResponse
 	GetDictionaryRequest            = pb.GetDictionaryRequest
@@ -48,6 +55,7 @@ type (
 	ListAuditLogsRequest            = pb.ListAuditLogsRequest
 	ListAuditLogsResponse           = pb.ListAuditLogsResponse
 	ListDictionariesResponse        = pb.ListDictionariesResponse
+	ListFilesTasksRequest           = pb.ListFilesTasksRequest
 	ListManagementRequest           = pb.ListManagementRequest
 	ListPermissionsRequest          = pb.ListPermissionsRequest
 	ListPermissionsResponse         = pb.ListPermissionsResponse
@@ -60,12 +68,24 @@ type (
 	RoleResponse                    = pb.RoleResponse
 	SettingRecord                   = pb.SettingRecord
 	SettingResponse                 = pb.SettingResponse
+	TaskRecord                      = pb.TaskRecord
+	TaskResponse                    = pb.TaskResponse
+	TasksResponse                   = pb.TasksResponse
 	UpdateAdministratorRequest      = pb.UpdateAdministratorRequest
 	UpdateDictionaryRequest         = pb.UpdateDictionaryRequest
 	UpdateRoleRequest               = pb.UpdateRoleRequest
 	UpdateSettingRequest            = pb.UpdateSettingRequest
 
 	System interface {
+		ListFiles(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*FilesResponse, error)
+		CreateFile(ctx context.Context, in *CreateFileRequest, opts ...grpc.CallOption) (*FileResponse, error)
+		AuthorizeFileUpload(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileTransferResponse, error)
+		CompleteFileUpload(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileResponse, error)
+		DownloadFile(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileTransferResponse, error)
+		DeleteFile(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+		ListTasks(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*TasksResponse, error)
+		ExportDictionaries(ctx context.Context, in *ExportDictionariesRequest, opts ...grpc.CallOption) (*TaskResponse, error)
+		RetryTask(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
 		GetDictionary(ctx context.Context, in *GetDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error)
 		ListDictionaries(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListDictionariesResponse, error)
 		CreateDictionary(ctx context.Context, in *CreateDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error)
@@ -107,6 +127,51 @@ func NewSystem(cli zrpc.Client) System {
 	return &defaultSystem{
 		cli: cli,
 	}
+}
+
+func (m *defaultSystem) ListFiles(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*FilesResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.ListFiles(ctx, in, opts...)
+}
+
+func (m *defaultSystem) CreateFile(ctx context.Context, in *CreateFileRequest, opts ...grpc.CallOption) (*FileResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.CreateFile(ctx, in, opts...)
+}
+
+func (m *defaultSystem) AuthorizeFileUpload(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileTransferResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.AuthorizeFileUpload(ctx, in, opts...)
+}
+
+func (m *defaultSystem) CompleteFileUpload(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.CompleteFileUpload(ctx, in, opts...)
+}
+
+func (m *defaultSystem) DownloadFile(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileTransferResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.DownloadFile(ctx, in, opts...)
+}
+
+func (m *defaultSystem) DeleteFile(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.DeleteFile(ctx, in, opts...)
+}
+
+func (m *defaultSystem) ListTasks(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*TasksResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.ListTasks(ctx, in, opts...)
+}
+
+func (m *defaultSystem) ExportDictionaries(ctx context.Context, in *ExportDictionariesRequest, opts ...grpc.CallOption) (*TaskResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.ExportDictionaries(ctx, in, opts...)
+}
+
+func (m *defaultSystem) RetryTask(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.RetryTask(ctx, in, opts...)
 }
 
 func (m *defaultSystem) GetDictionary(ctx context.Context, in *GetDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error) {

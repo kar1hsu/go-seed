@@ -37,10 +37,10 @@ const stack = Object.entries(project.dependencies).map(([name, version]) => ({
             >{{ project.repository }}</a
           ></ElDescriptionsItem
         ><ElDescriptionsItem label="后端架构"
-          >go-zero · API / RPC 独立进程 · GORM</ElDescriptionsItem
+          >go-zero · API / RPC / Worker / Scheduler · GORM</ElDescriptionsItem
         ><ElDescriptionsItem label="当前阶段"
-          >管理员认证、角色权限和菜单按钮授权已接入。业务样板与 Asynq
-          任务能力待实现。</ElDescriptionsItem
+          >管理员认证、角色权限、操作日志、字典配置、私有文件与 Asynq
+          任务已接入。下一阶段提供业务开发样板。</ElDescriptionsItem
         ></ElDescriptions
       >
     </div>

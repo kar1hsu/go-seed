@@ -73,6 +73,13 @@ func TestHTTPManagement(t *testing.T) {
 			if err := cleanup.Where("code = ?", prefix+"_setting").Delete(&model.Setting{}).Error; err != nil {
 				return err
 			}
+			// Only this random fixture's jobs/files, after the HTTP worker checks have completed.
+			if err := cleanup.Where("owner_id = ?", root.ID).Delete(&model.Task{}).Error; err != nil {
+				return err
+			}
+			if err := cleanup.Where("owner_id = ? AND status = 'deleted'", root.ID).Delete(&model.File{}).Error; err != nil {
+				return err
+			}
 			return tx.Bump(ctx)
 		})
 		if err != nil {
@@ -189,4 +196,5 @@ func TestHTTPManagement(t *testing.T) {
 	call("GET", "/system/audit-logs/0", rootToken, nil, false, 400)
 	call("GET", "/system/audit-logs/18446744073709551615", rootToken, nil, false, 404)
 	verifySettingsHTTP(t, call, db, prefix, rootToken, reader)
+	verifyFilesTasksHTTP(t, call, db, prefix, rootToken, reader)
 }

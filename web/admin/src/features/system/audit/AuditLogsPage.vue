@@ -91,6 +91,8 @@ function targetName(type: string) {
       {
         administrator: '管理员',
         role: '角色',
+        file: '文件',
+        task: '任务',
         dictionary: '字典',
         setting: '系统配置',
       } as Record<string, string>

@@ -9,7 +9,7 @@ def environment():
     if not path.is_file():
         raise SystemExit('Missing .env: cp .env.example .env')
     env = os.environ.copy()
-    for line in path.read_text().splitlines():
+    for line in ((path.parent / '.env.example').read_text() + '\n' + path.read_text()).splitlines():
         line = line.strip()
         if not line or line.startswith('#'):
             continue

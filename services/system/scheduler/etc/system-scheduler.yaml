@@ -1,0 +1,12 @@
+Name: system-scheduler
+Mode: dev
+ListenOn: ${TASK_HOST}:${SYSTEM_SCHEDULER_PORT}
+Log:
+  ServiceName: system-scheduler
+  Mode: console
+  Encoding: json
+Queue:
+  Addr: ${QUEUE_HOST}:${QUEUE_PORT}
+  Password: "${QUEUE_PASSWORD}"
+  DB: ${QUEUE_DB}
+  Name: ${QUEUE_NAME}

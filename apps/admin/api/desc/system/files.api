@@ -1,0 +1,144 @@
+syntax = "v1"
+
+type (
+	FileRecord {
+		Id          string `json:"id"`
+		Name        string `json:"name"`
+		Size        int64  `json:"size"`
+		ContentType string `json:"contentType"`
+		Status      string `json:"status"`
+		Source      string `json:"source"`
+		Sha256      string `json:"sha256"`
+		CreatedAt   string `json:"createdAt"`
+	}
+	TaskRecord {
+		Id          string `json:"id"`
+		Kind        string `json:"kind"`
+		Status      string `json:"status"`
+		Attempts    int64  `json:"attempts"`
+		MaxAttempts int64  `json:"maxAttempts"`
+		Error       string `json:"error"`
+		FileId      string `json:"fileId"`
+		TraceId     string `json:"traceId"`
+		CreatedAt   string `json:"createdAt"`
+		UpdatedAt   string `json:"updatedAt"`
+		NextRunAt   string `json:"nextRunAt"`
+		Retryable   bool   `json:"retryable"`
+	}
+	ListFilesTasksRequest {
+		Page     int64  `form:"page,default=1,range=[1:100000]"`
+		PageSize int64  `form:"pageSize,default=20,range=[1:100]"`
+		Keyword  string `form:"keyword,optional"`
+		Status   string `form:"status,optional"`
+	}
+	FileTaskIDRequest {
+		Id string `path:"id"`
+	}
+	CreateFileRequest {
+		Name        string `json:"name"`
+		Size        int64  `json:"size"`
+		ContentType string `json:"contentType"`
+	}
+	ExportDictionariesRequest {
+		RequestKey string `json:"requestKey"`
+	}
+	FileData {
+		Record FileRecord `json:"record"`
+	}
+	TaskData {
+		Record TaskRecord `json:"record"`
+	}
+	FilesData {
+		Items    []FileRecord `json:"items"`
+		Total    int64        `json:"total"`
+		Page     int64        `json:"page"`
+		PageSize int64        `json:"pageSize"`
+	}
+	TasksData {
+		Items    []TaskRecord `json:"items"`
+		Total    int64        `json:"total"`
+		Page     int64        `json:"page"`
+		PageSize int64        `json:"pageSize"`
+	}
+	FileResponse {
+		Code    int      `json:"code"`
+		Message string   `json:"message"`
+		Data    FileData `json:"data"`
+		TraceId string   `json:"traceId"`
+	}
+	TaskResponse {
+		Code    int      `json:"code"`
+		Message string   `json:"message"`
+		Data    TaskData `json:"data"`
+		TraceId string   `json:"traceId"`
+	}
+	FilesResponse {
+		Code    int       `json:"code"`
+		Message string    `json:"message"`
+		Data    FilesData `json:"data"`
+		TraceId string    `json:"traceId"`
+	}
+	TasksResponse {
+		Code    int       `json:"code"`
+		Message string    `json:"message"`
+		Data    TasksData `json:"data"`
+		TraceId string    `json:"traceId"`
+	}
+)
+
+@server (
+	prefix:     /admin-api/v1/system
+	group:      files
+	middleware: AdminAccess
+)
+service admin-api {
+	@handler ListFiles
+	get /files (ListFilesTasksRequest) returns (FilesResponse)
+
+	@handler ListTasks
+	get /tasks (ListFilesTasksRequest) returns (TasksResponse)
+}
+
+@server (
+	prefix:     /admin-api/v1/system
+	group:      files
+	middleware: AdminAccess
+	timeout:    60s
+)
+service admin-api {
+	@doc "Private attachment stream; application/octet-stream, no JSON envelope on success."
+	@handler DownloadFile
+	get /files/:id/content (FileTaskIDRequest)
+}
+
+@server (
+	prefix:     /admin-api/v1/system
+	group:      files
+	middleware: BrowserOrigin,AdminAccess
+)
+service admin-api {
+	@handler CreateFile
+	post /files (CreateFileRequest) returns (FileResponse)
+
+	@handler DeleteFile
+	delete /files/:id (FileTaskIDRequest) returns (ActionResponse)
+
+	@handler ExportDictionaries
+	post /tasks/dictionary-export (ExportDictionariesRequest) returns (TaskResponse)
+
+	@handler RetryTask
+	post /tasks/:id/retry (FileTaskIDRequest) returns (ActionResponse)
+}
+
+@server (
+	prefix:     /admin-api/v1/system
+	group:      files
+	middleware: BrowserOrigin,AdminAccess
+	timeout:    60s
+	maxBytes:   10485760
+)
+service admin-api {
+	@doc "Raw application/octet-stream upload, at most 10 MiB; metadata must be created first."
+	@handler UploadFile
+	put /files/:id/content (FileTaskIDRequest) returns (FileResponse)
+}

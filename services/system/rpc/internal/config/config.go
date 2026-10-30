@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/kar1hsu/go-seed/pkg/storage"
 	"time"
 
 	"github.com/kar1hsu/go-seed/pkg/dbx"
@@ -10,6 +11,7 @@ import (
 )
 
 type Config struct {
+	Storage storage.Config
 	zrpc.RpcServerConf
 	MySQL          dbx.MySQLConfig
 	Cache          redis.RedisConf

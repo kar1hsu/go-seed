@@ -10,6 +10,12 @@ import (
 )
 
 const (
+	FileRead         = "system.file.read"
+	FileUpload       = "system.file.upload"
+	FileDelete       = "system.file.delete"
+	TaskRead         = "system.task.read"
+	TaskExport       = "system.task.export"
+	TaskRetry        = "system.task.retry"
 	DictionaryRead   = "system.dictionary.read"
 	DictionaryCreate = "system.dictionary.create"
 	DictionaryUpdate = "system.dictionary.update"

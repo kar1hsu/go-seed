@@ -162,3 +162,9 @@ func (r *RBAC) SyncPermissions(ctx context.Context, items []model.Permission) er
 func (r *RBAC) MarkBootstrapped(ctx context.Context) error {
 	return r.db.WithContext(ctx).Model(&model.PolicyState{}).Where("id = 1").Update("bootstrapped", true).Error
 }
+
+func (r *RBAC) Admin(ctx context.Context, id uint64) (*model.Administrator, error) {
+	var a model.Administrator
+	err := r.db.WithContext(ctx).First(&a, id).Error
+	return &a, err
+}

@@ -5,6 +5,8 @@ import { navigation } from './navigation'
 
 // A compile-time allowlist: declarative menus never resolve arbitrary component paths.
 const views = {
+  files: () => import('../features/system/files/FilesPage.vue'),
+  tasks: () => import('../features/system/files/TasksPage.vue'),
   dashboard: () => import('../features/dashboard/pages/DashboardPage.vue'),
   monitor: () => import('../features/dashboard/pages/MonitorPage.vue'),
   administrators: () =>

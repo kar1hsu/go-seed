@@ -76,4 +76,20 @@ export const menuResources = [
     component: 'security',
     hidden: true,
   },
+  {
+    path: '/system/files',
+    title: '文件管理',
+    group: '系统管理',
+    icon: 'FolderOpened',
+    component: 'files',
+    permission: 'system.file.read',
+  },
+  {
+    path: '/system/tasks',
+    title: '任务中心',
+    group: '系统管理',
+    icon: 'Timer',
+    component: 'tasks',
+    permission: 'system.task.read',
+  },
 ] as const

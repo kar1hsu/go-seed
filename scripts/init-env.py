@@ -10,7 +10,8 @@ if not path.exists():
     path.chmod(0o600)
 lines = path.read_text().splitlines()
 existing = dict(line.split('=', 1) for line in lines if line and not line.startswith('#') and '=' in line)
-settings = {
+defaults = dict(line.split('=', 1) for line in (root / '.env.example').read_text().splitlines() if line and not line.startswith('#') and '=' in line)
+settings = {**defaults,
     'ADMIN_TOKEN_SECRET': secrets.token_urlsafe(48),
     'ADMIN_RPC_SECRET': secrets.token_urlsafe(48),
     'ADMIN_BOOTSTRAP_PASSWORD': secrets.token_urlsafe(24),

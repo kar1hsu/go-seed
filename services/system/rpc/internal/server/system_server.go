@@ -23,6 +23,51 @@ func NewSystemServer(svcCtx *svc.ServiceContext) *SystemServer {
 	}
 }
 
+func (s *SystemServer) ListFiles(ctx context.Context, in *pb.ListFilesTasksRequest) (*pb.FilesResponse, error) {
+	l := logic.NewListFilesLogic(ctx, s.svcCtx)
+	return l.ListFiles(in)
+}
+
+func (s *SystemServer) CreateFile(ctx context.Context, in *pb.CreateFileRequest) (*pb.FileResponse, error) {
+	l := logic.NewCreateFileLogic(ctx, s.svcCtx)
+	return l.CreateFile(in)
+}
+
+func (s *SystemServer) AuthorizeFileUpload(ctx context.Context, in *pb.FileTaskIDRequest) (*pb.FileTransferResponse, error) {
+	l := logic.NewAuthorizeFileUploadLogic(ctx, s.svcCtx)
+	return l.AuthorizeFileUpload(in)
+}
+
+func (s *SystemServer) CompleteFileUpload(ctx context.Context, in *pb.FileTaskIDRequest) (*pb.FileResponse, error) {
+	l := logic.NewCompleteFileUploadLogic(ctx, s.svcCtx)
+	return l.CompleteFileUpload(in)
+}
+
+func (s *SystemServer) DownloadFile(ctx context.Context, in *pb.FileTaskIDRequest) (*pb.FileTransferResponse, error) {
+	l := logic.NewDownloadFileLogic(ctx, s.svcCtx)
+	return l.DownloadFile(in)
+}
+
+func (s *SystemServer) DeleteFile(ctx context.Context, in *pb.FileTaskIDRequest) (*pb.AdminActionResponse, error) {
+	l := logic.NewDeleteFileLogic(ctx, s.svcCtx)
+	return l.DeleteFile(in)
+}
+
+func (s *SystemServer) ListTasks(ctx context.Context, in *pb.ListFilesTasksRequest) (*pb.TasksResponse, error) {
+	l := logic.NewListTasksLogic(ctx, s.svcCtx)
+	return l.ListTasks(in)
+}
+
+func (s *SystemServer) ExportDictionaries(ctx context.Context, in *pb.ExportDictionariesRequest) (*pb.TaskResponse, error) {
+	l := logic.NewExportDictionariesLogic(ctx, s.svcCtx)
+	return l.ExportDictionaries(in)
+}
+
+func (s *SystemServer) RetryTask(ctx context.Context, in *pb.FileTaskIDRequest) (*pb.AdminActionResponse, error) {
+	l := logic.NewRetryTaskLogic(ctx, s.svcCtx)
+	return l.RetryTask(in)
+}
+
 func (s *SystemServer) GetDictionary(ctx context.Context, in *pb.GetDictionaryRequest) (*pb.DictionaryResponse, error) {
 	l := logic.NewGetDictionaryLogic(ctx, s.svcCtx)
 	return l.GetDictionary(in)

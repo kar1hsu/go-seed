@@ -10,6 +10,7 @@ import (
 	"time"
 
 	mysql "github.com/go-sql-driver/mysql"
+	"github.com/kar1hsu/go-seed/pkg/storage"
 	"github.com/kar1hsu/go-seed/pkg/xerr"
 	"github.com/kar1hsu/go-seed/services/system/internal/application/auth"
 	"github.com/kar1hsu/go-seed/services/system/internal/audit"
@@ -25,6 +26,7 @@ import (
 )
 
 type Service struct {
+	objects    storage.Store
 	store      *repository.RBAC
 	authorizer *authorization.Authorizer
 	catalog    []resources.Permission
@@ -45,12 +47,12 @@ type Role struct {
 	Manageable, Assignable bool
 }
 
-func New(store *repository.RBAC, authorizer *authorization.Authorizer) (*Service, error) {
+func New(store *repository.RBAC, authorizer *authorization.Authorizer, objects storage.Store) (*Service, error) {
 	catalog, err := resources.Catalog()
 	if err != nil {
 		return nil, err
 	}
-	return &Service{store, authorizer, catalog}, nil
+	return &Service{store: store, authorizer: authorizer, catalog: catalog, objects: objects}, nil
 }
 func publicError(ctx context.Context, err error) error {
 	if err == nil {

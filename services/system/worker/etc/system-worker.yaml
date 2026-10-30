@@ -1,0 +1,33 @@
+Name: system-worker
+Mode: dev
+ListenOn: ${TASK_HOST}:${SYSTEM_WORKER_PORT}
+Log:
+  ServiceName: system-worker
+  Mode: console
+  Encoding: json
+Queue:
+  Addr: ${QUEUE_HOST}:${QUEUE_PORT}
+  Password: "${QUEUE_PASSWORD}"
+  DB: ${QUEUE_DB}
+  Name: ${QUEUE_NAME}
+MySQL:
+  Host: ${MYSQL_HOST}
+  Port: ${MYSQL_PORT}
+  Database: ${MYSQL_DATABASE}
+  User: ${MYSQL_USER}
+  Password: "${MYSQL_PASSWORD}"
+Tokens:
+  Secret: "${ADMIN_TOKEN_SECRET}"
+  Issuer: go-seed-admin
+  Audience: go-seed-admin-api
+  AccessTTL: 15m
+Storage:
+  Driver: ${STORAGE_DRIVER}
+  Root: ${STORAGE_ROOT}
+  Endpoint: "${S3_ENDPOINT}"
+  Bucket: "${S3_BUCKET}"
+  AccessKey: "${S3_ACCESS_KEY}"
+  SecretKey: "${S3_SECRET_KEY}"
+  Secure: ${S3_SECURE}
+  Region: "${S3_REGION}"
+Concurrency: 4

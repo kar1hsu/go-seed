@@ -34,4 +34,9 @@ for app, key, prefix in [('admin','ADMIN_API_PORT','admin-api'),('app','APP_API_
     schema = json.loads((root/f'docs/openapi/{app}.openapi.json').read_text())['components']['schemas']['PingResponse']
     assert set(body) == set(schema['properties']), body
     print(f'{app}: health + readiness + API -> RPC envelope + trace ID passed')
+for process, key in [('worker', 'SYSTEM_WORKER_PORT'), ('scheduler', 'SYSTEM_SCHEDULER_PORT')]:
+    for probe in ('healthz', 'readyz'):
+        with urllib.request.urlopen(f"http://127.0.0.1:{env[key]}/{probe}", timeout=4) as response:
+            assert response.status == 200
+    print(f'{process}: health + dependency readiness passed')
 print('Smoke checks passed.')

@@ -29,3 +29,5 @@ grpcurl -plaintext -d '{}' 127.0.0.1:19001 goseed.system.v1.System/CheckReady
 `ListAuditLogs`、`GetAuditLog` 仅允许 admin-api 服务身份调用，management 用例检查当前管理员的 `system.audit.read`。操作日志在业务事务内由 system 构造，不对外提供写日志 RPC。记录范围、字段和查询语义见[操作日志](../../../docs/operation-audit.md)。
 
 `ListAdministrators`、`CreateAdministrator`、`UpdateAdministrator`、`AssignAdministratorRoles`、`ListRoles`、`CreateRole`、`UpdateRole`、`GrantRole`、`DeleteRole` 和 `ListPermissions` 同样只允许 admin-api 服务身份调用，再由 management 用例校验原始用户 token、当前会话、固定的权限键和目标授权范围。无权限为 PermissionDenied，编辑版本过期为 Aborted，已分配成员或最后超级管理员冲突为 FailedPrecondition。完整接口、权限与同步规则见 [角色授权](../../../docs/authorization.md)。
+
+文件元数据与任务方法定义在 `system.proto`：ListFiles/CreateFile/AuthorizeFileUpload/CompleteFileUpload/DownloadFile/DeleteFile、ListTasks/ExportDictionaries/RetryTask。所有方法仅允许 admin-api 服务调用，并在 application 层校验原用户身份；FileTransferResponse 的对象键仅供内部流式适配，禁止下发浏览器。行为与配置见[文件与任务](../../../docs/files-and-tasks.md)。

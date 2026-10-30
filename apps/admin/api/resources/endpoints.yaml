@@ -25,3 +25,11 @@
 - {method: put, path: '/admin-api/v1/system/settings/{id}', permission: system.setting.update}
 - {method: delete, path: '/admin-api/v1/system/settings/{id}', permission: system.setting.delete}
 - {method: get, path: '/admin-api/v1/system/dictionaries/{id}', permission: system.dictionary.read}
+- {method: get, path: '/admin-api/v1/system/files', permission: system.file.read}
+- {method: post, path: '/admin-api/v1/system/files', permission: system.file.upload, status: 201}
+- {method: put, path: '/admin-api/v1/system/files/{id}/content', permission: system.file.upload, requestBody: binary}
+- {method: get, path: '/admin-api/v1/system/files/{id}/content', permission: system.file.read, responseBody: binary}
+- {method: delete, path: '/admin-api/v1/system/files/{id}', permission: system.file.delete, status: 202}
+- {method: get, path: '/admin-api/v1/system/tasks', permission: system.task.read}
+- {method: post, path: '/admin-api/v1/system/tasks/dictionary-export', permission: system.task.export, status: 202}
+- {method: post, path: '/admin-api/v1/system/tasks/{id}/retry', permission: system.task.retry, status: 202}

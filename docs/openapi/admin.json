@@ -656,6 +656,173 @@
         }
       }
     },
+    "/admin-api/v1/system/files": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "ListFiles",
+        "operationId": "filesListFiles",
+        "parameters": [
+          {
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "integer",
+            "default": 1,
+            "example": 1,
+            "name": "page",
+            "in": "query",
+            "required": true
+          },
+          {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "default": 20,
+            "example": 20,
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "keyword",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "status",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/FilesResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "CreateFile",
+        "operationId": "filesCreateFile",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateFileRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/FileResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/system/files/{id}": {
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "DeleteFile",
+        "operationId": "filesDeleteFile",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ActionResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/system/files/{id}/content": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Private attachment stream; application/octet-stream, no JSON envelope on success.",
+        "operationId": "filesDownloadFile",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Raw application/octet-stream upload, at most 10 MiB; metadata must be created first.",
+        "operationId": "filesUploadFile",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/FileResponse"
+            }
+          }
+        }
+      }
+    },
     "/admin-api/v1/system/permissions": {
       "get": {
         "produces": [
@@ -1081,6 +1248,124 @@
             "type": "string",
             "name": "revision",
             "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ActionResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/system/tasks": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "ListTasks",
+        "operationId": "filesListTasks",
+        "parameters": [
+          {
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "integer",
+            "default": 1,
+            "example": 1,
+            "name": "page",
+            "in": "query",
+            "required": true
+          },
+          {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "default": 20,
+            "example": 20,
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "keyword",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "status",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/TasksResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/system/tasks/dictionary-export": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "ExportDictionaries",
+        "operationId": "filesExportDictionaries",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ExportDictionariesRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/TaskResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin-api/v1/system/tasks/{id}/retry": {
+      "post": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "RetryTask",
+        "operationId": "filesRetryTask",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
             "required": true
           }
         ],
@@ -1886,6 +2171,25 @@
         }
       }
     },
+    "CreateFileRequest": {
+      "type": "object",
+      "required": [
+        "name",
+        "size",
+        "contentType"
+      ],
+      "properties": {
+        "contentType": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer"
+        }
+      }
+    },
     "CreateRoleRequest": {
       "type": "object",
       "required": [
@@ -2329,6 +2633,249 @@
         }
       }
     },
+    "ExportDictionariesRequest": {
+      "type": "object",
+      "required": [
+        "requestKey"
+      ],
+      "properties": {
+        "requestKey": {
+          "type": "string"
+        }
+      }
+    },
+    "FileData": {
+      "type": "object",
+      "required": [
+        "record"
+      ],
+      "properties": {
+        "record": {
+          "type": "object",
+          "required": [
+            "id",
+            "name",
+            "size",
+            "contentType",
+            "status",
+            "source",
+            "sha256",
+            "createdAt"
+          ],
+          "properties": {
+            "contentType": {
+              "type": "string"
+            },
+            "createdAt": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string"
+            },
+            "size": {
+              "type": "integer"
+            },
+            "source": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/FileRecord"
+        }
+      }
+    },
+    "FileRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "size",
+        "contentType",
+        "status",
+        "source",
+        "sha256",
+        "createdAt"
+      ],
+      "properties": {
+        "contentType": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer"
+        },
+        "source": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "FileResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "record"
+          ],
+          "properties": {
+            "record": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "size",
+                "contentType",
+                "status",
+                "source",
+                "sha256",
+                "createdAt"
+              ],
+              "properties": {
+                "contentType": {
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "size": {
+                  "type": "integer"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              },
+              "$ref": "#/definitions/FileRecord"
+            }
+          },
+          "$ref": "#/definitions/FileData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "FileTaskIDRequest": {
+      "type": "object"
+    },
+    "FilesData": {
+      "type": "object",
+      "required": [
+        "items",
+        "total",
+        "page",
+        "pageSize"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FileRecord"
+          }
+        },
+        "page": {
+          "type": "integer"
+        },
+        "pageSize": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
+    },
+    "FilesResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "items",
+            "total",
+            "page",
+            "pageSize"
+          ],
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/FileRecord"
+              }
+            },
+            "page": {
+              "type": "integer"
+            },
+            "pageSize": {
+              "type": "integer"
+            },
+            "total": {
+              "type": "integer"
+            }
+          },
+          "$ref": "#/definitions/FilesData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
     "GetAuditLogRequest": {
       "type": "object"
     },
@@ -2354,6 +2901,9 @@
       }
     },
     "ListAuditLogsRequest": {
+      "type": "object"
+    },
+    "ListFilesTasksRequest": {
       "type": "object"
     },
     "ListManagementRequest": {
@@ -2885,6 +3435,283 @@
             }
           },
           "$ref": "#/definitions/SettingRecord"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "TaskData": {
+      "type": "object",
+      "required": [
+        "record"
+      ],
+      "properties": {
+        "record": {
+          "type": "object",
+          "required": [
+            "id",
+            "kind",
+            "status",
+            "attempts",
+            "maxAttempts",
+            "error",
+            "fileId",
+            "traceId",
+            "createdAt",
+            "updatedAt",
+            "nextRunAt",
+            "retryable"
+          ],
+          "properties": {
+            "attempts": {
+              "type": "integer"
+            },
+            "createdAt": {
+              "type": "string"
+            },
+            "error": {
+              "type": "string"
+            },
+            "fileId": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "maxAttempts": {
+              "type": "integer"
+            },
+            "nextRunAt": {
+              "type": "string"
+            },
+            "retryable": {
+              "type": "boolean"
+            },
+            "status": {
+              "type": "string"
+            },
+            "traceId": {
+              "type": "string"
+            },
+            "updatedAt": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/TaskRecord"
+        }
+      }
+    },
+    "TaskRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "status",
+        "attempts",
+        "maxAttempts",
+        "error",
+        "fileId",
+        "traceId",
+        "createdAt",
+        "updatedAt",
+        "nextRunAt",
+        "retryable"
+      ],
+      "properties": {
+        "attempts": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "fileId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "maxAttempts": {
+          "type": "integer"
+        },
+        "nextRunAt": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "TaskResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "record"
+          ],
+          "properties": {
+            "record": {
+              "type": "object",
+              "required": [
+                "id",
+                "kind",
+                "status",
+                "attempts",
+                "maxAttempts",
+                "error",
+                "fileId",
+                "traceId",
+                "createdAt",
+                "updatedAt",
+                "nextRunAt",
+                "retryable"
+              ],
+              "properties": {
+                "attempts": {
+                  "type": "integer"
+                },
+                "createdAt": {
+                  "type": "string"
+                },
+                "error": {
+                  "type": "string"
+                },
+                "fileId": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "maxAttempts": {
+                  "type": "integer"
+                },
+                "nextRunAt": {
+                  "type": "string"
+                },
+                "retryable": {
+                  "type": "boolean"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "traceId": {
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "type": "string"
+                }
+              },
+              "$ref": "#/definitions/TaskRecord"
+            }
+          },
+          "$ref": "#/definitions/TaskData"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "TasksData": {
+      "type": "object",
+      "required": [
+        "items",
+        "total",
+        "page",
+        "pageSize"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskRecord"
+          }
+        },
+        "page": {
+          "type": "integer"
+        },
+        "pageSize": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
+    },
+    "TasksResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "items",
+            "total",
+            "page",
+            "pageSize"
+          ],
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TaskRecord"
+              }
+            },
+            "page": {
+              "type": "integer"
+            },
+            "pageSize": {
+              "type": "integer"
+            },
+            "total": {
+              "type": "integer"
+            }
+          },
+          "$ref": "#/definitions/TasksData"
         },
         "message": {
           "type": "string"

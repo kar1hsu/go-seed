@@ -51,8 +51,17 @@ for (const app of ['admin', 'app']) {
         if (entry.permission || entry.access === 'session')
           operation.security = [{ AdminBearer: [] }]
         if (entry.permission) operation['x-permission'] = entry.permission
-        if (entry.status === 201) {
-          operation.responses['201'] = operation.responses['200']
+        if (entry.requestBody === 'binary') operation.requestBody = {
+          required: true,
+          content: { 'application/octet-stream': { schema: { type: 'string', format: 'binary' } } },
+          description: 'Raw file body, at most 10 MiB. Create metadata first.'
+        }
+        if (entry.responseBody === 'binary') operation.responses['200'] = {
+          description: 'Private attachment; no JSON envelope.',
+          content: { 'application/octet-stream': { schema: { type: 'string', format: 'binary' } } }
+        }
+        if ([201, 202].includes(entry.status)) {
+          operation.responses[entry.status] = operation.responses['200']
           delete operation.responses['200']
         }
 

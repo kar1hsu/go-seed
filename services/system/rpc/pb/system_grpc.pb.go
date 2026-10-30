@@ -19,6 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	System_ListFiles_FullMethodName                = "/goseed.system.v1.System/ListFiles"
+	System_CreateFile_FullMethodName               = "/goseed.system.v1.System/CreateFile"
+	System_AuthorizeFileUpload_FullMethodName      = "/goseed.system.v1.System/AuthorizeFileUpload"
+	System_CompleteFileUpload_FullMethodName       = "/goseed.system.v1.System/CompleteFileUpload"
+	System_DownloadFile_FullMethodName             = "/goseed.system.v1.System/DownloadFile"
+	System_DeleteFile_FullMethodName               = "/goseed.system.v1.System/DeleteFile"
+	System_ListTasks_FullMethodName                = "/goseed.system.v1.System/ListTasks"
+	System_ExportDictionaries_FullMethodName       = "/goseed.system.v1.System/ExportDictionaries"
+	System_RetryTask_FullMethodName                = "/goseed.system.v1.System/RetryTask"
 	System_GetDictionary_FullMethodName            = "/goseed.system.v1.System/GetDictionary"
 	System_ListDictionaries_FullMethodName         = "/goseed.system.v1.System/ListDictionaries"
 	System_CreateDictionary_FullMethodName         = "/goseed.system.v1.System/CreateDictionary"
@@ -53,6 +62,15 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SystemClient interface {
+	ListFiles(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*FilesResponse, error)
+	CreateFile(ctx context.Context, in *CreateFileRequest, opts ...grpc.CallOption) (*FileResponse, error)
+	AuthorizeFileUpload(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileTransferResponse, error)
+	CompleteFileUpload(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileResponse, error)
+	DownloadFile(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileTransferResponse, error)
+	DeleteFile(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
+	ListTasks(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*TasksResponse, error)
+	ExportDictionaries(ctx context.Context, in *ExportDictionariesRequest, opts ...grpc.CallOption) (*TaskResponse, error)
+	RetryTask(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*AdminActionResponse, error)
 	GetDictionary(ctx context.Context, in *GetDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error)
 	ListDictionaries(ctx context.Context, in *ListManagementRequest, opts ...grpc.CallOption) (*ListDictionariesResponse, error)
 	CreateDictionary(ctx context.Context, in *CreateDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error)
@@ -91,6 +109,96 @@ type systemClient struct {
 
 func NewSystemClient(cc grpc.ClientConnInterface) SystemClient {
 	return &systemClient{cc}
+}
+
+func (c *systemClient) ListFiles(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*FilesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FilesResponse)
+	err := c.cc.Invoke(ctx, System_ListFiles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) CreateFile(ctx context.Context, in *CreateFileRequest, opts ...grpc.CallOption) (*FileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResponse)
+	err := c.cc.Invoke(ctx, System_CreateFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) AuthorizeFileUpload(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileTransferResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileTransferResponse)
+	err := c.cc.Invoke(ctx, System_AuthorizeFileUpload_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) CompleteFileUpload(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResponse)
+	err := c.cc.Invoke(ctx, System_CompleteFileUpload_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) DownloadFile(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*FileTransferResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileTransferResponse)
+	err := c.cc.Invoke(ctx, System_DownloadFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) DeleteFile(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminActionResponse)
+	err := c.cc.Invoke(ctx, System_DeleteFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) ListTasks(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*TasksResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TasksResponse)
+	err := c.cc.Invoke(ctx, System_ListTasks_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) ExportDictionaries(ctx context.Context, in *ExportDictionariesRequest, opts ...grpc.CallOption) (*TaskResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TaskResponse)
+	err := c.cc.Invoke(ctx, System_ExportDictionaries_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) RetryTask(ctx context.Context, in *FileTaskIDRequest, opts ...grpc.CallOption) (*AdminActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminActionResponse)
+	err := c.cc.Invoke(ctx, System_RetryTask_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *systemClient) GetDictionary(ctx context.Context, in *GetDictionaryRequest, opts ...grpc.CallOption) (*DictionaryResponse, error) {
@@ -377,6 +485,15 @@ func (c *systemClient) CheckReady(ctx context.Context, in *CheckReadyRequest, op
 // All implementations must embed UnimplementedSystemServer
 // for forward compatibility.
 type SystemServer interface {
+	ListFiles(context.Context, *ListFilesTasksRequest) (*FilesResponse, error)
+	CreateFile(context.Context, *CreateFileRequest) (*FileResponse, error)
+	AuthorizeFileUpload(context.Context, *FileTaskIDRequest) (*FileTransferResponse, error)
+	CompleteFileUpload(context.Context, *FileTaskIDRequest) (*FileResponse, error)
+	DownloadFile(context.Context, *FileTaskIDRequest) (*FileTransferResponse, error)
+	DeleteFile(context.Context, *FileTaskIDRequest) (*AdminActionResponse, error)
+	ListTasks(context.Context, *ListFilesTasksRequest) (*TasksResponse, error)
+	ExportDictionaries(context.Context, *ExportDictionariesRequest) (*TaskResponse, error)
+	RetryTask(context.Context, *FileTaskIDRequest) (*AdminActionResponse, error)
 	GetDictionary(context.Context, *GetDictionaryRequest) (*DictionaryResponse, error)
 	ListDictionaries(context.Context, *ListManagementRequest) (*ListDictionariesResponse, error)
 	CreateDictionary(context.Context, *CreateDictionaryRequest) (*DictionaryResponse, error)
@@ -417,6 +534,33 @@ type SystemServer interface {
 // pointer dereference when methods are called.
 type UnimplementedSystemServer struct{}
 
+func (UnimplementedSystemServer) ListFiles(context.Context, *ListFilesTasksRequest) (*FilesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListFiles not implemented")
+}
+func (UnimplementedSystemServer) CreateFile(context.Context, *CreateFileRequest) (*FileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateFile not implemented")
+}
+func (UnimplementedSystemServer) AuthorizeFileUpload(context.Context, *FileTaskIDRequest) (*FileTransferResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthorizeFileUpload not implemented")
+}
+func (UnimplementedSystemServer) CompleteFileUpload(context.Context, *FileTaskIDRequest) (*FileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CompleteFileUpload not implemented")
+}
+func (UnimplementedSystemServer) DownloadFile(context.Context, *FileTaskIDRequest) (*FileTransferResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DownloadFile not implemented")
+}
+func (UnimplementedSystemServer) DeleteFile(context.Context, *FileTaskIDRequest) (*AdminActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteFile not implemented")
+}
+func (UnimplementedSystemServer) ListTasks(context.Context, *ListFilesTasksRequest) (*TasksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTasks not implemented")
+}
+func (UnimplementedSystemServer) ExportDictionaries(context.Context, *ExportDictionariesRequest) (*TaskResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExportDictionaries not implemented")
+}
+func (UnimplementedSystemServer) RetryTask(context.Context, *FileTaskIDRequest) (*AdminActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetryTask not implemented")
+}
 func (UnimplementedSystemServer) GetDictionary(context.Context, *GetDictionaryRequest) (*DictionaryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDictionary not implemented")
 }
@@ -520,6 +664,168 @@ func RegisterSystemServer(s grpc.ServiceRegistrar, srv SystemServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&System_ServiceDesc, srv)
+}
+
+func _System_ListFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListFilesTasksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).ListFiles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_ListFiles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).ListFiles(ctx, req.(*ListFilesTasksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_CreateFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).CreateFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_CreateFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).CreateFile(ctx, req.(*CreateFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_AuthorizeFileUpload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FileTaskIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).AuthorizeFileUpload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_AuthorizeFileUpload_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).AuthorizeFileUpload(ctx, req.(*FileTaskIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_CompleteFileUpload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FileTaskIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).CompleteFileUpload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_CompleteFileUpload_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).CompleteFileUpload(ctx, req.(*FileTaskIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_DownloadFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FileTaskIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).DownloadFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_DownloadFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).DownloadFile(ctx, req.(*FileTaskIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_DeleteFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FileTaskIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).DeleteFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_DeleteFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).DeleteFile(ctx, req.(*FileTaskIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_ListTasks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListFilesTasksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).ListTasks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_ListTasks_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).ListTasks(ctx, req.(*ListFilesTasksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_ExportDictionaries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExportDictionariesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).ExportDictionaries(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_ExportDictionaries_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).ExportDictionaries(ctx, req.(*ExportDictionariesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_RetryTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FileTaskIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).RetryTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_RetryTask_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).RetryTask(ctx, req.(*FileTaskIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _System_GetDictionary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1033,6 +1339,42 @@ var System_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "goseed.system.v1.System",
 	HandlerType: (*SystemServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListFiles",
+			Handler:    _System_ListFiles_Handler,
+		},
+		{
+			MethodName: "CreateFile",
+			Handler:    _System_CreateFile_Handler,
+		},
+		{
+			MethodName: "AuthorizeFileUpload",
+			Handler:    _System_AuthorizeFileUpload_Handler,
+		},
+		{
+			MethodName: "CompleteFileUpload",
+			Handler:    _System_CompleteFileUpload_Handler,
+		},
+		{
+			MethodName: "DownloadFile",
+			Handler:    _System_DownloadFile_Handler,
+		},
+		{
+			MethodName: "DeleteFile",
+			Handler:    _System_DeleteFile_Handler,
+		},
+		{
+			MethodName: "ListTasks",
+			Handler:    _System_ListTasks_Handler,
+		},
+		{
+			MethodName: "ExportDictionaries",
+			Handler:    _System_ExportDictionaries_Handler,
+		},
+		{
+			MethodName: "RetryTask",
+			Handler:    _System_RetryTask_Handler,
+		},
 		{
 			MethodName: "GetDictionary",
 			Handler:    _System_GetDictionary_Handler,

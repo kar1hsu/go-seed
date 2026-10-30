@@ -25,3 +25,16 @@ Tokens:
   AccessTTL: 15m
 RefreshTTL: 168h
 AdminAPISecret: "${ADMIN_RPC_SECRET}"
+
+Storage:
+  Driver: ${STORAGE_DRIVER}
+  Root: ${STORAGE_ROOT}
+  Endpoint: "${S3_ENDPOINT}"
+  Bucket: "${S3_BUCKET}"
+  AccessKey: "${S3_ACCESS_KEY}"
+  SecretKey: "${S3_SECRET_KEY}"
+  Secure: ${S3_SECURE}
+  Region: "${S3_REGION}"
+MethodTimeouts:
+  - FullMethod: /goseed.system.v1.System/CompleteFileUpload
+    Timeout: 30s

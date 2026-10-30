@@ -51,6 +51,24 @@ func (a *Authorizer) Current(ctx context.Context, tx *repository.RBAC, raw strin
 	if err != nil {
 		return nil, err
 	}
+	return a.access(ctx, tx, admin)
+}
+
+// Deferred rechecks current account status and policy without storing or extending a login token.
+func (a *Authorizer) Deferred(ctx context.Context, tx *repository.RBAC, id uint64) (*Access, error) {
+	admin, err := tx.Admin(ctx, id)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, xerr.New(codes.PermissionDenied)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if !admin.Enabled {
+		return nil, xerr.New(codes.PermissionDenied)
+	}
+	return a.access(ctx, tx, admin)
+}
+func (a *Authorizer) access(ctx context.Context, tx *repository.RBAC, admin *model.Administrator) (*Access, error) {
 	version, err := tx.Version(ctx)
 	if err != nil {
 		return nil, err
@@ -63,7 +81,7 @@ func (a *Authorizer) Current(ctx context.Context, tx *repository.RBAC, raw strin
 		}
 	}
 	access := &Access{Admin: admin, Permissions: []string{}, Roles: []string{}, Policy: policy}
-	for _, role := range policy.RolesFor(id) {
+	for _, role := range policy.RolesFor(admin.ID) {
 		if role.Enabled {
 			access.Roles = append(access.Roles, role.Code)
 			access.SuperAdmin = access.SuperAdmin || role.BuiltIn && role.Code == resources.SuperRole
@@ -73,7 +91,7 @@ func (a *Authorizer) Current(ctx context.Context, tx *repository.RBAC, raw strin
 		if !permission.Active {
 			continue
 		}
-		ok, err := policy.enforcer.Enforce(userKey(id), permission.Code)
+		ok, err := policy.enforcer.Enforce(userKey(admin.ID), permission.Code)
 		if err != nil {
 			return nil, err
 		}

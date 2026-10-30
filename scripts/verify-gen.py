@@ -24,7 +24,7 @@ env.pop('APP', None)
 env.pop('DOMAIN', None)
 with tempfile.TemporaryDirectory(prefix='goseed-gen-') as temporary:
     target = Path(temporary)/'repo'
-    shutil.copytree(root, target, ignore=shutil.ignore_patterns('.git','.ai-context','.agents','.tools','.tmp','node_modules','dist','bin','.env','__pycache__'))
+    shutil.copytree(root, target, ignore=shutil.ignore_patterns('.git','.ai-context','.agents','.tools','.tmp','node_modules','dist','bin','.env','.data','__pycache__'))
     (target/'web/admin/node_modules').symlink_to(root/'web/admin/node_modules', target_is_directory=True)
     before = snapshot(target)
     run(['bash','scripts/gen.sh','all'], target)
