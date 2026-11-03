@@ -29,6 +29,7 @@ type (
 		TraceId string   `json:"traceId"`
 	}
 	CurrentData {
+		Navigation MenuTree `json:"navigation"`
 		Admin         AdminProfile `json:"admin"`
 		Permissions   []string     `json:"permissions"`
 		Roles         []string     `json:"roles"`

@@ -25,9 +25,9 @@ func NewAdminCurrentLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Admi
 }
 
 func (l *AdminCurrentLogic) AdminCurrent(in *pb.AdminCurrentRequest) (*pb.AdminCurrentResponse, error) {
-	a, err := l.svcCtx.Management.Current(l.ctx, identity.RawToken(l.ctx))
+	a, layout, err := l.svcCtx.Management.CurrentNavigation(l.ctx, identity.RawToken(l.ctx))
 	if err != nil {
 		return nil, err
 	}
-	return &pb.AdminCurrentResponse{Admin: adminProfile(a.Admin), Permissions: a.Permissions, Roles: a.Roles, PolicyVersion: strconv.FormatUint(a.Policy.Snapshot.Version, 10), SuperAdmin: a.SuperAdmin}, nil
+	return &pb.AdminCurrentResponse{Navigation: menuTree(layout), Admin: adminProfile(a.Admin), Permissions: a.Permissions, Roles: a.Roles, PolicyVersion: strconv.FormatUint(a.Policy.Snapshot.Version, 10), SuperAdmin: a.SuperAdmin}, nil
 }

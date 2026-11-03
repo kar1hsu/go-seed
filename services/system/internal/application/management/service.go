@@ -35,6 +35,7 @@ type Service struct {
 	objects    storage.Store
 	store      *repository.RBAC
 	authorizer *authorization.Authorizer
+	menus      menuCatalog
 	catalog    []resources.Permission
 }
 type Query struct {
@@ -61,7 +62,11 @@ func New(store *repository.RBAC, authorizer *authorization.Authorizer, objects s
 	if err != nil {
 		return nil, err
 	}
-	return &Service{store: store, authorizer: authorizer, catalog: catalog, objects: objects, location: location}, nil
+	routes, err := resources.MenuRoutes()
+	if err != nil {
+		return nil, err
+	}
+	return &Service{menus: newMenuCatalog(routes), store: store, authorizer: authorizer, catalog: catalog, objects: objects, location: location}, nil
 }
 func publicError(ctx context.Context, err error) error {
 	if err == nil {

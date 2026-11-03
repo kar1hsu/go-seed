@@ -9,34 +9,34 @@ import {
   ElScrollbar,
   type MenuInstance,
 } from 'element-plus'
-import { useAuthStore } from '../features/auth/store'
-import { navigation } from '../router/navigation'
+import type { PresentationGroup } from '../router/menu-layout'
 
-const props = defineProps<{ collapsed: boolean }>()
-const auth = useAuthStore()
+const props = defineProps<{ collapsed: boolean; groups: PresentationGroup[] }>()
 const route = useRoute()
 const router = useRouter()
 const menu = ref<MenuInstance>()
-const groups = computed(() => {
-  const visible = navigation.filter(
-    (item) => !item.hidden && auth.has(item.permission),
-  )
-  return [...new Set(visible.map((item) => item.group))].map((name) => ({
-    name,
-    items: visible.filter((item) => item.group === name),
-  }))
-})
+const groups = computed(() =>
+  props.groups
+    .filter((g) => !g.hidden)
+    .map((g) => ({ ...g, items: g.items.filter((p) => !p.hidden) }))
+    .filter((g) => g.items.length),
+)
 function savedGroups(): string[] {
   try {
     const value: unknown = JSON.parse(
       localStorage.getItem('goseed.menu.open') || 'null',
     )
     if (Array.isArray(value) && value.every((item) => typeof item === 'string'))
-      return value
+      return value.map(
+        (id) =>
+          groups.value.find(
+            (group) => group.id === id || group.id === 'builtin-' + id,
+          )?.id ?? id,
+      )
   } catch {
     /* Storage can be unavailable in private browsing. */
   }
-  return groups.value.map((group) => group.name)
+  return groups.value.map((group) => group.id)
 }
 const opened = ref(savedGroups())
 function change(group: string, open: boolean) {
@@ -57,12 +57,12 @@ watch(
     const group = groups.value.find((group) =>
       group.items.some((item) => item.path === route.path),
     )
-    if (group) change(group.name, true)
+    if (group) change(group.id, true)
     await nextTick()
     if (props.collapsed) return
     // Preferences may contain groups hidden by this account's current permissions.
     for (const visible of groups.value) {
-      if (opened.value.includes(visible.name)) menu.value?.open(visible.name)
+      if (opened.value.includes(visible.id)) menu.value?.open(visible.id)
     }
   },
   { immediate: true },
@@ -84,14 +84,14 @@ watch(
       >
         <ElSubMenu
           v-for="group in groups"
-          :key="group.name"
-          :index="group.name"
-          :title="collapsed ? group.name : undefined"
+          :key="group.id"
+          :index="group.id"
+          :title="collapsed ? group.title : undefined"
           popper-class="sidebar-submenu"
         >
           <template #title
-            ><ElIcon><component :is="group.items[0]!.icon" /></ElIcon
-            ><span>{{ group.name }}</span></template
+            ><ElIcon><component :is="group.icon" /></ElIcon
+            ><span>{{ group.title }}</span></template
           >
           <ElMenuItem
             v-for="item in group.items"

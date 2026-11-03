@@ -10,6 +10,8 @@ import (
 )
 
 const (
+	MenuRead         = "system.menu.read"
+	MenuUpdate       = "system.menu.update"
 	FileRead         = "system.file.read"
 	FileUpload       = "system.file.upload"
 	FileDelete       = "system.file.delete"

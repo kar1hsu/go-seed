@@ -9,6 +9,7 @@ info (
 
 import "base.api"
 import "system/ping.api"
+import "system/menu.api"
 import "auth/auth.api"
 import "system/management.api"
 import "system/audit.api"

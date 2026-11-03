@@ -23,6 +23,7 @@ bootstrap 不修改已有密码；`policy_states.bootstrapped` 记录首次超�
 | `system.user.create` | 新增管理员 |
 | `system.user.update` | 修改姓名、启用/停用 |
 | `system.user.assign_role` | 分配角色，同时需要 `system.role.read` |
+| `system.menu.read` / `system.menu.update` | 查看菜单树 / 保存菜单布局 |
 | `system.role.read` | 角色菜单、角色列表、权限目录 |
 | `system.role.create` | 新增角色 |
 | `system.role.update` | 修改名称/说明、启用/停用 |
@@ -31,12 +32,21 @@ bootstrap 不修改已有密码；`policy_states.bootstrapped` 记录首次超�
 
 按钮权限依赖对应菜单读取权限，前端自动补齐依赖，服务端拒绝缺失依赖的授权请求。普通管理员不能授予自己没有的权限，也不能操作权限超过自己的角色或账户；禁用角色的潜在权限仍参与范围判断。普通管理员不能修改自己的角色关联。页面中的 `manageable`、`assignable` 只辅助交互，保存时服务端重新检查。
 
-权限目录：[permissions.yaml](../services/system/resources/permissions.yaml)；路由声明：[endpoints.yaml](../apps/admin/api/resources/endpoints.yaml)；菜单声明：[menu.yaml](../web/admin/src/router/menu.yaml)。`make gen-web` 和 `make check` 检查重复项、权限引用、组件白名单和 HTTP 路由覆盖。运行中的同步命令只写权限目录，不写菜单、角色授权或成员关系。菜单编译为 `resources.generated.ts`，浏览器用本地白名单映射页面，不接收动态脚本或组件路径。
+权限目录：[permissions.yaml](../services/system/resources/permissions.yaml)；路由声明：[endpoints.yaml](../apps/admin/api/resources/endpoints.yaml)；菜单声明：[menu.yaml](../web/admin/src/router/menu.yaml)。`make gen-web` 和 `make check` 检查重复项、权限引用、组件白名单和 HTTP 路由覆盖。运行中的同步命令只写权限目录，不写菜单、角色授权或成员关系。`make gen-web` 从同一菜单声明生成前端路由目录和 system 的菜单目录。新增页面随代码发布，已有实例会把新页面补入默认分组。
+
+### 菜单管理
+
+打开「系统管理 → 菜单管理」查看分组与页面。使用上下箭头调整同级顺序，在「编辑」中修改名称、图标、显隐或页面所属分组。移走全部页面后可以移除空分组。「应用到菜单树」只修改当前草稿，点击「保存菜单」后侧栏、面包屑和已打开的页签立即使用新布局。其他标签页收到通知后更新，其他管理员在导航、重新聚焦或下一次会话轮询时更新。
+
+布局保存在 system 数据库。隐藏分组会隐藏整个分组的侧栏入口，拥有权限的管理员仍可通过原地址访问页面。角色的页面与按钮权限仍在「角色管理」配置。只有具有 `system.menu.update` 的管理员可以保存，变更和操作日志在同一事务中写入。多人编辑发生版本冲突时，保留本地草稿，重新加载后可以基于新版本调整。
+
+升级已有环境时，先运行 `make migrate`、`make sync-resources`，再部署新版应用。容器部署用新版镜像执行 `make compose-migrate` 和 `make compose-sync-resources`。
 
 HTTP 前缀 `/admin-api/v1/system`，所有管理接口要求管理员 Bearer token；写操作另要求 `X-GoSeed-CSRF: 1` 和同源策略。
 
 | 方法/路径 | 行为 |
 | --- | --- |
+| GET / PUT `/menus` | 查看 / 原子保存整棵菜单树，数组顺序即展示顺序 |
 | GET / POST `/administrators` | 筛选分页 / 新增，创建成功为 201 |
 | PATCH `/administrators/{id}` | 姓名与状态 |
 | PUT `/administrators/{id}/roles` | 替换关联角色 |
@@ -58,7 +68,7 @@ ID 为十进制字符串；列表默认 `page=1&pageSize=20&enabled=all`，每�
 
 `GET /auth/me` 返回 permissions、roles、policyVersion、superAdmin。前端在导航、窗口重新激活、可见页面每 30 秒，以及本浏览器授权保存通知后更新菜单和按钮；403 后刷新权限。UI 更新间隔不影响后端即时拒绝请求。写操作失败后不自动重放。
 
-当前已接入[事务审计与操作日志](operation-audit.md)。尚未接入 Redis watcher、远程跨领域 `CheckAccess`、可视化菜单编辑。watcher 可作为提前刷新优化，不能替代权威版本确认。字典和配置按实施路线继续接入。
+当前已接入[事务审计与操作日志](operation-audit.md)。菜单布局的修订号独立于授权策略版本，调整导航不触发角色授权变更。
 
 ## 验证
 

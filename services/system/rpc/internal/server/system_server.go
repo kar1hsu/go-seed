@@ -23,6 +23,16 @@ func NewSystemServer(svcCtx *svc.ServiceContext) *SystemServer {
 	}
 }
 
+func (s *SystemServer) GetMenuTree(ctx context.Context, in *pb.GetMenuTreeRequest) (*pb.MenuTree, error) {
+	l := logic.NewGetMenuTreeLogic(ctx, s.svcCtx)
+	return l.GetMenuTree(in)
+}
+
+func (s *SystemServer) SaveMenuTree(ctx context.Context, in *pb.MenuTree) (*pb.MenuTree, error) {
+	l := logic.NewSaveMenuTreeLogic(ctx, s.svcCtx)
+	return l.SaveMenuTree(in)
+}
+
 func (s *SystemServer) CheckAccess(ctx context.Context, in *pb.CheckAccessRequest) (*pb.CheckAccessResponse, error) {
 	l := logic.NewCheckAccessLogic(ctx, s.svcCtx)
 	return l.CheckAccess(in)

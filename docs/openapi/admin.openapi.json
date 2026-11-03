@@ -3707,6 +3707,282 @@
         }
       }
     },
+    "/admin-api/v1/system/menus": {
+      "get": {
+        "tags": [
+          "Navigation menus"
+        ],
+        "summary": "Read the editable navigation tree",
+        "operationId": "menusGetMenuTree",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuTreeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "x-permission": "system.menu.read"
+      },
+      "put": {
+        "tags": [
+          "Navigation menus"
+        ],
+        "summary": "Save the ordered navigation tree with revision checking",
+        "operationId": "menusSaveMenuTree",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MenuTree"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuTreeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "GoSeed error envelope; code is stable, message is safe for clients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminBearer": []
+          }
+        ],
+        "x-permission": "system.menu.update",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-GoSeed-CSRF",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            },
+            "description": "Required for same-origin write requests, including CLI clients."
+          }
+        ]
+      }
+    },
     "/admin-api/v1/system/permissions": {
       "get": {
         "tags": [
@@ -6434,6 +6710,7 @@
       "CurrentData": {
         "type": "object",
         "required": [
+          "navigation",
           "admin",
           "permissions",
           "roles",
@@ -6443,6 +6720,9 @@
         "properties": {
           "admin": {
             "$ref": "#/components/schemas/AdminProfile"
+          },
+          "navigation": {
+            "$ref": "#/components/schemas/MenuTree"
           },
           "permissions": {
             "type": "array",
@@ -6983,6 +7263,100 @@
           },
           "data": {
             "$ref": "#/components/schemas/MemberUserDetail"
+          },
+          "message": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "MenuGroup": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "icon",
+          "hidden",
+          "pages"
+        ],
+        "properties": {
+          "hidden": {
+            "type": "boolean"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuPage"
+            }
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "MenuPage": {
+        "type": "object",
+        "required": [
+          "path",
+          "title",
+          "icon",
+          "hidden"
+        ],
+        "properties": {
+          "hidden": {
+            "type": "boolean"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "MenuTree": {
+        "type": "object",
+        "required": [
+          "revision",
+          "groups"
+        ],
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuGroup"
+            }
+          },
+          "revision": {
+            "type": "string"
+          }
+        }
+      },
+      "MenuTreeResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MenuTree"
           },
           "message": {
             "type": "string"

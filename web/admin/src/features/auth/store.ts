@@ -38,6 +38,7 @@ export const useAuthStore = defineStore('auth', () => {
   const permissions = ref<string[]>([])
   const roles = ref<string[]>([])
   const policyVersion = ref('')
+  const navigation = ref<components['schemas']['MenuTree'] | null>(null)
   const superAdmin = ref(false)
   const has = (permission?: string) =>
     !permission || permissions.value.includes(permission)
@@ -67,6 +68,7 @@ export const useAuthStore = defineStore('auth', () => {
     permissions.value = []
     roles.value = []
     policyVersion.value = ''
+    navigation.value = null
     superAdmin.value = false
     accessToken.value = ''
     expiresAt.value = 0
@@ -91,7 +93,8 @@ export const useAuthStore = defineStore('auth', () => {
       channel = new BroadcastChannel('goseed-admin-session')
     if (channel)
       channel.onmessage = (event) => {
-        if (event.data === 'permissions') void reconcile()
+        if (event.data === 'permissions' || event.data === 'menus')
+          void reconcile()
         if (event.data === 'logout') {
           clear()
           initialized.value = true
@@ -193,6 +196,8 @@ export const useAuthStore = defineStore('auth', () => {
           error?.traceId,
         )
       sessionEpoch++
+      navigation.value = null
+      policyVersion.value = ''
       rememberRetry('')
       setSession(data.data, response, started)
     })
@@ -218,11 +223,29 @@ export const useAuthStore = defineStore('auth', () => {
       return
     admin.value = data.data.admin
     // Keep identity stable on unchanged polls so open forms are not discarded.
-    if (permissions.value.join('\n') !== data.data.permissions.join('\n'))
-      permissions.value = data.data.permissions
+    const permissionsChanged =
+      permissions.value.join('\n') !== data.data.permissions.join('\n')
+    if (permissionsChanged) permissions.value = data.data.permissions
+    const tree = data.data.navigation
+    if (
+      tree?.revision &&
+      (!navigation.value ||
+        BigInt(tree.revision) > BigInt(navigation.value.revision) ||
+        (permissionsChanged && tree.revision === navigation.value.revision))
+    ) {
+      navigation.value = tree
+    }
     roles.value = data.data.roles
     policyVersion.value = data.data.policyVersion
     superAdmin.value = data.data.superAdmin
+  }
+  function menuSaved(tree: components['schemas']['MenuTree']) {
+    if (
+      !navigation.value ||
+      BigInt(tree.revision) >= BigInt(navigation.value.revision)
+    )
+      navigation.value = tree
+    channel?.postMessage('menus')
   }
   async function permissionsChanged() {
     channel?.postMessage('permissions')
@@ -272,6 +295,8 @@ export const useAuthStore = defineStore('auth', () => {
     superAdmin,
     has,
     permissionsChanged,
+    navigation,
+    menuSaved,
     initialized,
     connectionError,
     clear,

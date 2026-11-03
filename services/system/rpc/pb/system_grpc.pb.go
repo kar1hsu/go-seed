@@ -19,6 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	System_GetMenuTree_FullMethodName              = "/goseed.system.v1.System/GetMenuTree"
+	System_SaveMenuTree_FullMethodName             = "/goseed.system.v1.System/SaveMenuTree"
 	System_CheckAccess_FullMethodName              = "/goseed.system.v1.System/CheckAccess"
 	System_ListFiles_FullMethodName                = "/goseed.system.v1.System/ListFiles"
 	System_CreateFile_FullMethodName               = "/goseed.system.v1.System/CreateFile"
@@ -63,6 +65,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SystemClient interface {
+	GetMenuTree(ctx context.Context, in *GetMenuTreeRequest, opts ...grpc.CallOption) (*MenuTree, error)
+	SaveMenuTree(ctx context.Context, in *MenuTree, opts ...grpc.CallOption) (*MenuTree, error)
 	CheckAccess(ctx context.Context, in *CheckAccessRequest, opts ...grpc.CallOption) (*CheckAccessResponse, error)
 	ListFiles(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*FilesResponse, error)
 	CreateFile(ctx context.Context, in *CreateFileRequest, opts ...grpc.CallOption) (*FileResponse, error)
@@ -111,6 +115,26 @@ type systemClient struct {
 
 func NewSystemClient(cc grpc.ClientConnInterface) SystemClient {
 	return &systemClient{cc}
+}
+
+func (c *systemClient) GetMenuTree(ctx context.Context, in *GetMenuTreeRequest, opts ...grpc.CallOption) (*MenuTree, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MenuTree)
+	err := c.cc.Invoke(ctx, System_GetMenuTree_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) SaveMenuTree(ctx context.Context, in *MenuTree, opts ...grpc.CallOption) (*MenuTree, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MenuTree)
+	err := c.cc.Invoke(ctx, System_SaveMenuTree_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *systemClient) CheckAccess(ctx context.Context, in *CheckAccessRequest, opts ...grpc.CallOption) (*CheckAccessResponse, error) {
@@ -497,6 +521,8 @@ func (c *systemClient) CheckReady(ctx context.Context, in *CheckReadyRequest, op
 // All implementations must embed UnimplementedSystemServer
 // for forward compatibility.
 type SystemServer interface {
+	GetMenuTree(context.Context, *GetMenuTreeRequest) (*MenuTree, error)
+	SaveMenuTree(context.Context, *MenuTree) (*MenuTree, error)
 	CheckAccess(context.Context, *CheckAccessRequest) (*CheckAccessResponse, error)
 	ListFiles(context.Context, *ListFilesTasksRequest) (*FilesResponse, error)
 	CreateFile(context.Context, *CreateFileRequest) (*FileResponse, error)
@@ -547,6 +573,12 @@ type SystemServer interface {
 // pointer dereference when methods are called.
 type UnimplementedSystemServer struct{}
 
+func (UnimplementedSystemServer) GetMenuTree(context.Context, *GetMenuTreeRequest) (*MenuTree, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMenuTree not implemented")
+}
+func (UnimplementedSystemServer) SaveMenuTree(context.Context, *MenuTree) (*MenuTree, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SaveMenuTree not implemented")
+}
 func (UnimplementedSystemServer) CheckAccess(context.Context, *CheckAccessRequest) (*CheckAccessResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckAccess not implemented")
 }
@@ -680,6 +712,42 @@ func RegisterSystemServer(s grpc.ServiceRegistrar, srv SystemServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&System_ServiceDesc, srv)
+}
+
+func _System_GetMenuTree_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMenuTreeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).GetMenuTree(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_GetMenuTree_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).GetMenuTree(ctx, req.(*GetMenuTreeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_SaveMenuTree_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MenuTree)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).SaveMenuTree(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_SaveMenuTree_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).SaveMenuTree(ctx, req.(*MenuTree))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _System_CheckAccess_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1373,6 +1441,14 @@ var System_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "goseed.system.v1.System",
 	HandlerType: (*SystemServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetMenuTree",
+			Handler:    _System_GetMenuTree_Handler,
+		},
+		{
+			MethodName: "SaveMenuTree",
+			Handler:    _System_SaveMenuTree_Handler,
+		},
 		{
 			MethodName: "CheckAccess",
 			Handler:    _System_CheckAccess_Handler,

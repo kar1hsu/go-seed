@@ -21,6 +21,7 @@ type Action struct{ Code, Name string }
 
 func Actions() []Action {
 	return []Action{
+		{resources.MenuUpdate, "调整菜单布局"},
 		{resources.FileUpload, "上传文件"}, {resources.FileDelete, "删除文件"}, {resources.TaskExport, "提交字典导出"}, {resources.TaskRetry, "重试任务"},
 		{resources.DictionaryCreate, "新增字典"}, {resources.DictionaryUpdate, "编辑与启停字典"}, {resources.DictionaryDelete, "删除字典"},
 		{resources.SettingCreate, "新增系统配置"}, {resources.SettingUpdate, "编辑与启停系统配置"}, {resources.SettingDelete, "删除系统配置"},
@@ -138,4 +139,17 @@ func File(f model.File) Snapshot {
 }
 func Task(t model.Task) Snapshot {
 	return Snapshot{{"kind", "任务类型", []string{t.Kind}}, {"status", "状态", []string{t.Status}}, {"generation", "执行批次", []string{strconv.FormatInt(t.Generation, 10)}}}
+}
+
+func Menu(groups []model.MenuGroup) Snapshot {
+	var fields Snapshot
+	for i, g := range groups {
+		name := strconv.Itoa(i+1) + ". " + g.Title
+		values := []string{name + " · " + g.Icon + " · 显示=" + strconv.FormatBool(!g.Hidden)}
+		for _, p := range g.Pages {
+			values = append(values, p.Title+" ("+p.Path+") · "+p.Icon+" · 显示="+strconv.FormatBool(!p.Hidden))
+		}
+		fields = append(fields, Field{g.ID, g.Title, values})
+	}
+	return fields
 }

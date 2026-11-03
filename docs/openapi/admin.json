@@ -970,6 +970,63 @@
         }
       }
     },
+    "/admin-api/v1/system/menus": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Navigation menus"
+        ],
+        "summary": "Read the editable navigation tree",
+        "operationId": "menusGetMenuTree",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/MenuTreeResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "tags": [
+          "Navigation menus"
+        ],
+        "summary": "Save the ordered navigation tree with revision checking",
+        "operationId": "menusSaveMenuTree",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MenuTree"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/MenuTreeResponse"
+            }
+          }
+        }
+      }
+    },
     "/admin-api/v1/system/permissions": {
       "get": {
         "produces": [
@@ -2390,6 +2447,7 @@
     "CurrentData": {
       "type": "object",
       "required": [
+        "navigation",
         "admin",
         "permissions",
         "roles",
@@ -2416,6 +2474,25 @@
             }
           },
           "$ref": "#/definitions/AdminProfile"
+        },
+        "navigation": {
+          "type": "object",
+          "required": [
+            "revision",
+            "groups"
+          ],
+          "properties": {
+            "groups": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MenuGroup"
+              }
+            },
+            "revision": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/MenuTree"
         },
         "permissions": {
           "type": "array",
@@ -2452,6 +2529,7 @@
         "data": {
           "type": "object",
           "required": [
+            "navigation",
             "admin",
             "permissions",
             "roles",
@@ -2478,6 +2556,25 @@
                 }
               },
               "$ref": "#/definitions/AdminProfile"
+            },
+            "navigation": {
+              "type": "object",
+              "required": [
+                "revision",
+                "groups"
+              ],
+              "properties": {
+                "groups": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/MenuGroup"
+                  }
+                },
+                "revision": {
+                  "type": "string"
+                }
+              },
+              "$ref": "#/definitions/MenuTree"
             },
             "permissions": {
               "type": "array",
@@ -3339,6 +3436,116 @@
             }
           },
           "$ref": "#/definitions/MemberUserDetail"
+        },
+        "message": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      }
+    },
+    "MenuGroup": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "icon",
+        "hidden",
+        "pages"
+      ],
+      "properties": {
+        "hidden": {
+          "type": "boolean"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MenuPage"
+          }
+        },
+        "title": {
+          "type": "string"
+        }
+      }
+    },
+    "MenuPage": {
+      "type": "object",
+      "required": [
+        "path",
+        "title",
+        "icon",
+        "hidden"
+      ],
+      "properties": {
+        "hidden": {
+          "type": "boolean"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      }
+    },
+    "MenuTree": {
+      "type": "object",
+      "required": [
+        "revision",
+        "groups"
+      ],
+      "properties": {
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MenuGroup"
+          }
+        },
+        "revision": {
+          "type": "string"
+        }
+      }
+    },
+    "MenuTreeResponse": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "data",
+        "traceId"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "revision",
+            "groups"
+          ],
+          "properties": {
+            "groups": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MenuGroup"
+              }
+            },
+            "revision": {
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/MenuTree"
         },
         "message": {
           "type": "string"

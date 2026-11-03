@@ -49,6 +49,8 @@ func main() {
 		pb.System_ExportDictionaries_FullMethodName,
 		pb.System_RetryTask_FullMethodName,
 
+		pb.System_GetMenuTree_FullMethodName,
+		pb.System_SaveMenuTree_FullMethodName,
 		pb.System_GetDictionary_FullMethodName,
 		pb.System_ListDictionaries_FullMethodName,
 		pb.System_CreateDictionary_FullMethodName,

@@ -52,6 +52,7 @@ type (
 	GetAuditLogRequest              = pb.GetAuditLogRequest
 	GetAuditLogResponse             = pb.GetAuditLogResponse
 	GetDictionaryRequest            = pb.GetDictionaryRequest
+	GetMenuTreeRequest              = pb.GetMenuTreeRequest
 	GrantRoleRequest                = pb.GrantRoleRequest
 	ListAdministratorsResponse      = pb.ListAdministratorsResponse
 	ListAuditLogsRequest            = pb.ListAuditLogsRequest
@@ -63,6 +64,9 @@ type (
 	ListPermissionsResponse         = pb.ListPermissionsResponse
 	ListRolesResponse               = pb.ListRolesResponse
 	ListSettingsResponse            = pb.ListSettingsResponse
+	MenuGroup                       = pb.MenuGroup
+	MenuPage                        = pb.MenuPage
+	MenuTree                        = pb.MenuTree
 	PermissionRecord                = pb.PermissionRecord
 	PingRequest                     = pb.PingRequest
 	PingResponse                    = pb.PingResponse
@@ -79,6 +83,8 @@ type (
 	UpdateSettingRequest            = pb.UpdateSettingRequest
 
 	System interface {
+		GetMenuTree(ctx context.Context, in *GetMenuTreeRequest, opts ...grpc.CallOption) (*MenuTree, error)
+		SaveMenuTree(ctx context.Context, in *MenuTree, opts ...grpc.CallOption) (*MenuTree, error)
 		CheckAccess(ctx context.Context, in *CheckAccessRequest, opts ...grpc.CallOption) (*CheckAccessResponse, error)
 		ListFiles(ctx context.Context, in *ListFilesTasksRequest, opts ...grpc.CallOption) (*FilesResponse, error)
 		CreateFile(ctx context.Context, in *CreateFileRequest, opts ...grpc.CallOption) (*FileResponse, error)
@@ -130,6 +136,16 @@ func NewSystem(cli zrpc.Client) System {
 	return &defaultSystem{
 		cli: cli,
 	}
+}
+
+func (m *defaultSystem) GetMenuTree(ctx context.Context, in *GetMenuTreeRequest, opts ...grpc.CallOption) (*MenuTree, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.GetMenuTree(ctx, in, opts...)
+}
+
+func (m *defaultSystem) SaveMenuTree(ctx context.Context, in *MenuTree, opts ...grpc.CallOption) (*MenuTree, error) {
+	client := pb.NewSystemClient(m.cli.Conn())
+	return client.SaveMenuTree(ctx, in, opts...)
 }
 
 func (m *defaultSystem) CheckAccess(ctx context.Context, in *CheckAccessRequest, opts ...grpc.CallOption) (*CheckAccessResponse, error) {

@@ -34,6 +34,7 @@ export async function loadResources(root) {
     'monitor',
     'administrators',
     'roles',
+    'menus',
     'auditLogs',
     'dictionaries',
     'settings',
@@ -95,6 +96,15 @@ export async function loadResources(root) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = fileURLToPath(new URL('../../../', import.meta.url))
   const { menus, permissions } = await loadResources(root)
+  const menuCatalog = path.join(
+    root,
+    'services/system/resources/menus.generated.json',
+  )
+  const menuSource = JSON.stringify(menus, null, 2) + '\n'
+  if (process.argv.includes('--write'))
+    await fs.writeFile(menuCatalog, menuSource)
+  else if ((await fs.readFile(menuCatalog, 'utf8')) !== menuSource)
+    throw Error('System menu catalog is stale; run make gen-web')
   const catalogTarget = path.join(
     root,
     'services/system/resources/permissions.generated.yaml',

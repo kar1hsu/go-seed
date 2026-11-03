@@ -168,6 +168,7 @@ type CreateSettingRequest struct {
 }
 
 type CurrentData struct {
+	Navigation    MenuTree     `json:"navigation"`
 	Admin         AdminProfile `json:"admin"`
 	Permissions   []string     `json:"permissions"`
 	Roles         []string     `json:"roles"`
@@ -372,6 +373,33 @@ type MemberUserResponse struct {
 	Message string           `json:"message"`
 	Data    MemberUserDetail `json:"data"`
 	TraceId string           `json:"traceId"`
+}
+
+type MenuGroup struct {
+	Id     string     `json:"id"`
+	Title  string     `json:"title"`
+	Icon   string     `json:"icon"`
+	Hidden bool       `json:"hidden"`
+	Pages  []MenuPage `json:"pages"`
+}
+
+type MenuPage struct {
+	Path   string `json:"path"`
+	Title  string `json:"title"`
+	Icon   string `json:"icon"`
+	Hidden bool   `json:"hidden"`
+}
+
+type MenuTree struct {
+	Revision string      `json:"revision"`
+	Groups   []MenuGroup `json:"groups"`
+}
+
+type MenuTreeResponse struct {
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    MenuTree `json:"data"`
+	TraceId string   `json:"traceId"`
 }
 
 type PermissionListData struct {

@@ -1,0 +1,51 @@
+syntax = "v1"
+
+type (
+    MenuPage {
+        Path string `json:"path"`
+        Title string `json:"title"`
+        Icon string `json:"icon"`
+        Hidden bool `json:"hidden"`
+    }
+    MenuGroup {
+        Id string `json:"id"`
+        Title string `json:"title"`
+        Icon string `json:"icon"`
+        Hidden bool `json:"hidden"`
+        Pages []MenuPage `json:"pages"`
+    }
+    MenuTree {
+        Revision string `json:"revision"`
+        Groups []MenuGroup `json:"groups"`
+    }
+    MenuTreeResponse {
+        Code int `json:"code"`
+        Message string `json:"message"`
+        Data MenuTree `json:"data"`
+        TraceId string `json:"traceId"`
+    }
+)
+
+@server (
+    prefix: /admin-api/v1/system
+    group: menus
+    middleware: AdminAccess
+    tags: "Navigation menus"
+)
+service admin-api {
+    @doc "Read the editable navigation tree"
+    @handler GetMenuTree
+    get /menus returns (MenuTreeResponse)
+}
+
+@server (
+    prefix: /admin-api/v1/system
+    group: menus
+    middleware: BrowserOrigin,AdminAccess
+    tags: "Navigation menus"
+)
+service admin-api {
+    @doc "Save the ordered navigation tree with revision checking"
+    @handler SaveMenuTree
+    put /menus (MenuTree) returns (MenuTreeResponse)
+}

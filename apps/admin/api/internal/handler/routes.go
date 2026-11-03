@@ -12,6 +12,7 @@ import (
 	files "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/files"
 	management "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/management"
 	member "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/member"
+	menus "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/menus"
 	settings "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/settings"
 	system "github.com/kar1hsu/go-seed/apps/admin/api/internal/handler/system"
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/svc"
@@ -278,6 +279,36 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/admin-api/v1/member"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					// Read the editable navigation tree
+					Method:  http.MethodGet,
+					Path:    "/menus",
+					Handler: menus.GetMenuTreeHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/system"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.BrowserOrigin, serverCtx.AdminAccess},
+			[]rest.Route{
+				{
+					// Save the ordered navigation tree with revision checking
+					Method:  http.MethodPut,
+					Path:    "/menus",
+					Handler: menus.SaveMenuTreeHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/admin-api/v1/system"),
 	)
 
 	server.AddRoutes(

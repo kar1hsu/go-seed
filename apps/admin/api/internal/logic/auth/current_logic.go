@@ -5,6 +5,7 @@ package auth
 
 import (
 	"context"
+	"github.com/kar1hsu/go-seed/apps/admin/api/internal/menuhttp"
 
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/authhttp"
 	"github.com/kar1hsu/go-seed/apps/admin/api/internal/svc"
@@ -34,5 +35,5 @@ func (l *CurrentLogic) Current() (*types.CurrentResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &types.CurrentResponse{Code: 0, Message: "ok", Data: types.CurrentData{Admin: authhttp.Profile(reply.Admin), Permissions: append([]string{}, reply.Permissions...), Roles: append([]string{}, reply.Roles...), PolicyVersion: reply.PolicyVersion, SuperAdmin: reply.SuperAdmin}, TraceId: trace.TraceIDFromContext(l.ctx)}, nil
+	return &types.CurrentResponse{Code: 0, Message: "ok", Data: types.CurrentData{Navigation: menuhttp.Tree(reply.Navigation), Admin: authhttp.Profile(reply.Admin), Permissions: append([]string{}, reply.Permissions...), Roles: append([]string{}, reply.Roles...), PolicyVersion: reply.PolicyVersion, SuperAdmin: reply.SuperAdmin}, TraceId: trace.TraceIDFromContext(l.ctx)}, nil
 }

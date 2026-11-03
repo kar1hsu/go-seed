@@ -118,3 +118,13 @@
   group: 任务中心
   kind: button
   requires: [system.task.read]
+- code: system.menu.read
+  name: 查看菜单树
+  group: 菜单管理
+  kind: menu
+  requires: []
+- code: system.menu.update
+  name: 调整菜单布局
+  group: 菜单管理
+  kind: button
+  requires: [system.menu.read]

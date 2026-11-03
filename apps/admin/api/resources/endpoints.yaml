@@ -37,3 +37,5 @@
 - {method: get, path: /admin-api/v1/member/users, permission: member.user.read}
 - {method: get, path: '/admin-api/v1/member/users/{id}', permission: member.user.read}
 - {method: put, path: '/admin-api/v1/member/users/{id}/status', permission: member.user.update_status}
+- {method: get, path: /admin-api/v1/system/menus, permission: system.menu.read}
+- {method: put, path: /admin-api/v1/system/menus, permission: system.menu.update}

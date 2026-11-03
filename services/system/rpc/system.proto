@@ -44,6 +44,7 @@ message AdminCurrentResponse {
   repeated string roles = 3;
   string policy_version = 4;
   bool super_admin = 5;
+  MenuTree navigation = 6;
 }
 message AdminActionResponse {}
 
@@ -312,7 +313,28 @@ message FileTransferResponse { string key = 1; FileRecord record = 2; }
 message CheckAccessRequest { string permission = 1; }
 message CheckAccessResponse { string admin_id = 1; }
 
+message MenuPage {
+  string path = 1;
+  string title = 2;
+  string icon = 3;
+  bool hidden = 4;
+}
+message MenuGroup {
+  string id = 1;
+  string title = 2;
+  string icon = 3;
+  bool hidden = 4;
+  repeated MenuPage pages = 5;
+}
+message MenuTree {
+  string revision = 1;
+  repeated MenuGroup groups = 2;
+}
+message GetMenuTreeRequest {}
+
 service System {
+  rpc GetMenuTree(GetMenuTreeRequest) returns (MenuTree);
+  rpc SaveMenuTree(MenuTree) returns (MenuTree);
  rpc CheckAccess(CheckAccessRequest) returns (CheckAccessResponse);
  rpc ListFiles(ListFilesTasksRequest) returns (FilesResponse);
  rpc CreateFile(CreateFileRequest) returns (FileResponse);

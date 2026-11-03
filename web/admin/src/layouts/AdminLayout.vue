@@ -18,6 +18,7 @@ import {
 } from 'element-plus'
 import { useAuthStore, authMessage } from '../features/auth/store'
 import { navigation } from '../router/navigation'
+import { presentationGroups } from '../router/menu-layout'
 import SidebarNavigation from './SidebarNavigation.vue'
 import PageTab from './PageTab.vue'
 import TabActions from './TabActions.vue'
@@ -65,16 +66,18 @@ async function userAction(command: string) {
     signingOut.value = false
   }
 }
+const groups = computed(() => presentationGroups(auth.navigation, auth.has))
+const pages = computed(() => groups.value.flatMap((group) => group.items))
 const current = computed(
   () =>
-    navigation.find((item) => item.path === route.path) ||
+    pages.value.find((item) => item.path === route.path) ||
     (route.name === 'forbidden'
       ? { ...navigation[0]!, title: '暂无访问权限', group: '账户' }
       : navigation[0]!),
 )
 const tabs = computed(() =>
   visited.value
-    .map((path) => navigation.find((item) => item.path === path)!)
+    .map((path) => pages.value.find((item) => item.path === path)!)
     .filter((item) => item && auth.has(item.permission)),
 )
 const media = window.matchMedia('(max-width: 760px)')
@@ -126,7 +129,6 @@ watch(
     )
       visited.value.push(path)
     mobileOpen.value = false
-    document.title = `${current.value.title} - GoSeed`
   },
   { immediate: true },
 )
@@ -145,6 +147,13 @@ watch(
     )
       void router.replace('/forbidden')
   },
+)
+watch(
+  () => current.value.title,
+  (title) => {
+    document.title = title + ' - GoSeed'
+  },
+  { immediate: true },
 )
 onMounted(() => {
   updateMedia()
@@ -175,7 +184,7 @@ onBeforeUnmount(() => media.removeEventListener('change', updateMedia))
         ><img src="/seed.svg" alt="" /><strong>GoSeed</strong
         ><span>Admin</span></RouterLink
       >
-      <SidebarNavigation :collapsed="collapsed && !mobile" />
+      <SidebarNavigation :groups="groups" :collapsed="collapsed && !mobile" />
       <div class="sidebar-bottom">
         <span>GoSeed v{{ project.version }}</span
         ><button
