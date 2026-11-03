@@ -4,8 +4,8 @@ import os
 import re
 import shlex
 
-def environment():
-    path = Path(__file__).resolve().parents[1] / '.env'
+def environment(root=Path(__file__).resolve().parents[1]):
+    path = root / '.env'
     if not path.is_file():
         raise SystemExit('Missing .env: cp .env.example .env')
     env = os.environ.copy()
@@ -20,8 +20,9 @@ def environment():
         if len(values) > 1:
             raise SystemExit(f'Quote spaces in .env value: {key}')
         env[key] = values[0] if values else ''
-    # Match Compose: an explicitly exported TZ overrides the .env value.
-    env['TZ'] = os.environ.get('TZ', env['TZ'])
+    # Shell overrides for host-side runtime settings; credentials stay scoped.
+    for key in ('TZ', 'OTEL_ENDPOINT'):
+        env[key] = os.environ.get(key, env[key])
     return env
 
 # Keep host execution facilities, not arbitrary application credentials. In

@@ -78,4 +78,4 @@ CA 证书与 tzdata 由 static 镜像提供，`TZ` 及 Go 内嵌时区数据继�
 
 ## 可观测性部署
 
-本地匿名 Grafana、Docker socket 权限、OTLP 传输和尾部采样的部署边界见[可观测性生产配置](observability.md#生产配置)。
+Grafana 查询权限、Docker socket 权限、OTLP 传输和尾部采样的部署边界见[可观测性生产配置](observability.md#生产配置)。

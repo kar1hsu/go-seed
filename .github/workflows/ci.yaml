@@ -5,6 +5,12 @@ on:
 permissions:
   contents: read
 jobs:
+  observability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: make test-observability
   runtime-image:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -57,4 +63,4 @@ jobs:
         run: cat /tmp/goseed-dev.log 2>/dev/null || true
       - name: Stop infrastructure
         if: always()
-        run: docker compose --env-file .env -p goseed -f deploy/compose/compose.yaml down
+        run: make compose-down

@@ -44,13 +44,16 @@ func TestAccessLogWithServerChain(t *testing.T) {
 	c.Telemetry.Batcher = "file"
 	c.Telemetry.Endpoint = filepath.Join(t.TempDir(), "traces.json")
 	c.Telemetry.Sampler = 1
-	server := rest.MustNewServer(c, rest.WithRouter(NewAccessRouter(c.Name)))
+	server := rest.MustNewServer(c, WithAccessLog(c.Name))
 	logs := logtest.NewCollector(t)
 	httpx.SetErrorHandlerCtx(ErrorHandler)
 	t.Cleanup(func() { httpx.SetErrorHandlerCtx(nil) })
 	server.AddRoute(rest.Route{Method: "GET", Path: "/v1/items/:id", Handler: func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("keyword") != "OBS_SEARCH" || r.Header.Get("baggage") != "" || r.Header.Get("tracestate") != "" || r.Header.Get("traceparent") != "" {
 			t.Error("query lost or untrusted trace headers retained")
+		}
+		if r.UserAgent() != "OBS_PRIVATE_UA" || !reflect.DeepEqual(r.Header.Values("X-Forwarded-For"), []string{"203.0.113.77", "192.0.2.24"}) {
+			t.Error("application middleware lost original client headers")
 		}
 		io.WriteString(w, ztrace.TraceIDFromContext(r.Context()))
 	}})
@@ -92,6 +95,9 @@ func TestAccessLogWithServerChain(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			req.Header.Set("User-Agent", "OBS_PRIVATE_UA")
+			req.Header.Add("X-Forwarded-For", "203.0.113.77")
+			req.Header.Add("X-Forwarded-For", "192.0.2.24")
 			req.Header.Set("Authorization", "Bearer OBS_TOKEN")
 			req.Header.Set("Cookie", "test=OBS_COOKIE")
 			req.Header.Set("traceparent", "00-"+forged+"-bbbbbbbbbbbbbbbb-01")
@@ -192,6 +198,9 @@ func TestAccessLogWithServerChain(t *testing.T) {
 			continue
 		}
 		for _, a := range span.Attributes {
+			if a.Key == "http.user_agent" || a.Key == "http.client_ip" {
+				t.Errorf("unexpected private span attribute %s", a.Key)
+			}
 			if a.Key == "http.target" {
 				found = true
 				if a.Value.Value != "/v1/items/7" {
@@ -206,7 +215,7 @@ func TestAccessLogWithServerChain(t *testing.T) {
 }
 func assertNoAccessSecrets(t *testing.T, text string) {
 	t.Helper()
-	for _, marker := range []string{"OBS_SEARCH", "OBS_PATH_SECRET", "OBS_PASSWORD", "OBS_TOKEN", "OBS_COOKIE", "OBS_RESPONSE_SECRET", "OBS_BAGGAGE", "OBS_STATE"} {
+	for _, marker := range []string{"OBS_SEARCH", "OBS_PATH_SECRET", "OBS_PASSWORD", "OBS_TOKEN", "OBS_COOKIE", "OBS_RESPONSE_SECRET", "OBS_BAGGAGE", "OBS_STATE", "OBS_PRIVATE_UA", "203.0.113.77", "192.0.2.24"} {
 		if strings.Contains(text, marker) {
 			t.Errorf("leaked %s", marker)
 		}

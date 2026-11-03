@@ -142,6 +142,8 @@ class Smoke:
         checks = [('loki', '/ready'), ('tempo', '/ready'), ('grafana', '/api/health')]
         wait('Loki, Tempo and Grafana readiness', lambda: all(
             self.fetch(service, path)[0] == 200 for service, path in checks), 120)
+        require(self.fetch('grafana', '/api/datasources/proxy/uid/goseed-loki/loki/api/v1/labels')[0] == 401,
+                'Grafana must require login to query Loki')
         self.wait_for_delivery()
         password = 'OBS_PASSWORD_' + uuid.uuid4().hex
         cookie = 'OBS_COOKIE_' + uuid.uuid4().hex
@@ -156,19 +158,25 @@ class Smoke:
         keyword = 'OBS_QUERY_' + uuid.uuid4().hex
         forged = uuid.uuid4().hex
         baggage = 'OBS_BAGGAGE_' + uuid.uuid4().hex
+        agent = 'OBS_UA_' + uuid.uuid4().hex
+        forwarded_ip = '203.0.113.77'
         path = '/admin-api/v1/system/settings'
         actual = self.call(path, {401}, query={'keyword': keyword, 'page': 1}, headers={
-            'traceparent': f'00-{forged}-bbbbbbbbbbbbbbbb-01', 'baggage': 'tenant=' + baggage})
+            'traceparent': f'00-{forged}-bbbbbbbbbbbbbbbb-01', 'baggage': 'tenant=' + baggage,
+            'User-Agent': agent, 'X-Forwarded-For': forwarded_ip})
         require(actual != forged, 'external trace ID accepted')
         query_trace = self.trace(actual, lambda rows: any(svc == 'admin-api' for svc, _ in rows))
         self.access(actual, path, 401)
         targets = [entries(s.get('attributes', []), 'http.target') for _, s in spans(query_trace)]
         require(path in targets and not any('?' in target for target in targets if target), 'unexpected http.target')
-        for marker in [password, cookie, token, keyword, baggage]:
+        for marker in [password, cookie, token, keyword, baggage, agent, forwarded_ip]:
             require(marker not in json.dumps([data, query_trace]) and not self.logs(marker),
                     'sensitive test marker found in Tempo or Loki')
+        require(not any(a['key'] in {'http.client_ip', 'http.user_agent', 'user_agent.original', 'client.address'}
+                        for trace in (data, query_trace) for _, span in spans(trace)
+                        for a in span.get('attributes', [])), 'private client attribute in stored trace')
         require(self.fetch('tempo', '/api/traces/' + forged)[0] == 404, 'forged trace ID is stored')
-        print('PASS query, password, token, cookie, baggage and forged trace checks', flush=True)
+        print('PASS redaction including client IP and User-Agent; forged trace rejected', flush=True)
 
         for svc in ('admin', 'app'):
             require(self.fetch(svc, '/readyz')[0] == 200, svc + ' readiness failed')

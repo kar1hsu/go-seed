@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
-from env import service_environment
+from env import environment, service_environment
 spec = importlib.util.spec_from_file_location('init_env', ROOT / 'scripts/init-env.py')
 init_env = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(init_env)
@@ -45,6 +45,9 @@ class EnvironmentTests(unittest.TestCase):
         values = init_env.entries(first)
         self.assertEqual(values['MYSQL_PASSWORD'], 'keep this password')
         self.assertEqual(values['ADMIN_BOOTSTRAP_PASSWORD'], 'unchanged')
+        self.assertEqual(values['GRAFANA_ADMIN_USER'], 'admin')
+        self.assertTrue(values['GRAFANA_ADMIN_PASSWORD'])
+        self.assertNotEqual(values['GRAFANA_ADMIN_PASSWORD'], values['ADMIN_BOOTSTRAP_PASSWORD'])
         self.assertEqual(values['TZ'], 'UTC')
         self.assertEqual(values['CUSTOM_VALUE'], 'keep')
         self.assertEqual(values['ADMIN_TOKEN_SECRET'], 'legacy-secret')
@@ -57,6 +60,28 @@ class EnvironmentTests(unittest.TestCase):
                 self.assertEqual(len(base64.urlsafe_b64decode(value + '=' * (-len(value) % 4))), size)
         init_env.initialize(self.root)
         self.assertEqual(path.read_text(), first)
+
+    def test_grafana_uses_configured_credentials_only_in_its_own_container(self):
+        path = self.root / '.env'
+        path.write_text('GRAFANA_ADMIN_USER=observer\nGRAFANA_ADMIN_PASSWORD="custom test password"\n')
+        init_env.initialize(self.root)
+        env = {k: v for k, v in os.environ.items() if not k.startswith('GRAFANA_ADMIN_')}
+        cmd = ['docker', 'compose', '--env-file', str(path), '-f', str(ROOT / 'deploy/compose/compose.yaml')]
+        services = json.loads(subprocess.check_output(
+            cmd + ['--profile', 'observability', 'config', '--format', 'json'], env=env))['services']
+        grafana = services['grafana']['environment']
+        self.assertEqual(grafana['GF_SECURITY_ADMIN_USER'], 'observer')
+        self.assertEqual(grafana['GF_SECURITY_ADMIN_PASSWORD'], 'custom test password')
+        self.assertEqual(grafana['GF_AUTH_ANONYMOUS_ENABLED'], 'false')
+        self.assertEqual(grafana['GF_AUTH_DISABLE_LOGIN_FORM'], 'false')
+        for name, service in services.items():
+            if name != 'grafana':
+                self.assertNotIn('custom test password', service.get('environment', {}).values(), name)
+
+        # An older .env without Grafana credentials still supports the default profile.
+        path.write_text('\n'.join(line for line in path.read_text().splitlines()
+                                  if not line.startswith('GRAFANA_ADMIN_')) + '\n')
+        self.assertNotIn('grafana', subprocess.check_output(cmd + ['config', '--services'], env=env, text=True).splitlines())
 
     def test_corrupt_existing_pair_does_not_rewrite_env(self):
         init_env.initialize(self.root)
@@ -109,6 +134,38 @@ class EnvironmentTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             init_env.initialize(self.root)
         self.assertEqual(path.read_text(), broken)
+
+    def test_host_trace_endpoint_overrides_dotenv_without_reaching_containers(self):
+        init_env.initialize(self.root)
+        dotenv = self.root / '.env'
+        dotenv.write_text(dotenv.read_text() + '\nOTEL_ENDPOINT=127.0.0.1:14317\n')
+        with patch.dict(os.environ, clear=True):
+            self.assertEqual(environment(self.root)['OTEL_ENDPOINT'], '127.0.0.1:14317')
+        for override in ('127.0.0.1:54317', ''):
+            with self.subTest(override=override), patch.dict(os.environ, OTEL_ENDPOINT=override):
+                source = environment(self.root)
+                for name in ('admin-api', 'app-api', 'system-rpc', 'member-rpc'):
+                    self.assertEqual(service_environment(source, name)['OTEL_ENDPOINT'], override)
+                self.assertNotIn('OTEL_ENDPOINT', service_environment(source, 'web'))
+
+        cmd = ['docker', 'compose', '--env-file', str(dotenv), '-f', str(ROOT / 'deploy/compose/compose.yaml'),
+               '--profile', 'observability', 'config', '--format', 'json']
+        for container_endpoint in ('', 'alloy:4317', 'internal-collector:4317'):
+            with self.subTest(container_endpoint=container_endpoint):
+                shell = dict(os.environ, OTEL_ENDPOINT='127.0.0.1:54317',
+                             COMPOSE_OTEL_ENDPOINT=container_endpoint)
+                services = json.loads(subprocess.check_output(cmd, env=shell, text=True))['services']
+                for name in ('admin-api', 'app-api', 'system-rpc', 'member-rpc'):
+                    self.assertEqual(services[name]['environment']['OTEL_ENDPOINT'], container_endpoint)
+
+    def test_compose_observability_and_dependencies_restart_with_applications(self):
+        raw = subprocess.check_output([
+            'docker', 'compose', '--env-file', '/dev/null', '-f', str(ROOT / 'deploy/compose/compose.yaml'),
+            '--profile', 'observability', 'config', '--no-interpolate', '--no-normalize', '--format', 'json',
+        ], text=True)
+        services = json.loads(raw)['services']
+        for name in ('alloy', 'loki', 'tempo', 'grafana', 'mysql', 'redis'):
+            self.assertEqual(services[name]['restart'], 'unless-stopped', name)
 
     def test_compose_key_distribution_matches_local_processes(self):
         # Structural check uses Compose's actual YAML merger/interpolator, without

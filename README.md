@@ -43,7 +43,7 @@ make compose-bootstrap             # 初始化管理员与超级管理员角色
 
 ```bash
 make smoke                         # 验证正在运行的 API / RPC / 数据库 / 缓存链路
-make compose-down                  # 停止并移除容器，保留命名卷中的数据
+make compose-down                  # 移除所有 profile 的容器和网络，保留命名卷数据
 ```
 
 Compose 提供同源入口，RPC 端口不发布到宿主机。它用于开发和部署参考；生产环境需要按[生产配置](docs/production.md)设置 `GOSEED_MODE=pro`、TLS、Secure Cookie、允许来源和密钥管理。
@@ -136,6 +136,7 @@ Go 运行镜像采用固定 digest 的 **Distroless Debian 13 nonroot**，包含
 | `make check` | 格式、依赖边界、文档链接、vet、前端类型/格式和生成一致性检查 |
 | `make test` / `make build` | 无外部服务依赖的测试 / 六个服务、probe 与管理端构建 |
 | `make observability-up` | 启动本地观测组件，开启 API、RPC 的 OTLP 上报 |
+| `make test-observability` | 在隔离栈验证零基础采样、隐私字段、全栈关闭及数据卷保留 |
 | `make observability-smoke` | 验证日志与链路关联、脱敏、探活过滤 |
 | `make observability-down` | 停止四个观测组件，保留观测数据；`make compose-up` 还原默认应用配置 |
 | `make smoke` | 检查已运行服务的 API、RPC、MySQL、Redis 链路 |

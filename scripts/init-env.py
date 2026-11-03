@@ -45,6 +45,7 @@ def initialize(root=ROOT):
         **{key: secrets.token_urlsafe(32) for key in ('MYSQL_PASSWORD', 'MYSQL_ROOT_PASSWORD', 'MEMBER_MYSQL_PASSWORD')},
         **{key: secrets.token_urlsafe(48) for key in ('MEMBER_ADMIN_RPC_SECRET', 'MEMBER_APP_RPC_SECRET', 'MEMBER_SYSTEM_RPC_SECRET', 'ADMIN_RPC_SECRET')},
         'ADMIN_BOOTSTRAP_PASSWORD': secrets.token_urlsafe(24),
+        'GRAFANA_ADMIN_PASSWORD': secrets.token_urlsafe(24),
         'ADMIN_COOKIE_SECURE': 'false',
         'MEMBER_ALLOWED_ORIGINS': ','.join(f'http://{host}:{existing.get(key, default)}' for host in ('127.0.0.1', 'localhost') for key, default in [('GATEWAY_PORT','8088'),('APP_API_PORT','8080')]),
         'ADMIN_ALLOWED_ORIGINS': ','.join(f'http://{host}:{existing.get(key, default)}' for host in ('127.0.0.1', 'localhost') for key, default in [('WEB_PORT','5173'),('GATEWAY_PORT','8088'),('ADMIN_API_PORT','8081')]),

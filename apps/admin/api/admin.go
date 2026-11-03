@@ -37,7 +37,7 @@ func main() {
 	httpx.SetErrorHandlerCtx(xhttp.ErrorHandler)
 
 	c.Middlewares.Log = false // Never log password, cookie, or token bodies.
-	server := rest.MustNewServer(c.RestConf, rest.WithRouter(xhttp.NewAccessRouter(c.Name)))
+	server := rest.MustNewServer(c.RestConf, xhttp.WithAccessLog(c.Name))
 	defer server.Stop()
 
 	ctx, err := svc.NewServiceContext(c)

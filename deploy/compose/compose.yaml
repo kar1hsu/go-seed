@@ -32,6 +32,7 @@ x-queue-env: &queue-env
 # Development/reference stack. All host ports are loopback-only.
 services:
   mysql:
+    restart: unless-stopped
     logging: *default-logging
     image: mysql:8.4.6
     environment:
@@ -50,6 +51,7 @@ services:
       retries: 30
       start_period: 20s
   redis:
+    restart: unless-stopped
     logging: *default-logging
     image: redis:8.2.1-alpine
     environment:
@@ -71,7 +73,7 @@ services:
       args: { SERVICE_PATH: services/system/rpc }
     command: ["-f", "services/system/rpc/etc/system.yaml"]
     environment:
-      OTEL_ENDPOINT: ${OTEL_ENDPOINT:-}
+      OTEL_ENDPOINT: ${COMPOSE_OTEL_ENDPOINT:-}
       GOSEED_MODE: ${GOSEED_MODE:-dev}
       <<: [*timezone-env, *storage-env, *tls-env]
       ADMIN_TOKEN_PUBLIC_KEY: ${ADMIN_TOKEN_PUBLIC_KEY:?run make init}
@@ -106,7 +108,7 @@ services:
       args: { SERVICE_PATH: services/member/rpc }
     command: ["-f", "services/member/rpc/etc/member.yaml"]
     environment:
-      OTEL_ENDPOINT: ${OTEL_ENDPOINT:-}
+      OTEL_ENDPOINT: ${COMPOSE_OTEL_ENDPOINT:-}
       <<: [*timezone-env, *tls-env]
       GOSEED_MODE: ${GOSEED_MODE:-dev}
       MEMBER_RPC_HOST: 0.0.0.0
@@ -147,7 +149,7 @@ services:
       args: { SERVICE_PATH: apps/admin/api }
     command: ["-f", "apps/admin/api/etc/admin-api.yaml"]
     environment:
-      OTEL_ENDPOINT: ${OTEL_ENDPOINT:-}
+      OTEL_ENDPOINT: ${COMPOSE_OTEL_ENDPOINT:-}
       GOSEED_MODE: ${GOSEED_MODE:-dev}
       <<: [*timezone-env, *storage-env, *tls-env]
       TRUSTED_PROXY_CIDRS: 172.30.86.2/32
@@ -182,7 +184,7 @@ services:
       args: { SERVICE_PATH: apps/app/api }
     command: ["-f", "apps/app/api/etc/app-api.yaml"]
     environment:
-      OTEL_ENDPOINT: ${OTEL_ENDPOINT:-}
+      OTEL_ENDPOINT: ${COMPOSE_OTEL_ENDPOINT:-}
       <<: [*timezone-env, *tls-env]
       GOSEED_MODE: ${GOSEED_MODE:-dev}
       MEMBER_TOKEN_PUBLIC_KEY: ${MEMBER_TOKEN_PUBLIC_KEY:?run make init}
@@ -270,8 +272,9 @@ services:
       dockerfile: deploy/docker/admin.Dockerfile
     ports: ["127.0.0.1:${GATEWAY_PORT:-8088}:80"]
     depends_on:
-      admin-api: { condition: service_healthy }
-      app-api: { condition: service_healthy }
+      # Nginx resolves both upstream names at startup. Refresh it when Compose updates an API.
+      admin-api: { condition: service_healthy, restart: true }
+      app-api: { condition: service_healthy, restart: true }
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
       interval: 5s
@@ -279,17 +282,22 @@ services:
       retries: 10
   alloy:
     profiles: [observability]
-    environment: *timezone-env
+    restart: unless-stopped
+    environment:
+      <<: *timezone-env
+      TRACE_BASELINE_PERCENT: ${TRACE_BASELINE_PERCENT:-100}
     logging: *default-logging
     image: grafana/alloy:v1.21.0
-    command: ["run", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]
+    command: ["run", "--storage.path=/var/lib/alloy/data", "/etc/alloy/goseed"]
     volumes:
-      - ../observability/alloy.alloy:/etc/alloy/config.alloy:ro
+      - ../observability/alloy.alloy:/etc/alloy/goseed/traces.alloy:ro
+      - ../observability/docker-logs.alloy:/etc/alloy/goseed/logs.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports: ["127.0.0.1:${OTLP_GRPC_PORT:-14317}:4317"]
     depends_on: [loki, tempo]
   loki:
     profiles: [observability]
+    restart: unless-stopped
     environment: *timezone-env
     logging: *default-logging
     image: grafana/loki:3.7.9
@@ -300,6 +308,7 @@ services:
     ports: ["127.0.0.1:${LOKI_PORT:-13100}:3100"]
   tempo:
     profiles: [observability]
+    restart: unless-stopped
     environment: *timezone-env
     logging: *default-logging
     image: grafana/tempo:2.10.10
@@ -311,13 +320,24 @@ services:
     ports: ["127.0.0.1:${TEMPO_PORT:-13200}:3200"]
   grafana:
     profiles: [observability]
+    restart: unless-stopped
     logging: *default-logging
     image: grafana/grafana:13.2.4
     environment:
       <<: *timezone-env
-      GF_AUTH_ANONYMOUS_ENABLED: "true"
-      GF_AUTH_ANONYMOUS_ORG_ROLE: Editor
-      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_AUTH_DISABLE_LOGIN_FORM: "false"
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-}
+    # Validate only when starting this profile, including for older .env files.
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        : "$${GF_SECURITY_ADMIN_USER:?run make init to set GRAFANA_ADMIN_USER}"
+        : "$${GF_SECURITY_ADMIN_PASSWORD:?run make init to set GRAFANA_ADMIN_PASSWORD}"
+        exec /run.sh "$$@"
+      - --
     volumes:
       - ../observability/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/goseed.yaml:ro
       - grafana-data:/var/lib/grafana

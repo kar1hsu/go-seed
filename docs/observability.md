@@ -11,7 +11,7 @@
 | trace | 来自服务端 Traceparent 响应头；404、405 等未进入业务路由的请求可能没有 |
 | query | 仅 page、pageSize、enabled、status，值限 1–64 个 ASCII 字母、数字或 `_.:-` |
 
-API 在创建 span 前丢弃外部的 traceparent、tracestate、baggage，从框架记录的请求目标中去掉查询串。业务处理器仍可读取完整查询参数。访问日志不存原始路径、请求或响应正文、头、Cookie、密码、搜索词、客户端 IP 或用户 ID。文件流只统计已写出的字节。探活路径不写 API 访问日志。
+API 在创建 span 前丢弃外部的 traceparent、tracestate、baggage，从框架记录的请求目标中去掉查询串。业务处理器仍可读取完整查询参数。两个 API 在 go-zero 创建 HTTP span 时隔离 User-Agent 和 X-Forwarded-For，再将原始头交给业务中间件，可信代理校验与限流仍使用原来的地址链。Alloy 在采样前也删除客户端地址、网络对端地址和 User-Agent 属性，覆盖滚动升级期间的旧生产者。已写入 Tempo 的旧数据按原有保留期过期。访问日志不存原始路径、请求或响应正文、头、Cookie、密码、搜索词、客户端 IP 或用户 ID。文件流只统计已写出的字节。探活路径不写 API 访问日志。
 
 网关访问日志记录规范化 URI（不含查询串）、远端地址、HTTP 和上游状态、响应大小、网关总耗时与上游耗时；不记录 Referer。Compose 容器日志按每文件 20 MB、最多 5 个文件轮转。
 
@@ -32,19 +32,29 @@ API 在创建 span 前丢弃外部的 traceparent、tracestate、baggage，从�
 ## 本地集中查询
 
 ```bash
+make init                         # 生成或补齐 .env 中的 Grafana 登录凭据
 make observability-up
 make observability-smoke
 # 额外验证中断和恢复。执行期间 system-rpc 和 Alloy 会分别短暂停止。
 python3 scripts/observability-smoke.py --fault
 ```
 
-默认 Compose 环境不启动观测组件。启用 profile 时，两个 API 和两个 RPC 通过内部网络向 Alloy 的 OTLP gRPC 端口上报。服务端完整采样，Alloy 先过滤两个领域的 CheckReady 和 gRPC 标准健康检查 `grpc.health.v1.Health/Check`，再保留错误和耗时至少 1 秒的链路，其余按比例采样（本地为 100%）。worker、scheduler 只收集容器日志。首版链路覆盖 HTTP 和 RPC，数据库与异步任务未创建单独的 span。
+默认 Compose 环境不启动观测组件。启用 profile 时，两个 API 和两个 RPC 通过内部网络向 Alloy 的 OTLP gRPC 端口上报。服务端完整采样，Alloy 先过滤两个领域的 CheckReady 和 gRPC 标准健康检查 `grpc.health.v1.Health/Check`，再保留含 HTTP 5xx 或 gRPC 服务故障（Unknown、DeadlineExceeded、Internal、Unavailable、DataLoss）的链路。耗时至少 1 秒的链路也会保留。快速的鉴权失败、权限拒绝和限流只按 `TRACE_BASELINE_PERCENT` 采样，默认 100%，可设为 0–100。若同一链路还包含真正的服务故障，仍可查到整条链路。worker、scheduler 只收集容器日志。首版链路覆盖 HTTP 和 RPC，数据库与异步任务未创建单独的 span。
 
 | 本机入口 | 默认地址 |
 | --- | --- |
 | Grafana Explore | http://127.0.0.1:13000/explore |
 | Loki HTTP / Tempo HTTP | http://127.0.0.1:13100 / http://127.0.0.1:13200 |
 | 宿主机 Go 进程使用的 OTLP gRPC | 127.0.0.1:14317 |
+
+打开 Grafana Explore 后，用本地 `.env` 中的 `GRAFANA_ADMIN_USER` 和 `GRAFANA_ADMIN_PASSWORD` 登录。默认账号为 `admin`，`make init` 为 Grafana 单独生成随机密码，重复执行会保留已有值。
+
+Grafana 只在首次创建数据卷里的管理员时读取这两个值。已有数据卷沿用原账号。在旧匿名环境升级或需要将原管理员的密码更新为 `.env` 中的值时，先执行上面的 `make init` 和 `make observability-up`，再运行以下命令。默认管理员 ID 为 1；若改过用户名，请将 `GRAFANA_ADMIN_USER` 设为已有用户名。
+
+```bash
+docker compose --env-file .env -p goseed -f deploy/compose/compose.yaml exec -T grafana \
+  sh -ec 'printf "%s\n" "$GF_SECURITY_ADMIN_PASSWORD" | grafana cli admin reset-admin-password --password-from-stdin'
+```
 
 日志采集限定 Compose 项目 `goseed`，包括网关、应用与 worker。查询标签为 `compose_project`、`compose_service`。trace ID 保留在日志行里，高基数 ID 不作为索引标签。Loki 和 Tempo 在本地命名卷保留数据 168 小时。停止时先停止 Alloy 和 Grafana。Tempo 收到退出信号后预留 35 秒让查询队列完成清理，再将内存中的链路写盘。Compose 为整个退出流程预留 90 秒。
 
@@ -64,11 +74,26 @@ make compose-up
 make smoke
 ```
 
-`observability-down` 保留数据卷，只停止四个观测容器。随后 `make compose-up` 在默认的空 `OTEL_ENDPOINT` 下重建应用。宿主机原生开发时，进程应使用回环地址和 `OTLP_GRPC_PORT`，Compose 服务则使用 `alloy:4317`。
+`observability-down` 保留数据卷，只停止四个观测容器。随后 `make compose-up` 在默认的空 `COMPOSE_OTEL_ENDPOINT` 下重建应用。`make compose-down` 则移除所有 profile 的容器和项目网络，保留命名卷。运行中的观测组件使用 `unless-stopped`，与应用一同随 Docker 恢复；手动停止的组件保持停止。
+
+## 宿主机开发
+
+`OTEL_ENDPOINT` 配置宿主机 Go 进程，优先级为 shell、项目 .env、.env.example；显式传空值可关闭本次上报。`COMPOSE_OTEL_ENDPOINT` 配置容器中的 Go 进程。之前在 .env 用 OTEL_ENDPOINT 配置外部容器采集器的项目，请将该容器地址移到 COMPOSE_OTEL_ENDPOINT。`make observability-up` 会为本次启动指定容器网络地址 `alloy:4317`。
+
+宿主机跑 API / RPC 时，先释放完整 Compose 栈占用的应用端口。以下命令保留数据，只在 Docker 中启动基础设施和观测组件：
+
+```bash
+make compose-down
+make infra-up
+docker compose --env-file .env -p goseed -f deploy/compose/compose.yaml --profile observability up -d alloy grafana
+OTEL_ENDPOINT=127.0.0.1:14317 make dev
+```
+
+`make test-observability` 在独立的临时 Compose 项目中以 0% 基础采样验证拒绝、故障、慢链路和隐私字段，同时检查全栈关闭后网络被移除、命名卷仍在。`observability-smoke` 的正常请求关联检查使用默认的 100% 基础采样。
 
 ## 生产配置
 
-- 本地 Grafana 只绑定回环地址，允许匿名 Editor。对外提供查询前启用身份验证、角色权限和 TLS；日志与链路应有独立的访问和保留策略。
+- 本地 Grafana 只绑定回环地址，查询需要登录。生产环境按角色分配查询权限并启用 TLS。Loki 和 Tempo 的本机直连端口独立于 Grafana 登录，对外部署时限制为内部网络访问。
 - Alloy 挂载 Docker socket 的权限接近宿主机 root，只读挂载仍可调用 Docker API。生产使用限制 API 的 socket proxy，或读取容器日志文件。
 - go-zero v1.10.2 的 `otlpgrpc` 使用 `WithInsecure()`。当前 gRPC 上报只走同机受控网络；跨主机上报改用 `otlphttp`、启用 `OtlpHttpSecure` 并验证证书。
-- 生产按流量和容量调低 Alloy 的普通链路采样率，保留错误和慢调用策略。保持应用完整上报才能在链路结束后做决定。调整采样等待时间和内存容量时，应覆盖实际最长的请求与导出延迟。
+- 生产按流量和容量调低 Alloy 的普通链路采样率，保留服务故障和慢调用策略。保持应用完整上报才能在链路结束后做决定。调整采样等待时间和内存容量时，应覆盖实际最长的请求与导出延迟。
