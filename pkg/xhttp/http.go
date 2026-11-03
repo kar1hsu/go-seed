@@ -21,6 +21,9 @@ type ErrorResponse struct {
 
 func ErrorHandler(ctx context.Context, err error) (int, any) {
 	public := xerr.Describe(err)
+	if record, ok := ctx.Value(accessRecordKey{}).(*accessRecord); ok {
+		record.code.Store(int64(public.Code))
+	}
 	if public.HTTPStatus >= 500 {
 		logx.WithContext(ctx).Errorf("request failed: %v", err)
 	}

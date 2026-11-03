@@ -4,7 +4,7 @@ package management
 import (
 	"context"
 	"errors"
-	"fmt"
+	"github.com/kar1hsu/go-seed/pkg/dbx"
 	"github.com/kar1hsu/go-seed/pkg/xerr"
 	"github.com/kar1hsu/go-seed/services/member/internal/application/account"
 	"github.com/kar1hsu/go-seed/services/member/internal/model"
@@ -102,6 +102,6 @@ func publicError(ctx context.Context, err error) error {
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return err
 	}
-	logx.WithContext(ctx).Error(fmt.Sprintf("member storage failure (%T)", err))
+	logx.WithContext(ctx).Errorw("member storage failure", dbx.ErrorFields(err)...)
 	return xerr.New(codes.Unavailable)
 }

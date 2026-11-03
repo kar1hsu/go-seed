@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+
 x-timezone-env: &timezone-env
   TZ: ${TZ-Asia/Shanghai}
 x-tls-env: &tls-env
@@ -26,6 +32,7 @@ x-queue-env: &queue-env
 # Development/reference stack. All host ports are loopback-only.
 services:
   mysql:
+    logging: *default-logging
     image: mysql:8.4.6
     environment:
       <<: *timezone-env
@@ -43,6 +50,7 @@ services:
       retries: 30
       start_period: 20s
   redis:
+    logging: *default-logging
     image: redis:8.2.1-alpine
     environment:
       <<: *timezone-env
@@ -55,6 +63,7 @@ services:
       timeout: 3s
       retries: 10
   system-rpc:
+    logging: *default-logging
     restart: unless-stopped
     build:
       context: ../..
@@ -88,6 +97,7 @@ services:
       timeout: 4s
       retries: 10
   member-rpc:
+    logging: *default-logging
     restart: unless-stopped
     build:
       context: ../..
@@ -126,6 +136,7 @@ services:
       timeout: 4s
       retries: 10
   admin-api:
+    logging: *default-logging
     restart: unless-stopped
     networks: [default, ingress]
     build:
@@ -159,6 +170,7 @@ services:
       timeout: 4s
       retries: 10
   app-api:
+    logging: *default-logging
     restart: unless-stopped
     networks: [default, ingress]
     build:
@@ -190,6 +202,7 @@ services:
       timeout: 4s
       retries: 10
   system-worker:
+    logging: *default-logging
     restart: unless-stopped
     stop_grace_period: 30s
     build:
@@ -219,6 +232,7 @@ services:
       timeout: 4s
       retries: 10
   system-scheduler:
+    logging: *default-logging
     restart: unless-stopped
     stop_grace_period: 30s
     build:
@@ -240,6 +254,7 @@ services:
       timeout: 4s
       retries: 10
   gateway:
+    logging: *default-logging
     environment:
       <<: *timezone-env
     restart: unless-stopped

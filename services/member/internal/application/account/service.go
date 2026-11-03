@@ -5,13 +5,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"github.com/kar1hsu/go-seed/pkg/authlimit"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/kar1hsu/go-seed/pkg/dbx"
 	"github.com/kar1hsu/go-seed/pkg/identity"
 	"github.com/kar1hsu/go-seed/pkg/xerr"
 	"github.com/kar1hsu/go-seed/services/member/internal/model"
@@ -326,6 +326,6 @@ func storageError(ctx context.Context, err error) error {
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return err
 	}
-	logx.WithContext(ctx).Error(fmt.Sprintf("authentication storage failure (%T)", err))
+	logx.WithContext(ctx).Errorw("authentication storage failure", dbx.ErrorFields(err)...)
 	return xerr.New(codes.Unavailable)
 }

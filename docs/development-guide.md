@@ -146,3 +146,7 @@ API client 统一处理基础 URL、超时、错误码、request ID 和 refresh 
 ## 管理员认证开发
 
 当前认证实现、初始化命令、HTTP Cookie 与会话撤销规则见 [管理员认证](authentication.md)。修改认证行为时执行 `make test-auth`；对运行中的完整链路执行 `make auth-smoke`。这两个命令使用本项目开发 MySQL，创建随机测试账号并仅删除自身账号。认证令牌、密码和 Cookie 不写入日志或提交的测试产物。
+
+## 请求排障
+
+复制响应中的 traceId，按[可观测性说明](observability.md)查询 API 访问记录与 RPC 故障。新增接口沿用最外层访问日志，不记录请求体、响应体或原始查询串。

@@ -164,7 +164,7 @@ Go 运行镜像采用固定 digest 的 **Distroless Debian 13 nonroot**，包含
 | 开发新业务 | [新增模块教程](docs/new-module-guide.md) · [会员业务样板](docs/member-module.md) |
 | 身份与权限 | [管理员认证](docs/authentication.md) · [角色授权](docs/authorization.md) · [操作日志](docs/operation-audit.md) |
 | 配置与任务 | [字典与系统配置](docs/system-settings.md) · [文件与任务](docs/files-and-tasks.md) |
-| 部署与工具 | [生产配置](docs/production.md) · [AI 开发配置](docs/ai-development.md) |
+| 部署与工具 | [可观测性](docs/observability.md) · [生产配置](docs/production.md) · [AI 开发配置](docs/ai-development.md) |
 | HTTP 接口 | [管理 API](apps/admin/api/README.md) · [业务 API](apps/app/api/README.md) · [管理端 OpenAPI](docs/openapi/admin.openapi.json) · [C 端 OpenAPI](docs/openapi/app.openapi.json) |
 | 服务与前端 | [系统服务](services/system/README.md) · [会员服务](services/member/README.md) · [管理端](web/admin/README.md) |
 

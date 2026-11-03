@@ -174,7 +174,7 @@ Asynq 按至少一次执行设计，消费者必须可重入。`Unique` 和调�
 
 RPC 初期使用 `Endpoints`；go-zero 也提供 `Target` 与 etcd 配置，后续根据部署平台选择发现机制。单 Go module 不妨碍各进程分别执行 `go build` 和发布镜像。[RPC 配置源码](https://github.com/zeromicro/go-zero/blob/master/zrpc/config.go)
 
-每个进程输出 logx 结构化日志，关联 request ID、Trace ID、服务名和安全的业务标识。监控 HTTP/RPC 延迟与错误、数据库池、队列积压、任务重试和策略刷新失败。HTTP 提供 `/healthz` 与 `/readyz`，RPC 接入健康检查；依赖未准备好时不接流量。退出时先停止接新请求和调度，再排空在途操作并关闭资源。
+两个 API 记录路由模板、状态、耗时与服务端 trace；网关记录去除查询串的 URI、上游耗时和响应 traceparent。RPC 内部故障与存储错误通过 trace 关联，字段约定见[可观测性](observability.md)。监控 HTTP/RPC 延迟与错误、数据库池、队列积压、任务重试和策略刷新失败。HTTP 提供 `/healthz` 与 `/readyz`，RPC 接入健康检查；依赖未准备好时不接流量。退出时先停止接新请求和调度，再排空在途操作并关闭资源。
 
 同步请求显式设置超时预算，例如 HTTP 3 秒、下游 RPC 2 秒、单次数据库操作 1 秒，实际值通过配置与压测调整。多段调用共享剩余 deadline，写请求不透明重试；长任务返回任务 ID，由客户端查询进度。
 

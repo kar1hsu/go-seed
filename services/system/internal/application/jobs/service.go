@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/hibiken/asynq"
+	"github.com/kar1hsu/go-seed/pkg/dbx"
 	"github.com/kar1hsu/go-seed/pkg/storage"
 	"github.com/kar1hsu/go-seed/pkg/xerr"
 	"github.com/kar1hsu/go-seed/services/system/internal/authorization"
@@ -161,7 +162,7 @@ func (s *Service) Process(ctx context.Context, p task.Payload) error {
 		logx.WithContext(ctx).Infow("system task completed", logx.Field("taskId", job.ID), logx.Field("attempt", job.Attempts))
 		return nil
 	}
-	logx.WithContext(ctx).Errorw("system task attempt failed", logx.Field("taskId", job.ID), logx.Field("attempt", job.Attempts), logx.Field("errorType", fmt.Sprintf("%T", err)))
+	logx.WithContext(ctx).Errorw("system task attempt failed", append(dbx.ErrorFields(err), logx.Field("taskId", job.ID), logx.Field("attempt", job.Attempts))...)
 	// Parent may have been canceled during shutdown. A short independent write records failure;
 	// if this also fails, the durable lease/outbox recovers after expiry.
 	saveCtx, stop := context.WithTimeout(context.WithoutCancel(ctx), 3*time.Second)
@@ -377,7 +378,7 @@ func (s *Service) cleanup(ctx context.Context) error {
 				if deferErr := s.store.DeferCleanup(ctx, f.ID, time.Now().UTC().Add(time.Hour)); deferErr != nil {
 					return deferErr
 				}
-				logx.WithContext(ctx).Errorw("file cleanup deferred", logx.Field("fileId", f.ID), logx.Field("errorType", fmt.Sprintf("%T", err)))
+				logx.WithContext(ctx).Errorw("file cleanup deferred", append(dbx.ErrorFields(err), logx.Field("fileId", f.ID))...)
 				failures = append(failures, fmt.Errorf("file %d cleanup failed", f.ID))
 			}
 		}

@@ -3,7 +3,6 @@ package management
 import (
 	"context"
 	"errors"
-	"fmt"
 	"regexp"
 	"slices"
 	"strconv"
@@ -13,6 +12,7 @@ import (
 	"unicode/utf8"
 
 	mysql "github.com/go-sql-driver/mysql"
+	"github.com/kar1hsu/go-seed/pkg/dbx"
 	"github.com/kar1hsu/go-seed/pkg/storage"
 	"github.com/kar1hsu/go-seed/pkg/xerr"
 	"github.com/kar1hsu/go-seed/services/system/internal/application/auth"
@@ -80,7 +80,7 @@ func publicError(ctx context.Context, err error) error {
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return err
 	}
-	logx.WithContext(ctx).Error(fmt.Sprintf("management storage failure (%T)", err))
+	logx.WithContext(ctx).Errorw("management storage failure", dbx.ErrorFields(err)...)
 	return xerr.New(codes.Unavailable)
 }
 func (s *Service) run(ctx context.Context, raw, permission string, write bool, fn func(*repository.RBAC, *authorization.Access) error) error {

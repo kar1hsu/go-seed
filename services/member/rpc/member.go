@@ -34,11 +34,13 @@ func main() {
 	defer ctx.Close()
 	admin := []string{pb.Member_ListUsers_FullMethodName, pb.Member_GetUser_FullMethodName, pb.Member_SetUserStatus_FullMethodName}
 	app := []string{pb.Member_Register_FullMethodName, pb.Member_Login_FullMethodName, pb.Member_Refresh_FullMethodName, pb.Member_Logout_FullMethodName, pb.Member_Current_FullMethodName, pb.Member_UpdateProfile_FullMethodName, pb.Member_ChangePassword_FullMethodName}
-	guard, err := rpcx.Server([]rpcx.Caller{{Name: "admin-api", Secret: c.AdminAPISecret, Methods: admin}, {Name: "app-api", Secret: c.AppAPISecret, Methods: app}}, []string{pb.Member_CheckReady_FullMethodName, "/grpc.health.v1.Health/Check"})
+	public := []string{pb.Member_CheckReady_FullMethodName, "/grpc.health.v1.Health/Check"}
+	guard, err := rpcx.Server([]rpcx.Caller{{Name: "admin-api", Secret: c.AdminAPISecret, Methods: admin}, {Name: "app-api", Secret: c.AppAPISecret, Methods: app}}, public)
 	if err != nil {
 		log.Fatal(err)
 	}
 	c.Middlewares.StatConf.IgnoreContentMethods = append(append(c.Middlewares.StatConf.IgnoreContentMethods, admin...), app...)
+	c.Middlewares.StatConf.IgnoreContentMethods = append(c.Middlewares.StatConf.IgnoreContentMethods, public...)
 	s := zrpc.MustNewServer(c.RpcServerConf, func(server *grpc.Server) { pb.RegisterMemberServer(server, serverAdapter(ctx)) })
 	s.AddOptions(tlsOptions...)
 	defer s.Stop()

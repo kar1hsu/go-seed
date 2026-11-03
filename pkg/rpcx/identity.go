@@ -8,9 +8,11 @@ import (
 
 	"github.com/kar1hsu/go-seed/pkg/identity"
 	"github.com/kar1hsu/go-seed/pkg/xerr"
+	"github.com/zeromicro/go-zero/core/logx"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 type Credential struct {
@@ -72,7 +74,8 @@ func Server(callers []Caller, public []string) (grpc.UnaryServerInterceptor, err
 		}
 		allowed[caller.Name] = grant{caller.Secret, methods}
 	}
-	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, next grpc.UnaryHandler) (any, error) {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, next grpc.UnaryHandler) (reply any, err error) {
+		defer func() { logRPCFailure(ctx, info.FullMethod, err) }()
 		if open[info.FullMethod] {
 			return next(ctx, req)
 		}
@@ -111,6 +114,20 @@ func Server(callers []Caller, public []string) (grpc.UnaryServerInterceptor, err
 		}
 		return next(context.WithValue(ctx, callerKey{}, names[0]), req)
 	}, nil
+}
+
+func logRPCFailure(ctx context.Context, method string, err error) {
+	if err == nil || errors.Is(err, context.Canceled) {
+		return
+	}
+	code := status.Code(err)
+	if errors.Is(err, context.DeadlineExceeded) {
+		code = codes.DeadlineExceeded
+	}
+	switch code {
+	case codes.Unknown, codes.DeadlineExceeded, codes.Internal, codes.Unavailable, codes.DataLoss:
+		logx.WithContext(ctx).Errorw("rpc failed", logx.Field("rpcMethod", method), logx.Field("grpcCode", code.String()))
+	}
 }
 
 // ServiceName is set only after validating the service credential and method grant.

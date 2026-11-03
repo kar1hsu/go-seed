@@ -93,6 +93,7 @@ func main() {
 		log.Fatal(err)
 	}
 	c.Middlewares.StatConf.IgnoreContentMethods = append(c.Middlewares.StatConf.IgnoreContentMethods, methods...)
+	c.Middlewares.StatConf.IgnoreContentMethods = append(c.Middlewares.StatConf.IgnoreContentMethods, public...)
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
 		pb.RegisterSystemServer(grpcServer, server.NewSystemServer(ctx))
 

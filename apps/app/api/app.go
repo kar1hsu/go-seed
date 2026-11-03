@@ -35,7 +35,7 @@ func main() {
 	httpx.SetErrorHandlerCtx(xhttp.ErrorHandler)
 
 	c.Middlewares.Log = false // Never log authentication request bodies.
-	server := rest.MustNewServer(c.RestConf)
+	server := rest.MustNewServer(c.RestConf, rest.WithRouter(xhttp.NewAccessRouter(c.Name)))
 	defer server.Stop()
 
 	ctx, err := svc.NewServiceContext(c)

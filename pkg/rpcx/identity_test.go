@@ -2,6 +2,8 @@ package rpcx
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/zeromicro/go-zero/core/logx/logtest"
 	"strings"
 	"testing"
 
@@ -58,5 +60,40 @@ func TestClientReplacesUntrustedMetadata(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestServerFailureLogging(t *testing.T) {
+	const method = "/System/Fail"
+	guard, err := Server(nil, []string{method})
+	if err != nil {
+		t.Fatal(err)
+	}
+	logs := logtest.NewCollector(t)
+	for _, tc := range []struct {
+		err  error
+		want string
+	}{
+		{status.Error(codes.Unavailable, "secret-value"), "Unavailable"}, {context.DeadlineExceeded, "DeadlineExceeded"},
+		{status.Error(codes.PermissionDenied, "secret-value"), ""}, {context.Canceled, ""}, {status.Error(codes.Canceled, "secret-value"), ""},
+	} {
+		logs.Reset()
+		_, got := guard(context.Background(), "secret-value", &grpc.UnaryServerInfo{FullMethod: method}, func(context.Context, any) (any, error) { return nil, tc.err })
+		if got != tc.err {
+			t.Fatal("changed RPC error")
+		}
+		if tc.want == "" {
+			if logs.String() != "" {
+				t.Fatal("logged expected rejection")
+			}
+			continue
+		}
+		var row map[string]any
+		if err := json.Unmarshal(logs.Bytes(), &row); err != nil {
+			t.Fatal(err)
+		}
+		if row["rpcMethod"] != method || row["grpcCode"] != tc.want || row["content"] != "rpc failed" || strings.Contains(logs.String(), "secret-value") {
+			t.Errorf("invalid RPC failure record")
+		}
 	}
 }
