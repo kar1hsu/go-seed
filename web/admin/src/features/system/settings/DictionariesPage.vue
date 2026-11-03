@@ -20,10 +20,16 @@ import { settings, type Dictionary, type DictionaryItem } from './api'
 import { resourceRules } from './form'
 import { useList } from '../use-list'
 import ListFilters from '../components/ListFilters.vue'
+import DictionaryItemList from './DictionaryItemList.vue'
 import { authMessage, useAuthStore } from '../../auth/store'
 const auth = useAuthStore()
 const { query, filters, items, total, loading, error, load, search, reset } =
   useList(settings.dictionaries)
+const activeId = ref('')
+const active = computed(
+  () =>
+    items.value.find((item) => item.id === activeId.value) ?? items.value[0],
+)
 const drawer = ref(false)
 const selected = ref<Dictionary | null>(null)
 const form = reactive({
@@ -130,7 +136,14 @@ async function save() {
         ...body,
         revision: selected.value.revision,
       })
-    else await settings.createDictionary({ ...body, code: form.code })
+    else {
+      const created = await settings.createDictionary({
+        ...body,
+        code: form.code,
+      })
+      activeId.value = created.record.id
+      query.page = 1
+    }
     drawer.value = false
     ElMessage.success('字典已保存')
     await load()
@@ -180,7 +193,22 @@ onBeforeUnmount(() => {
   <div class="page-heading">
     <div>
       <h1>字典管理</h1>
-      <p>统一维护业务选项的值、显示标签和排列顺序。</p>
+      <p>按分类查看和维护业务选项。</p>
+    </div>
+    <div class="table-tools">
+      <ElButton
+        v-if="auth.has('system.dictionary.create')"
+        type="primary"
+        :icon="Plus"
+        @click="open()"
+        >新增字典</ElButton
+      >
+      <ElButton
+        :icon="RefreshRight"
+        :loading="loading"
+        aria-label="刷新字典列表"
+        @click="load"
+      />
     </div>
   </div>
   <ListFilters
@@ -191,83 +219,88 @@ onBeforeUnmount(() => {
     @reset="reset"
   />
   <div v-if="error" class="error-notice" role="alert">{{ error }}</div>
-  <section class="panel">
-    <div class="panel-heading">
-      <h2>
-        字典列表 <span class="count-label">{{ total }}</span>
-      </h2>
-      <div class="table-tools">
-        <ElButton
-          v-if="auth.has('system.dictionary.create')"
-          type="primary"
-          :icon="Plus"
-          @click="open()"
-          >新增字典</ElButton
-        ><ElButton
-          :icon="RefreshRight"
-          :loading="loading"
-          aria-label="刷新字典列表"
-          @click="load"
-        />
+  <div
+    v-else-if="active && auth.has('system.dictionary.read')"
+    class="dictionary-browser"
+  >
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>
+          字典分类 <span class="count-label">{{ total }}</span>
+        </h2>
       </div>
-    </div>
-    <div class="panel-table management-table" :aria-busy="loading">
-      <ElTable
-        :data="items"
-        row-key="id"
-        :empty-text="loading ? '加载中…' : '暂无字典，新增字典以维护业务选项'"
-      >
-        <ElTableColumn label="字典" min-width="220"
-          ><template #default="{ row }"
-            ><div class="role-cell">
-              <strong>{{ row.name }}</strong
-              ><small>{{ row.code }}</small>
-            </div></template
-          ></ElTableColumn
+      <nav class="dictionary-nav" aria-label="字典分类" :aria-busy="loading">
+        <button
+          v-for="row in items"
+          :key="row.id"
+          type="button"
+          :aria-pressed="row.id === active.id"
+          @click="activeId = row.id"
         >
-        <ElTableColumn
-          prop="description"
-          label="说明"
-          min-width="220"
-          show-overflow-tooltip
-        />
-        <ElTableColumn prop="itemCount" label="字典项" width="100" />
-        <ElTableColumn label="状态" width="100"
-          ><template #default="{ row }"
-            ><span class="status-dot" :class="{ enabled: row.enabled }"></span
-            >{{ row.enabled ? '启用' : '停用' }}</template
-          ></ElTableColumn
-        >
-        <ElTableColumn label="操作" width="180" fixed="right"
-          ><template #default="{ row }"
-            ><ElButton link type="primary" @click="open(row as Dictionary)">{{
-              auth.has('system.dictionary.update') ? '编辑字典' : '查看字典'
-            }}</ElButton
-            ><ElButton
-              v-if="auth.has('system.dictionary.delete')"
-              link
-              type="danger"
-              :disabled="row.enabled"
-              :title="row.enabled ? '请先停用字典' : '删除字典'"
-              @click="remove(row as Dictionary)"
-              >删除</ElButton
-            ></template
-          ></ElTableColumn
-        >
-      </ElTable>
-    </div>
-    <div class="table-pagination">
-      <span>共 {{ total }} 条</span
-      ><ElPagination
+          <span class="category-text"
+            ><strong>{{ row.name }}</strong
+            ><small>{{ row.code }}</small></span
+          >
+          <span class="item-count">{{ row.itemCount }} 项</span>
+        </button>
+      </nav>
+      <ElPagination
+        v-if="total > 10"
         v-model:current-page="query.page"
         v-model:page-size="query.pageSize"
         :page-sizes="[10, 20, 50]"
         :total="total"
-        layout="sizes, prev, pager, next"
+        size="small"
+        layout="sizes, prev, slot, next"
+        class="category-pager"
         @change="load"
-      />
-    </div>
-  </section>
+        >{{ query.page }} /
+        {{ Math.ceil(total / query.pageSize) }}</ElPagination
+      >
+    </section>
+    <section class="panel dictionary-detail" aria-label="字典项详情">
+      <div class="detail-heading">
+        <div class="detail-title">
+          <h2>{{ active.name }}</h2>
+          <small>{{ active.code }}</small>
+        </div>
+        <div class="table-tools">
+          <ElButton
+            v-if="auth.has('system.dictionary.update')"
+            size="small"
+            @click="open(active)"
+            >编辑字典</ElButton
+          >
+          <ElButton
+            v-if="auth.has('system.dictionary.delete')"
+            link
+            type="danger"
+            :disabled="active.enabled"
+            :title="active.enabled ? '请先停用字典' : '删除字典'"
+            @click="remove(active)"
+            >删除</ElButton
+          >
+        </div>
+      </div>
+      <div class="detail-meta">
+        <span
+          ><span class="status-dot" :class="{ enabled: active.enabled }"></span
+          >{{ active.enabled ? '启用' : '停用' }}</span
+        >
+        <span v-if="active.description">{{ active.description }}</span>
+      </div>
+      <DictionaryItemList :record="active" />
+    </section>
+  </div>
+  <div v-else class="panel plain-empty" role="status">
+    {{
+      loading
+        ? '正在加载字典…'
+        : query.keyword || query.enabled !== 'all'
+          ? '没有符合条件的字典'
+          : '暂无字典'
+    }}
+  </div>
   <ElDrawer
     :model-value="drawer"
     :title="selected ? (editable ? '编辑字典' : '查看字典') : '新增字典'"
@@ -393,3 +426,98 @@ onBeforeUnmount(() => {
     >
   </ElDrawer>
 </template>
+<style scoped>
+.dictionary-browser {
+  display: grid;
+  grid-template-columns: minmax(228px, 28%) minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+.dictionary-nav {
+  display: grid;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding: 8px;
+}
+.dictionary-nav button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.dictionary-nav button:hover {
+  background: var(--el-fill-color-light);
+}
+.dictionary-nav button[aria-pressed='true'] {
+  background: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+}
+.category-text,
+.detail-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.category-text strong,
+.category-text small,
+.detail-title small {
+  display: block;
+}
+.category-text strong {
+  font-size: 14px;
+  font-weight: 500;
+}
+.category-text small,
+.detail-title small,
+.item-count {
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
+.item-count {
+  white-space: nowrap;
+}
+.category-pager {
+  justify-content: center;
+  padding: 8px 4px;
+  border-top: 1px solid var(--el-border-color-lighter);
+}
+.detail-heading,
+.detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.detail-heading {
+  justify-content: space-between;
+  padding: 16px 20px 0;
+}
+.detail-title h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.detail-meta {
+  padding: 8px 20px 16px;
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.dictionary-detail {
+  padding-bottom: 12px;
+}
+@media (max-width: 850px) {
+  .dictionary-browser {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dictionary-nav {
+    max-height: 200px;
+  }
+}
+</style>

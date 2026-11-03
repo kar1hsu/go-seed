@@ -2,6 +2,7 @@
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import {
   ElButton,
+  ElDialog,
   ElDrawer,
   ElForm,
   ElFormItem,
@@ -20,6 +21,7 @@ import {
 import { Plus, RefreshRight } from '@element-plus/icons-vue'
 import { settings, type Setting } from './api'
 import { resourceRules, validateSettingValue } from './form'
+import { formatSettingJson } from './format-json'
 import { useList } from '../use-list'
 import ListFilters from '../components/ListFilters.vue'
 import { authMessage, useAuthStore } from '../../auth/store'
@@ -28,6 +30,7 @@ const { query, filters, items, total, loading, error, load, search, reset } =
   useList(settings.settings)
 const drawer = ref(false),
   selected = ref<Setting | null>(null)
+const preview = ref<Setting | null>(null)
 const form = reactive({
   code: '',
   name: '',
@@ -129,6 +132,7 @@ async function remove(row: Setting) {
 watch(
   () => auth.permissions,
   () => {
+    if (!auth.has('system.setting.read')) preview.value = null
     if (!auth.has('system.setting.read') || !editable.value)
       drawer.value = false
   },
@@ -190,12 +194,18 @@ watch(
             }}</ElTag></template
           ></ElTableColumn
         >
-        <ElTableColumn
-          prop="value"
-          label="配置值"
-          min-width="210"
-          show-overflow-tooltip
-        />
+        <ElTableColumn label="配置值" min-width="210" show-overflow-tooltip>
+          <template #default="{ row }">
+            <ElButton
+              v-if="row.type === 'json'"
+              link
+              type="primary"
+              @click="preview = row as Setting"
+              >查看 JSON</ElButton
+            >
+            <span v-else>{{ row.value }}</span>
+          </template>
+        </ElTableColumn>
         <ElTableColumn
           prop="description"
           label="说明"
@@ -238,6 +248,22 @@ watch(
       />
     </div>
   </section>
+  <ElDialog
+    :model-value="!!preview"
+    :title="preview ? `${preview.name} · JSON 配置值` : 'JSON 配置值'"
+    width="min(600px, calc(100% - 32px))"
+    align-center
+    append-to-body
+    destroy-on-close
+    @close="preview = null"
+  >
+    <pre v-if="preview" class="code-block json-preview" tabindex="0">{{
+      formatSettingJson(preview.value)
+    }}</pre>
+    <template #footer>
+      <ElButton @click="preview = null">关闭</ElButton>
+    </template>
+  </ElDialog>
   <ElDrawer
     :model-value="drawer"
     :title="selected ? (editable ? '编辑配置' : '查看配置') : '新增配置'"
@@ -339,3 +365,9 @@ watch(
     >
   </ElDrawer>
 </template>
+<style scoped>
+.json-preview {
+  max-height: 60vh;
+  overflow: auto;
+}
+</style>

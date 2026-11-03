@@ -45,6 +45,12 @@ func TestSettingsCRUDPermissionsAndAudit(t *testing.T) {
 	if len(rows) != 1 || total != 1 || rows[0].ItemCount != 2 {
 		t.Fatal("list summary mismatch")
 	}
+	query.Keyword = "订单"
+	rows, total, err = f.b.ListDictionaries(ctx, reader, query)
+	require(t, err)
+	if len(rows) != 1 || total != 1 || rows[0].ID != dict.Record.ID {
+		t.Fatal("dictionary name search mismatch")
+	}
 	query.Keyword = "%"
 	_, total, err = f.a.ListDictionaries(ctx, f.root, query)
 	require(t, err)
@@ -109,6 +115,37 @@ func TestSettingsCRUDPermissionsAndAudit(t *testing.T) {
 	_, _, err = f.b.ListDictionaries(ctx, reader, query)
 	code(t, err, codes.PermissionDenied)
 }
+func TestSettingKeywordSearch(t *testing.T) {
+	f := setup(t)
+	active, err := f.a.CreateSetting(ctx, f.root, "feature.boolean_flag", "boolean", SettingInput{Name: "布尔开关", Value: "true", Enabled: true})
+	require(t, err)
+	_, err = f.a.CreateSetting(ctx, f.root, "feature.booleanxflag", "boolean", SettingInput{Name: "备用开关", Value: "false"})
+	require(t, err)
+	for _, tt := range []struct {
+		keyword, enabled string
+		wantActive       bool
+	}{
+		{"布尔", "all", true},
+		{"布尔", "disabled", false},
+		{"开关", "enabled", true},
+		{"boolean_flag", "all", true},
+		{"BOOLEAN_FLAG", "all", false},
+		{"%", "all", false},
+	} {
+		t.Run(tt.keyword+"/"+tt.enabled, func(t *testing.T) {
+			rows, total, err := f.a.ListSettings(ctx, f.root, Query{Page: 1, PageSize: 20, Keyword: tt.keyword, Enabled: tt.enabled})
+			require(t, err)
+			if tt.wantActive {
+				if total != 1 || len(rows) != 1 || rows[0].ID != active.ID {
+					t.Errorf("expected only setting %d, got %d rows (total %d)", active.ID, len(rows), total)
+				}
+			} else if total != 0 || len(rows) != 0 {
+				t.Errorf("expected empty result, got %d rows (total %d)", len(rows), total)
+			}
+		})
+	}
+}
+
 func TestSettingsConcurrentRevisionAndAuditRollback(t *testing.T) {
 	f := setup(t)
 	dict, err := f.a.CreateDictionary(ctx, f.root, "order.status", dictionaryInput())

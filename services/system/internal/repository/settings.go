@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
+
 	"github.com/kar1hsu/go-seed/services/system/internal/model"
 	"gorm.io/gorm"
-	"strings"
 )
 
 type Settings struct{ db *gorm.DB }
@@ -12,8 +12,9 @@ type Settings struct{ db *gorm.DB }
 func (r *RBAC) Settings() *Settings { return &Settings{r.db} }
 func settingFilter(q *gorm.DB, keyword, enabled string) *gorm.DB {
 	if keyword != "" {
-		pattern := "%" + strings.NewReplacer("!", "!!", "%", "!%", "_", "!_").Replace(keyword) + "%"
-		q = q.Where("name LIKE ? ESCAPE '!' OR code LIKE ? ESCAPE '!'", pattern, pattern)
+		pattern := literalLike(keyword)
+		// Codes use ascii_bin. Compare in UTF-8 so Unicode keywords can match names.
+		q = q.Where("name LIKE ? ESCAPE '!' OR CONVERT(code USING utf8mb4) COLLATE utf8mb4_bin LIKE ? ESCAPE '!'", pattern, pattern)
 	}
 	if enabled != "all" {
 		q = q.Where("enabled = ?", enabled == "enabled")
