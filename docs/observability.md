@@ -28,3 +28,47 @@ API 在创建 span 前丢弃外部的 traceparent、tracestate、baggage，从�
 3. 例如修复前搜索“布尔”会收到 503（100503）。对于同类数据库故障，沿同一 trace 查找 RPC 的存储错误行，`mysqlErrno=1270` 和 `sqlState=HY000` 可以定位到字符集比较，而不需要保存搜索词。错误行只写错误类型与 MySQL 编号、SQLState，不写可能含业务数据的驱动错误文本。
 
 管理员写操作的修改前后值在受权限控制的[操作审计](operation-audit.md)中查询。该审计与容器访问日志分别存储。
+
+## 本地集中查询
+
+```bash
+make observability-up
+make observability-smoke
+# 额外验证中断和恢复。执行期间 system-rpc 和 Alloy 会分别短暂停止。
+python3 scripts/observability-smoke.py --fault
+```
+
+默认 Compose 环境不启动观测组件。启用 profile 时，两个 API 和两个 RPC 通过内部网络向 Alloy 的 OTLP gRPC 端口上报。服务端完整采样，Alloy 先过滤两个领域的 CheckReady 和 gRPC 标准健康检查 `grpc.health.v1.Health/Check`，再保留错误和耗时至少 1 秒的链路，其余按比例采样（本地为 100%）。worker、scheduler 只收集容器日志。首版链路覆盖 HTTP 和 RPC，数据库与异步任务未创建单独的 span。
+
+| 本机入口 | 默认地址 |
+| --- | --- |
+| Grafana Explore | http://127.0.0.1:13000/explore |
+| Loki HTTP / Tempo HTTP | http://127.0.0.1:13100 / http://127.0.0.1:13200 |
+| 宿主机 Go 进程使用的 OTLP gRPC | 127.0.0.1:14317 |
+
+日志采集限定 Compose 项目 `goseed`，包括网关、应用与 worker。查询标签为 `compose_project`、`compose_service`。trace ID 保留在日志行里，高基数 ID 不作为索引标签。Loki 和 Tempo 在本地命名卷保留数据 168 小时。停止时先停止 Alloy 和 Grafana。Tempo 收到退出信号后预留 35 秒让查询队列完成清理，再将内存中的链路写盘。Compose 为整个退出流程预留 90 秒。
+
+1. 在 Grafana Explore 选择 Loki，用下列 LogQL 查响应中的 trace ID。展开 API 的日志行，在关联字段 Trace 旁点 **View Trace**。
+2. Tempo 中展开 API 及其 RPC span，比较各段时间与状态。在 span 详情点击 **Related logs**，跳回同一时间窗口和 trace ID 的 Loki 记录。尚在批处理或等待采样决定的链路需要稍后查询。
+
+```logql
+{compose_project="goseed"} |= "替换为32位traceId"
+{compose_service="admin-api"} | json | content="http access" | status >= 500
+```
+
+停止观测组件、恢复默认应用配置：
+
+```bash
+make observability-down
+make compose-up
+make smoke
+```
+
+`observability-down` 保留数据卷，只停止四个观测容器。随后 `make compose-up` 在默认的空 `OTEL_ENDPOINT` 下重建应用。宿主机原生开发时，进程应使用回环地址和 `OTLP_GRPC_PORT`，Compose 服务则使用 `alloy:4317`。
+
+## 生产配置
+
+- 本地 Grafana 只绑定回环地址，允许匿名 Editor。对外提供查询前启用身份验证、角色权限和 TLS；日志与链路应有独立的访问和保留策略。
+- Alloy 挂载 Docker socket 的权限接近宿主机 root，只读挂载仍可调用 Docker API。生产使用限制 API 的 socket proxy，或读取容器日志文件。
+- go-zero v1.10.2 的 `otlpgrpc` 使用 `WithInsecure()`。当前 gRPC 上报只走同机受控网络；跨主机上报改用 `otlphttp`、启用 `OtlpHttpSecure` 并验证证书。
+- 生产按流量和容量调低 Alloy 的普通链路采样率，保留错误和慢调用策略。保持应用完整上报才能在链路结束后做决定。调整采样等待时间和内存容量时，应覆盖实际最长的请求与导出延迟。

@@ -3,6 +3,9 @@ ListenOn: ${MEMBER_RPC_HOST}:${MEMBER_RPC_PORT}
 Mode: ${GOSEED_MODE}
 Timeout: 3000
 Health: true
+Telemetry:
+  Endpoint: "${OTEL_ENDPOINT}"
+  Batcher: otlpgrpc
 Log:
   ServiceName: member-rpc
   Mode: console

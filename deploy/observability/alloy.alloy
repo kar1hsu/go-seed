@@ -1,0 +1,113 @@
+discovery.docker "goseed" {
+	host             = "unix:///var/run/docker.sock"
+	refresh_interval = "5s"
+
+	filter {
+		name   = "label"
+		values = ["com.docker.compose.project=goseed"]
+	}
+}
+
+discovery.relabel "goseed" {
+	targets = discovery.docker.goseed.targets
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+		target_label  = "compose_project"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+		target_label  = "compose_service"
+	}
+}
+
+loki.source.docker "goseed" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = discovery.relabel.goseed.output
+	forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+}
+
+otelcol.receiver.otlp "goseed" {
+	grpc {
+		endpoint = "0.0.0.0:4317"
+	}
+
+	output {
+		traces = [otelcol.processor.filter.probes.input]
+	}
+}
+
+otelcol.processor.filter "probes" {
+	error_mode = "ignore"
+
+	trace_conditions {
+		conditions = [
+			`span.name == "goseed.system.v1.System/CheckReady"`,
+			`span.name == "goseed.member.v1.Member/CheckReady"`,
+			`span.name == "grpc.health.v1.Health/Check"`,
+		]
+	}
+
+	output {
+		traces = [otelcol.processor.tail_sampling.local.input]
+	}
+}
+
+otelcol.processor.tail_sampling "local" {
+	decision_wait = "5s"
+
+	policy {
+		name = "errors"
+		type = "status_code"
+
+		status_code {
+			status_codes = ["ERROR"]
+		}
+	}
+
+	policy {
+		name = "slow"
+		type = "latency"
+
+		latency {
+			threshold_ms = 1000
+		}
+	}
+
+	policy {
+		name = "baseline"
+		type = "probabilistic"
+
+		probabilistic {
+			// Local development retains all other traces. Lower this in production.
+			sampling_percentage = 100
+		}
+	}
+
+	output {
+		traces = [otelcol.processor.batch.local.input]
+	}
+}
+
+otelcol.processor.batch "local" {
+	output {
+		traces = [otelcol.exporter.otlp.tempo.input]
+	}
+}
+
+otelcol.exporter.otlp "tempo" {
+	client {
+		endpoint = "tempo:4317"
+
+		tls {
+			insecure = true
+		}
+	}
+}

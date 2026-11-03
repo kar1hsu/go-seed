@@ -3,6 +3,10 @@ Host: ${API_HOST}
 Port: ${ADMIN_API_PORT}
 Mode: ${GOSEED_MODE}
 Timeout: 3000
+TraceIgnorePaths: [/healthz, /readyz]
+Telemetry:
+  Endpoint: "${OTEL_ENDPOINT}"
+  Batcher: otlpgrpc
 Log:
   ServiceName: admin-api
   Mode: console

@@ -26,6 +26,7 @@ go-seed/
 ├── web/
 │   └── admin/                        # Vue 管理后台
 ├── deploy/
+│   ├── observability/                # Alloy、Loki、Tempo 和 Grafana 数据源配置
 │   ├── compose/                      # 开发与小规模交付
 │   ├── docker/                       # 各进程 Dockerfile
 │   └── nginx/                        # 静态页面与入口代理

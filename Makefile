@@ -4,7 +4,7 @@ COMPOSE := docker compose --env-file .env -p goseed -f deploy/compose/compose.ya
 
 .PHONY: help tools doctor infra-up infra-down dev build-go build check test gen gen-api gen-rpc gen-web verify-gen smoke compose-up compose-down
 help:
-	@echo 'init tools doctor infra-up infra-down migrate bootstrap dev gen check test test-auth test-rbac test-member test-storage test-runtime sync-resources build smoke auth-smoke rbac-smoke member-smoke compose-up compose-migrate compose-bootstrap compose-down'
+	@echo 'init tools doctor infra-up infra-down migrate bootstrap dev gen check test test-auth test-rbac test-member test-storage test-runtime sync-resources build smoke auth-smoke rbac-smoke member-smoke compose-up compose-migrate compose-bootstrap compose-down observability-up observability-down observability-smoke'
 tools:
 	bash scripts/install-tools.sh
 doctor:
@@ -96,3 +96,11 @@ test-member:
 	python3 scripts/test-member.py
 member-smoke:
 	python3 scripts/test-member.py --http
+
+.PHONY: observability-up observability-down observability-smoke
+observability-up: infra-up
+	OTEL_ENDPOINT=alloy:4317 $(COMPOSE) --profile observability up -d --build --wait
+observability-down:
+	$(COMPOSE) --profile observability stop alloy loki tempo grafana
+observability-smoke:
+	python3 scripts/observability-smoke.py

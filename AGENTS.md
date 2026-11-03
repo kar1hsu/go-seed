@@ -2,7 +2,7 @@
 
 ## 项目状态
 
-当前已实现第一阶段工程骨架：两个 API、system-rpc、GORM/Redis 就绪检查、Vue 管理端、Compose、生成脚本和 CI。先读 README.md，并按任务查阅 docs/architecture.md、docs/directory-structure.md、docs/development-guide.md。管理员迁移、bootstrap、登录、刷新、退出和改密已实现；管理员管理、角色权限、菜单按钮授权和 Casbin 版本快照已实现；管理员/角色/改密/命令禁用的事务审计与日志查询已实现；字典分类与子项、普通业务配置、编辑冲突与事务审计已实现，菜单分组可折叠、页签支持右键操作；私有文件、本地/S3 存储、Asynq worker/scheduler、事务 outbox、字典 CSV 导出、定时清理和重试已实现；member 会员业务样板已实现，提供独立注册登录、资料、会话与后台查询启停，跨领域管理员授权通过 system CheckAccess；模块自动生成器尚未实现；目标目录不代表全部存在。
+当前已实现第一阶段工程骨架：两个 API、system-rpc、GORM/Redis 就绪检查、Vue 管理端、Compose、生成脚本和 CI。先读 README.md，并按任务查阅 docs/architecture.md、docs/directory-structure.md、docs/development-guide.md。管理员迁移、bootstrap、登录、刷新、退出和改密已实现；管理员管理、角色权限、菜单按钮授权和 Casbin 版本快照已实现；管理员/角色/改密/命令禁用的事务审计与日志查询已实现；字典分类与子项、普通业务配置、编辑冲突与事务审计已实现，菜单分组可折叠、页签支持右键操作；私有文件、本地/S3 存储、Asynq worker/scheduler、事务 outbox、字典 CSV 导出、定时清理和重试已实现；member 会员业务样板已实现，提供独立注册登录、资料、会话与后台查询启停，跨领域管理员授权通过 system CheckAccess；API 已有安全访问日志，RPC 故障与数据库错误按 trace 关联；可选 observability profile 提供 Loki、Tempo、Alloy 和 Grafana；模块自动生成器尚未实现；目标目录不代表全部存在。
 
 ## 工程边界
 
@@ -40,6 +40,7 @@
 - `make test`：无外部依赖的 Go 测试；`make build`：六个服务和前端。
 - `make init` + `make infra-up` + `make migrate` + `make bootstrap`：初次准备；`make dev`：本地联调；`make smoke` 验证运行中的依赖链路。
 - `make test-auth` / `make auth-smoke`：使用本项目 MySQL 的认证并发测试 / 运行中 HTTP 会话链路。
+- `make observability-up` / `make observability-smoke` / `make observability-down`：启用、验证和停止本地观测组件。外部追踪头不受信，访问日志不记录正文或搜索词。
 - 修改工具、契约或模板后执行 `make verify-gen`；所有安装只写项目 `.tools`，不擅自升级全局工具。
 
 ## 验证与交付

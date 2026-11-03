@@ -1,0 +1,26 @@
+# Tempo 2.10 cleans empty frontend queues on a 30s timer. Leave the timer
+# running for one interval after SIGTERM before stopping that service.
+shutdown_delay: 35s
+server:
+  http_listen_port: 3200
+  log_level: warn
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+ingester:
+  flush_all_on_shutdown: true
+compactor:
+  compaction:
+    block_retention: 168h
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
+usage_report:
+  reporting_enabled: false
